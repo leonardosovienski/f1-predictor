@@ -1,0 +1,28 @@
+{
+  "source": "Grid 2026 REAL via Jolpica (api.jolpi.ca/ergast/f1/2026/driverstandings, 2026-07-11): 22 pilotos / 11 equipes — a Cadillac entrou em 2026 (o prompt de criação assumia 20/10; a realidade venceu).",
+  "elo_seed_rule": "posição no campeonato FINAL de 2025 (Jolpica): P1=1750 → P21=1350, passo 20. Fora dos standings 2025: novato=1300 (regra do prompt); veterano retornante=1400 (declarado).",
+  "drivers": [
+    {"name": "Lando Norris", "team": "McLaren", "nationality": "GBR", "initial_elo": 1750, "rookie": false},
+    {"name": "Max Verstappen", "team": "Red Bull", "nationality": "NED", "initial_elo": 1730, "rookie": false},
+    {"name": "Oscar Piastri", "team": "McLaren", "nationality": "AUS", "initial_elo": 1710, "rookie": false},
+    {"name": "George Russell", "team": "Mercedes", "nationality": "GBR", "initial_elo": 1690, "rookie": false},
+    {"name": "Charles Leclerc", "team": "Ferrari", "nationality": "MON", "initial_elo": 1670, "rookie": false},
+    {"name": "Lewis Hamilton", "team": "Ferrari", "nationality": "GBR", "initial_elo": 1650, "rookie": false},
+    {"name": "Andrea Kimi Antonelli", "team": "Mercedes", "nationality": "ITA", "initial_elo": 1630, "rookie": false},
+    {"name": "Alexander Albon", "team": "Williams", "nationality": "THA", "initial_elo": 1610, "rookie": false},
+    {"name": "Carlos Sainz", "team": "Williams", "nationality": "ESP", "initial_elo": 1590, "rookie": false},
+    {"name": "Fernando Alonso", "team": "Aston Martin", "nationality": "ESP", "initial_elo": 1570, "rookie": false},
+    {"name": "Nico Hülkenberg", "team": "Audi", "nationality": "GER", "initial_elo": 1550, "rookie": false},
+    {"name": "Isack Hadjar", "team": "Red Bull", "nationality": "FRA", "initial_elo": 1530, "rookie": false},
+    {"name": "Oliver Bearman", "team": "Haas F1 Team", "nationality": "GBR", "initial_elo": 1510, "rookie": false},
+    {"name": "Liam Lawson", "team": "RB F1 Team", "nationality": "NZL", "initial_elo": 1490, "rookie": false},
+    {"name": "Esteban Ocon", "team": "Haas F1 Team", "nationality": "FRA", "initial_elo": 1470, "rookie": false},
+    {"name": "Lance Stroll", "team": "Aston Martin", "nationality": "CAN", "initial_elo": 1450, "rookie": false},
+    {"name": "Pierre Gasly", "team": "Alpine F1 Team", "nationality": "FRA", "initial_elo": 1410, "rookie": false},
+    {"name": "Gabriel Bortoleto", "team": "Audi", "nationality": "BRA", "initial_elo": 1390, "rookie": false},
+    {"name": "Franco Colapinto", "team": "Alpine F1 Team", "nationality": "ARG", "initial_elo": 1350, "rookie": false},
+    {"name": "Valtteri Bottas", "team": "Cadillac F1 Team", "nationality": "FIN", "initial_elo": 1400, "rookie": false},
+    {"name": "Sergio Pérez", "team": "Cadillac F1 Team", "nationality": "MEX", "initial_elo": 1400, "rookie": false},
+    {"name": "Arvid Lindblad", "team": "RB F1 Team", "nationality": "GBR", "initial_elo": 1300, "rookie": true}
+  ]
+}

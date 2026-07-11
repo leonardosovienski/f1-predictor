@@ -1,0 +1,27 @@
+{
+  "source": "Calendário 2026 REAL via Jolpica (22 corridas). As características (power/downforce/tire_wear, escala 0-1) são ESTIMATIVA QUALITATIVA da era — metadados para a extensão por circuito da Fase 1+; o modelo da Fase 0 NÃO as consome (só valida que o circuito existe).",
+  "circuits": [
+    {"name": "Albert Park", "round": 1, "country": "Australia", "power_sensitivity": 0.5, "downforce_sensitivity": 0.5, "tire_wear": 0.4},
+    {"name": "Shanghai", "round": 2, "country": "China", "power_sensitivity": 0.6, "downforce_sensitivity": 0.5, "tire_wear": 0.6},
+    {"name": "Suzuka", "round": 3, "country": "Japan", "power_sensitivity": 0.5, "downforce_sensitivity": 0.8, "tire_wear": 0.6},
+    {"name": "Miami", "round": 4, "country": "USA", "power_sensitivity": 0.7, "downforce_sensitivity": 0.4, "tire_wear": 0.5},
+    {"name": "Gilles Villeneuve", "round": 5, "country": "Canada", "power_sensitivity": 0.8, "downforce_sensitivity": 0.3, "tire_wear": 0.4},
+    {"name": "Monaco", "round": 6, "country": "Monaco", "power_sensitivity": 0.1, "downforce_sensitivity": 0.95, "tire_wear": 0.3},
+    {"name": "Barcelona-Catalunya", "round": 7, "country": "Spain", "power_sensitivity": 0.5, "downforce_sensitivity": 0.7, "tire_wear": 0.8},
+    {"name": "Red Bull Ring", "round": 8, "country": "Austria", "power_sensitivity": 0.8, "downforce_sensitivity": 0.4, "tire_wear": 0.5},
+    {"name": "Silverstone", "round": 9, "country": "UK", "power_sensitivity": 0.7, "downforce_sensitivity": 0.7, "tire_wear": 0.8},
+    {"name": "Spa-Francorchamps", "round": 10, "country": "Belgium", "power_sensitivity": 0.9, "downforce_sensitivity": 0.5, "tire_wear": 0.6},
+    {"name": "Hungaroring", "round": 11, "country": "Hungary", "power_sensitivity": 0.2, "downforce_sensitivity": 0.9, "tire_wear": 0.5},
+    {"name": "Zandvoort", "round": 12, "country": "Netherlands", "power_sensitivity": 0.3, "downforce_sensitivity": 0.85, "tire_wear": 0.5},
+    {"name": "Monza", "round": 13, "country": "Italy", "power_sensitivity": 0.9, "downforce_sensitivity": 0.2, "tire_wear": 0.4},
+    {"name": "Madring", "round": 14, "country": "Spain", "power_sensitivity": 0.5, "downforce_sensitivity": 0.6, "tire_wear": 0.5},
+    {"name": "Baku", "round": 15, "country": "Azerbaijan", "power_sensitivity": 0.9, "downforce_sensitivity": 0.3, "tire_wear": 0.4},
+    {"name": "Marina Bay", "round": 16, "country": "Singapore", "power_sensitivity": 0.2, "downforce_sensitivity": 0.9, "tire_wear": 0.6},
+    {"name": "Circuit of the Americas", "round": 17, "country": "USA", "power_sensitivity": 0.6, "downforce_sensitivity": 0.7, "tire_wear": 0.7},
+    {"name": "Hermanos Rodríguez", "round": 18, "country": "Mexico", "power_sensitivity": 0.7, "downforce_sensitivity": 0.5, "tire_wear": 0.4},
+    {"name": "Interlagos", "round": 19, "country": "Brazil", "power_sensitivity": 0.6, "downforce_sensitivity": 0.6, "tire_wear": 0.6},
+    {"name": "Las Vegas Strip", "round": 20, "country": "USA", "power_sensitivity": 0.9, "downforce_sensitivity": 0.2, "tire_wear": 0.3},
+    {"name": "Losail", "round": 21, "country": "Qatar", "power_sensitivity": 0.6, "downforce_sensitivity": 0.7, "tire_wear": 0.9},
+    {"name": "Yas Marina", "round": 22, "country": "UAE", "power_sensitivity": 0.6, "downforce_sensitivity": 0.5, "tire_wear": 0.4}
+  ]
+}

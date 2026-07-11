@@ -1,0 +1,19 @@
+# f1-predictor — Fase 0 (esqueleto). Elo semeado pelo campeonato FINAL de
+# 2025 (Jolpica); grid 2026 REAL = 22 pilotos / 11 equipes (Cadillac entrou).
+sport: "Formula 1"
+season: 2026
+k_factor_base: 24
+k_factor_rookie: 40
+bankroll: 1000
+stake_unit: 50
+
+model:
+  # Plackett-Luce via amostragem de Gumbel: nº de simulações da ordenação
+  # (determinístico com a seed) — win/podium/top6 saem da mesma passada
+  n_sims: 20000
+  sim_seed: 13
+
+drivers_file: data/drivers_f1.json
+circuits_file: data/circuits_f1.json
+# ratings correntes persistidos por update_ratings (ausente → initial_elo)
+ratings_file: data/ratings.json
