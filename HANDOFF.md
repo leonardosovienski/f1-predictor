@@ -1,5 +1,48 @@
 # HANDOFF.md — f1-predictor
 
+> ## 🏁 FASE 1 — BACKTEST ORDINAL (2026-07-12)
+>
+> **Backtest prequential rodado sobre 101 corridas reais (2022–2026 R9).
+> H1-F1 REFUTADA: o Elo puro NÃO bate o grid de largada (RPS 0.1410 vs
+> 0.1303, DM +4.43, p=0.00003). H2-F1 COMPROVADA: H2H entre companheiros
+> 62.6% (253/404, Wilson95 [0.578, 0.672]). NO-GO para apostas.**
+>
+> Primeiro backtest ORDINAL do ecossistema — `metrics.rps`, `nullref` e
+> Diebold-Mariano do core estrearam com cliente real. Fluxo de governança
+> completo NA ORDEM: harness (controle positivo) → atestado → pré-registro
+> (`data/trials.json`, versionado) → backtest → resultados nas trials.
+>
+> Decisões e lições da Fase 1:
+> - **Semente do backtest = 1400 para todos** (a semente 2025 da Fase 0
+>   seria lookahead dentro de 2022-2025); burn-in 2022, avaliação 79
+>   corridas 2023–2026. K novato 40 (<22 corridas vistas), base 24.
+> - **Nulo one-hot é armadilha**: o harness pegou — qualquer previsor flat
+>   vence ordenações one-hot no RPS (especificidade falhou na 1ª versão).
+>   O nulo correto é o **teste de PERMUTAÇÃO** (previsões do próprio
+>   modelo, atribuição sorteada): preserva assertividade, destrói
+>   informação. Ficou barato via matriz de custo RPS (equivalência com o
+>   core testada).
+> - **Baselines justos**: grid/standings viram forças pela escada
+>   declarada da Fase 0 (1750→1350) e passam pelo MESMO Plackett-Luce.
+> - O modelo carrega informação real (percentil 0 do nulo; esmaga o
+>   uniforme) e é MELHOR que o grid no vencedor (Brier 0.831 vs 0.846) —
+>   perde no meio do pelotão. Pior estrato: 2026 (choque de regulamento).
+>   Pódio subconfiante nas faixas altas (Platt = candidata N+1, Fase 2).
+> - **Jolpica**: 429 na primeira carga (retry/backoff implementado);
+>   resposta vazia de corrida futura NÃO pode virar cache imutável (bug
+>   corrigido + teste). Rate limit cortês 1s; cache `data/raw/` gitignored.
+> - Serving agora usa o **Elo vivido** (`data/ratings.json`, só grid 2026;
+>   filtro no model.py impede aposentados de entrar no grid do serving).
+>   Novo topo: Verstappen 1696 > Norris 1680 (a semente 2025 dava Norris).
+> - Suíte: **50 verdes** (25 novos); CI 3/3. Relatório:
+>   `docs/RELATORIO_FASE1.md`.
+>
+> Próximo passo (Fase 2, cada variação = trial N+1 pré-registrada): grid
+> de largada como FEATURE do modelo (Elo + grid, não Elo vs grid — alvo
+> nº 1 do relatório), DNF/confiabilidade por equipe, Platt no headline.
+> Fase 1b (odds): H2H é o único sinal comprovado — sondar `motorsport_f1`
+> na The Odds API quando houver chave. Fase 3 segue 🔒 NO-GO.
+
 > ## 🏎️ CRIAÇÃO (2026-07-11)
 >
 > **Projeto criado. Modelo Elo para pilotos implementado. Diferencial:

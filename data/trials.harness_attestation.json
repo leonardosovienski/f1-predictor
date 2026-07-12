@@ -1,0 +1,6 @@
+{
+  "passed_at": "2026-07-12T10:25:02+00:00",
+  "evaluate": "evaluate_ordinal_pipeline",
+  "edge_verdict": "COMPROVADA",
+  "note": "critério ordinal H1 (DM vs grid + nulo de permutação): detecta forças sintéticas separadas, rejeita permutações uniformes"
+}

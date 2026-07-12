@@ -49,7 +49,11 @@ class F1EloModel:
         self.path = Path(ratings_file) if ratings_file else (
             ROOT / cfg.get("ratings_file", "data/ratings.json"))
         if self.path.exists():
-            self.ratings.update(json.loads(self.path.read_text(encoding="utf-8")))
+            vividos = json.loads(self.path.read_text(encoding="utf-8"))
+            # só pilotos do grid: um ratings.json com histórico (aposentados)
+            # não pode inflar o grid do serving
+            self.ratings.update({k: float(v) for k, v in vividos.items()
+                                 if k in self.ratings})
 
     def _k(self, name: str) -> float:
         return (self.k_rookie if self.drivers.get(name, {}).get("rookie")

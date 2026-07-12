@@ -4,7 +4,11 @@
 /data/bets.jsonl
 /data/bankroll.jsonl
 /data/ratings.json
+# cache imutável da Jolpica e o SQLite (rebuildáveis via scripts/build_db.py)
+/data/raw/
 *.db
+*.db-shm
+*.db-wal
 *.log
 events.jsonl
 .env
