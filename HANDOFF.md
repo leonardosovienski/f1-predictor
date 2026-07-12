@@ -1,5 +1,17 @@
 # HANDOFF.md — f1-predictor
 
+> ## 🔒 SELADO — auditoria final (2026-07-12)
+>
+> Auditoria estritamente de leitura confirmou: `git status` limpo (nada
+> a commitar, nenhum untracked), `HEAD` em `9415c7b` (Fase 5), branch
+> único `main` (a antiga `claude/project-review-testing-694fed` foi
+> mesclada por fast-forward e apagada). **Nenhuma pendência aberta.**
+> Próximo gatilho natural: mais corridas de 2026 disputadas — rodar
+> `scripts/validate_2026.py` (acompanhamento) e, quando fizer sentido
+> pelo calendário, `scripts/run_fase5.py` de novo (H8-F1 pode ganhar
+> significância com mais amostra). Até lá, o projeto fica parado por
+> design — nenhuma fase nova sem gatilho de dado ou pedido explícito.
+
 > ## 🧪 FASE 5 — CHOQUE ESTRUTURAL DE TRANSIÇÃO DE REGULAMENTO (2026-07-12)
 >
 > **A pedido do usuário, com protocolo científico próprio dele**: testar

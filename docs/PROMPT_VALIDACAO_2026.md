@@ -4,9 +4,14 @@
 > histórico, retrodiz TODAS as corridas já disputadas no ano (comparando
 > a previsão que o modelo TERIA dado, sem lookahead, com o resultado
 > real) e prevê a próxima corrida do calendário. É um teste de sanidade
-> operacional, NÃO um backtest novo — as Fases 1/2/4 já mediram RPS
-> vs baselines com rigor estatístico; isto aqui é "o modelo, ao vivo,
+> operacional, NÃO um backtest novo — as Fases 1-5 já mediram RPS vs
+> baselines com rigor estatístico; isto aqui é "o modelo, ao vivo,
 > continua se comportando como o backtest disse que se comportaria?".
+>
+> **Estado do projeto em 2026-07-12: laboratório SELADO** (commit
+> `9415c7b`, branch único `main`, árvore limpa) — nenhuma fase nova
+> corre sem gatilho de dado novo ou pedido explícito. Este prompt É o
+> gatilho de rotina enquanto a temporada 2026 avança.
 
 **Projeto**: f1-predictor. **Regras de sempre**: nada inventado (só dado
 real da Jolpica), sem lookahead (a previsão de cada corrida só pode usar
@@ -69,7 +74,16 @@ os dois: a previsão pré-quali (Elo puro/vivido) e a pós-quali (blend).
 - **Gate de operação**: `python -m src.operate --status` — confirmar que
   segue NO-GO (H1-F1 continua REFUTADA; nada nesta validação muda isso).
 - **CI completo**: `scripts\ci_check.py` — 3 barreiras verdes.
-- **Suíte completa**: `pytest tests/ -q` — todos os testes (106+) verdes.
+- **Suíte completa**: `pytest tests/ -q` — todos os testes (116+) verdes.
+
+## PASSO 3.5 — Reavaliar H8-F1 (opcional, só quando 2026 tiver bem mais corridas)
+
+A Fase 5 (`scripts/run_fase5.py`) mediu o choque estrutural de
+transição de regulamento e REFUTOU por falta de poder estatístico (só 9
+corridas em 2026, RPS na direção certa mas p=0.907). É idempotente —
+rodar de novo a cada bloco relevante de corridas novas (ex.: a cada 5-6
+corridas) para checar se a significância aparece. Não rodar a cada
+atualização de rotina — só quando o calendário justificar.
 
 ## PASSO 4 — Relatório
 
@@ -78,7 +92,7 @@ retrodição corrida-a-corrida de 2026, RPS acumulado do ano vs baseline
 grid, previsão da próxima corrida (pré e pós-quali se disponível),
 resultado dos testes de estresse, e status do gate. **Nenhuma conclusão
 nova de pesquisa aqui** — isso é acompanhamento operacional do modelo já
-validado nas Fases 1/2/4.
+validado nas Fases 1-5.
 
 ## Reprodução rápida (tudo de uma vez)
 

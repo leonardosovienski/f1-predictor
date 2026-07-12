@@ -1,5 +1,9 @@
 # f1-predictor
 
+> 🔒 **Laboratório SELADO em 2026-07-12** (commit `9415c7b`, branch
+> único `main`, árvore limpa) — em espera por mais corridas de 2026
+> antes de qualquer nova tentativa. Nenhuma pendência aberta.
+
 > **Status: Fases 0-5 concluídas (2026-07-12).** Fase 1: **H1 REFUTADA**
 > (Elo puro não bate o grid, RPS 0.1410 vs 0.1303). Fase 2: **H3-F1b** e
 > **H4-F1b COMPROVADAS** — Elo+grid bate o Elo puro (RPS 0.1281 vs
