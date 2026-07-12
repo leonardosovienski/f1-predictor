@@ -1,15 +1,21 @@
-"""Serving de previsão de F1 — Fase 0.
+"""Serving de previsão de F1 — Fase 0 (Elo puro) e Fase 2 (Elo+grid, pós-quali).
 
 Uso:
     python -m src.predict --circuit Monza --weather dry --json
     python -m src.predict --head-to-head Verstappen Hamilton --circuit Monaco
     python -m src.predict --circuit Monza --market podium
+    python -m src.predict --circuit Monza --grid Verstappen:1 Norris:2 ...
 
 Contratos do core desde o dia zero: PredictionPoint (matures_at = largada
 estimada + 2h30 de corrida; sem schedule na Fase 0, largada = agora),
 emit_event (domínio "f1") e log append-only com override por env. Para o
 ranking completo, o value do PredictionPoint é a ORDENAÇÃO — o formato que
-o RPS (metrics.py) e o nullref.py do core consomem na Fase 1.
+o RPS (metrics.py) e o nullref.py do core consomem desde a Fase 1.
+
+`--grid` usa o modelo PÓS-QUALI da Fase 2 (Elo misturado ao grid de
+largada — H3-F1b COMPROVADA no backtest) só quando `data/fase2_params.json`
+existir com o veredito comprovado; senão cai no Elo puro (nenhuma feature
+sem comprovação entra no serving).
 """
 import argparse
 import json
@@ -68,6 +74,39 @@ def run_race(circuit: str, weather: str = "dry",
         now=now)
 
 
+def _parse_grid(pairs: list) -> dict:
+    """['Verstappen:1', 'Norris:2', ...] → {'Verstappen': 1, 'Norris': 2}."""
+    grid = {}
+    for item in pairs:
+        if ":" not in item:
+            raise ValueError(f"formato de --grid inválido: {item!r} "
+                             "(use PILOTO:POSICAO)")
+        name, pos = item.rsplit(":", 1)
+        try:
+            grid[name.strip()] = int(pos)
+        except ValueError:
+            raise ValueError(f"posição de grid não-numérica em {item!r}")
+    return grid
+
+
+def run_race_grid(circuit: str, grid_pairs: list, weather: str = "dry",
+                  now: datetime | None = None) -> dict:
+    model = F1EloModel()
+    r = model.predict_race_with_grid(circuit, _parse_grid(grid_pairs), weather)
+    ordem = list(r["ranking"])
+    return _stamp_and_log(
+        r,
+        value={"ranking": ordem,
+               "win_probs": {n: r["ranking"][n]["win"] for n in ordem[:5]}},
+        metadata={"market": "race_grid", "circuit": r["circuit"],
+                  "weather": weather, "model": r["model"],
+                  "w_grid": r["w_grid"],
+                  "podium_calibrado": r["podium_calibrado"],
+                  "_metrics": {"p_win_favorito": r["ranking"][ordem[0]]["win"],
+                               "n_drivers": r["n_drivers"]}},
+        now=now)
+
+
 def run_h2h(driver_a: str, driver_b: str, circuit: str,
             now: datetime | None = None) -> dict:
     model = F1EloModel()
@@ -91,6 +130,9 @@ def main(argv=None) -> int:
                     help="validado; NÃO ajusta na Fase 0 (declarado)")
     ap.add_argument("--head-to-head", nargs=2, metavar=("PILOTO_A", "PILOTO_B"),
                     dest="h2h", default=None)
+    ap.add_argument("--grid", nargs="+", metavar="PILOTO:POSICAO",
+                    default=None,
+                    help="grid de largada pós-quali (Fase 2, Elo+grid)")
     ap.add_argument("--market", default="winner",
                     choices=["winner", "podium", "top6", "h2h"],
                     help="coluna destacada na exibição do ranking")
@@ -100,6 +142,8 @@ def main(argv=None) -> int:
     try:
         if args.h2h:
             r = run_h2h(args.h2h[0], args.h2h[1], args.circuit)
+        elif args.grid:
+            r = run_race_grid(args.circuit, args.grid, args.weather)
         else:
             r = run_race(args.circuit, args.weather)
     except ValueError as e:
@@ -127,7 +171,13 @@ def main(argv=None) -> int:
         for n, v in ordenado[:10]:
             print(f"  {n:<24}{v['team'][:16]:<18}{v['win']:>7.1%}"
                   f"{v['podium']:>8.1%}{v['top6']:>7.1%}")
-        print("  [Fase 0: Elo pela temporada 2025 — circuito/clima ainda não ajustam]")
+        if r["model"] == "elo-grid-blend-fase2":
+            print(f"  [Fase 2: Elo+grid (w={r['w_grid']}), pódio "
+                  f"{'calibrado (Platt)' if r['podium_calibrado'] else 'cru'} "
+                  "— H3-F1b comprovada]")
+        else:
+            print("  [Elo puro — circuito/clima ainda não ajustam "
+                  "(use --grid pós-quali para a Fase 2)]")
     return 0
 
 

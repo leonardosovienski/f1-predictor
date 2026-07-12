@@ -1,6 +1,6 @@
 {
-  "passed_at": "2026-07-12T10:25:02+00:00",
-  "evaluate": "evaluate_ordinal_pipeline",
+  "passed_at": "2026-07-12T17:34:03+00:00",
+  "evaluate": "evaluate_grid_feature_pipeline",
   "edge_verdict": "COMPROVADA",
-  "note": "critério ordinal H1 (DM vs grid + nulo de permutação): detecta forças sintéticas separadas, rejeita permutações uniformes"
+  "note": "H3-F1b (grid como feature): choque de forma do dia compartilhado quali/largada -> grid informativo detectado; grid embaralhado (mesma forma) -> nao confirmado"
 }

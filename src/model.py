@@ -28,10 +28,25 @@ from .config import (ROOT, load_config, load_drivers, resolve_circuit,
 
 _LN10_400 = math.log(10.0) / 400.0
 
+_FASE2_DEFAULTS = {"w_grid": 0.0, "platt_a": 1.0, "platt_b": 0.0,
+                  "usar_blend": False, "usar_calibracao": False}
+
 
 def win_probability(elo_a: float, elo_b: float) -> float:
     """P(A termina à frente de B) — logística clássica do Elo."""
     return 1.0 / (1.0 + 10.0 ** ((elo_b - elo_a) / 400.0))
+
+
+def _load_fase2_params(path: Path | str | None = None) -> dict:
+    """Parâmetros vividos da Fase 2 (w do blend, Platt do pódio),
+    condicionados aos vereditos H3-F1b/H4-F1b. Sem o arquivo (ainda não
+    rodou scripts/run_fase2.py) ou veredito REFUTADA: cai no default —
+    nenhuma feature nova entra no serving sem ter sido comprovada."""
+    p = Path(path) if path else (ROOT / "data" / "fase2_params.json")
+    if not p.exists():
+        return dict(_FASE2_DEFAULTS)
+    saved = json.loads(p.read_text(encoding="utf-8"))
+    return {**_FASE2_DEFAULTS, **saved}
 
 
 class F1EloModel:
@@ -88,6 +103,72 @@ class F1EloModel:
         return {"circuit": c["name"], "weather": weather,
                 "n_drivers": len(names), "n_sims": self.n_sims,
                 "ranking": ranking, "model": "elo-plackett-luce-fase0"}
+
+    def predict_race_with_grid(self, circuit: str, grid: dict,
+                               weather: str = "dry") -> dict:
+        """Ranking PÓS-QUALI — Elo misturado ao grid de largada (Fase 2:
+        H3-F1b COMPROVADA — RPS 0.1281 vs 0.1416 do Elo puro, DM p≈0).
+
+        `grid`: {piloto: posição de largada (1..n); 0 = saiu do pit lane},
+        um valor único por piloto entre os inscritos. O peso do blend e a
+        calibração de Platt do P(pódio) vêm de `data/fase2_params.json`
+        (vividos no backtest); sem o arquivo, cai no Elo puro da Fase 0
+        (nenhuma feature nova aplicada sem ter sido comprovada)."""
+        from .backtest import apply_platt, blend_elos, ladder  # lazy: evita ciclo
+
+        c = resolve_circuit(circuit)
+        if weather not in ("dry", "wet"):
+            raise ValueError(f"weather desconhecido: {weather!r} (dry|wet)")
+        pilotos = {resolve_driver(n)["name"]: int(p) for n, p in grid.items()}
+        if len(set(pilotos.values())) != len(pilotos):
+            raise ValueError("posições de grid repetidas")
+        names = list(pilotos)
+        n = len(names)
+        if n < 2:
+            raise ValueError("grid precisa de pelo menos 2 pilotos")
+
+        params = _load_fase2_params()
+        elos_model = np.array([self.ratings[nm] for nm in names])
+        if params["usar_blend"]:
+            grid_raw = np.array([pilotos[nm] if pilotos[nm] > 0 else n + 1
+                                 for nm in names], dtype=float)
+            grid_rank = grid_raw.argsort(kind="stable").argsort()
+            elos_grid = ladder(n)[grid_rank]
+            elos = blend_elos(elos_model, elos_grid, params["w_grid"])
+            model_tag = "elo-grid-blend-fase2"
+        else:
+            elos = elos_model
+            model_tag = "elo-plackett-luce-fase0"
+
+        skill = elos * _LN10_400
+        rng = np.random.default_rng(self.seed)
+        noise = rng.gumbel(size=(self.n_sims, n))
+        order = np.argsort(-(skill[None, :] + noise), axis=1)
+        pos = np.empty_like(order)
+        rows = np.arange(self.n_sims)[:, None]
+        pos[rows, order] = np.arange(n)[None, :]
+
+        out = {}
+        for i, nm in enumerate(names):
+            p = pos[:, i]
+            podium_raw = float((p < 3).mean())
+            if params["usar_calibracao"]:
+                podium = float(apply_platt(np.array([podium_raw]),
+                                           params["platt_a"],
+                                           params["platt_b"])[0])
+            else:
+                podium = podium_raw
+            out[nm] = {"win": round(float((p == 0).mean()), 4),
+                      "podium": round(podium, 4),
+                      "top6": round(float((p < 6).mean()), 4),
+                      "elo": round(self.ratings[nm], 1),
+                      "grid": pilotos[nm],
+                      "team": self.drivers[nm]["team"]}
+        ranking = dict(sorted(out.items(), key=lambda kv: -kv[1]["win"]))
+        return {"circuit": c["name"], "weather": weather,
+                "n_drivers": n, "n_sims": self.n_sims, "ranking": ranking,
+                "model": model_tag, "w_grid": params["w_grid"],
+                "podium_calibrado": params["usar_calibracao"]}
 
     def predict_head_to_head(self, driver_a: str, driver_b: str,
                              circuit: str) -> dict:

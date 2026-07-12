@@ -133,6 +133,23 @@ def _rps_cost_matrix(probs: np.ndarray) -> np.ndarray:
     return ((cdf[:, :, None] - step) ** 2).sum(axis=1) / (k - 1)
 
 
+def _grid_elos(results: list[dict], n: int) -> np.ndarray:
+    """Elos da escada 1750→1350 aplicados à ORDEM DE LARGADA (0 = pit
+    lane → fim da fila, declarado). Compartilhado entre Fase 1 (baseline)
+    e Fase 2 (feature do blend)."""
+    grid_raw = np.array([r["grid"] if r["grid"] > 0 else n + 1
+                         for r in results], dtype=float)
+    return ladder(n)[grid_raw.argsort(kind="stable").argsort()]
+
+
+def _standings_elos(results: list[dict], table: dict, n: int) -> np.ndarray:
+    """Elos da escada aplicados aos pontos da temporada corrente (ou do
+    ano anterior na rodada 1 — novato no grid fica em 0 pontos, fim da
+    fila, ordem estável)."""
+    pts = np.array([-table.get(r["driver"], 0.0) for r in results])
+    return ladder(n)[pts.argsort(kind="stable").argsort()]
+
+
 def run_backtest(races: list[dict], *, n_sims: int = 10000, sim_seed: int = 13,
                  burn_in_season: int = 2022, k_base: float = 24.0,
                  k_rookie: float = 40.0, null_samples: int = 500) -> dict:
@@ -163,18 +180,10 @@ def run_backtest(races: list[dict], *, n_sims: int = 10000, sim_seed: int = 13,
         if is_eval:
             # --- previsões (ANTES do update) ---
             elos_model = np.array([elo.rating(nm) for nm in names])
-            # grid: 0 = pit lane → fim da fila (declarado)
-            grid_raw = np.array([r["grid"] if r["grid"] > 0 else n + 1
-                                 for r in results], dtype=float)
-            grid_rank = grid_raw.argsort(kind="stable").argsort()
-            elos_grid = ladder(n)[grid_rank]
-            # standings: pontos da temporada corrente; rodada 1 usa o ano
-            # anterior (novato no grid → 0 pontos → fim da fila, estável)
+            elos_grid = _grid_elos(results, n)
             table = (season_points[season] if season_points[season]
                      else season_points[season - 1])
-            pts = np.array([-table.get(nm, 0.0) for nm in names])
-            st_rank = pts.argsort(kind="stable").argsort()
-            elos_standings = ladder(n)[st_rank]
+            elos_standings = _standings_elos(results, table, n)
 
             probs = {
                 "model": position_probs(elos_model, n_sims,
@@ -360,12 +369,25 @@ def verdict_h2(result: dict) -> dict:
 
 def synthetic_races(n_drivers: int = 20, n_seasons: int = 3,
                     races_per_season: int = 20, elo_spread: float = 400.0,
-                    seed: int = 7, informative: bool = True) -> list[dict]:
+                    seed: int = 7, informative: bool = True,
+                    grid_random: bool = False,
+                    form_scale: float = 0.0) -> list[dict]:
     """Gera corridas sintéticas no MESMO schema do db: forças verdadeiras
     conhecidas (escada de largura `elo_spread`), classificação sorteada por
     Plackett-Luce e grid = outra amostra PL das MESMAS forças (o
     'qualifying' — um baseline forte, como na F1 real). `informative=False`
-    zera o spread: resultados viram permutações uniformes (ruído puro)."""
+    zera o spread: resultados viram permutações uniformes (ruído puro).
+    `grid_random=True` (harness H3, especificidade): a corrida continua
+    informativa mas o GRID vira permutação independente do skill — um
+    grid sem informação não pode ajudar o blend.
+
+    `form_scale>0` (harness H3, sensibilidade): soma um choque de "forma
+    do dia" ~Gumbel(0, form_scale) POR CORRIDA, compartilhado entre quali
+    e largada — algo que o Elo (que só aprende a força de LONGO PRAZO,
+    médias entre corridas) não vê, mas que o grid dessa corrida específica
+    CARREGA. É o mecanismo que torna "grid como feature" genuinamente
+    informativo além do Elo estático, e não apenas outro estimador
+    ruidoso da mesma força de sempre."""
     rng = np.random.default_rng(seed)
     spread = elo_spread if informative else 0.0
     true_elos = np.linspace(1400 + spread / 2, 1400 - spread / 2, n_drivers)
@@ -376,10 +398,15 @@ def synthetic_races(n_drivers: int = 20, n_seasons: int = 3,
     for s in range(n_seasons):
         season = 2022 + s
         for rnd in range(1, races_per_season + 1):
-            order = np.argsort(-(skill + rng.gumbel(size=n_drivers)))
-            quali = np.argsort(-(skill + rng.gumbel(size=n_drivers)))
-            grid_of = np.empty(n_drivers, dtype=int)
-            grid_of[quali] = np.arange(1, n_drivers + 1)
+            form = (rng.gumbel(scale=form_scale, size=n_drivers)
+                    if form_scale > 0 else 0.0)
+            order = np.argsort(-(skill + form + rng.gumbel(size=n_drivers)))
+            if grid_random:
+                grid_of = rng.permutation(n_drivers) + 1
+            else:
+                quali = np.argsort(-(skill + form + rng.gumbel(size=n_drivers)))
+                grid_of = np.empty(n_drivers, dtype=int)
+                grid_of[quali] = np.arange(1, n_drivers + 1)
             results = []
             for pos0, i in enumerate(order):
                 results.append({"driver": names[i], "constructor": f"Eq{i // 2}",
@@ -399,3 +426,311 @@ def evaluate_ordinal_pipeline(races: list[dict], *, n_sims: int = 2000,
     série→veredito, no contrato do harness do core (controle positivo)."""
     result = run_backtest(races, n_sims=n_sims, null_samples=null_samples)
     return verdict_h1(result)
+
+
+# =====================================================================
+# FASE 2 — grid como FEATURE do modelo (blend Elo+grid) e calibração
+# =====================================================================
+#
+# O relatório da Fase 1 apontou dois alvos: (H3) o grid de largada só
+# ajuda como BASELINE separado — o teste real é se ele ajuda DENTRO do
+# modelo, misturado ao Elo; (H4) o P(pódio) é subconfiante nas faixas
+# altas — Platt é candidata de calibração.
+#
+# Protocolo SEM lookahead adicional: o peso do blend (w) e os parâmetros
+# de Platt são escolhidos SÓ no período de DESENVOLVIMENTO (2023, após o
+# burn-in de 2022) — nunca olhando 2024-2026, que é o período de
+# avaliação genuinamente cego. w e Platt ficam CONGELADOS ao entrar em
+# 2024. O Elo em si continua a mesma passada contínua (2022→2026); só a
+# escolha de hiperparâmetro é que fica confinada ao "treino".
+
+
+def _sigmoid(x: np.ndarray) -> np.ndarray:
+    return 1.0 / (1.0 + np.exp(-np.clip(x, -500.0, 500.0)))
+
+
+def _logit(p: np.ndarray, eps: float = 1e-6) -> np.ndarray:
+    p = np.clip(p, eps, 1.0 - eps)
+    return np.log(p / (1.0 - p))
+
+
+def fit_platt(scores: np.ndarray, outcomes: np.ndarray,
+             iters: int = 50, ridge: float = 1e-6) -> tuple[float, float]:
+    """Platt scaling: ajusta (a, b) em sigmoid(a·logit(p) + b) ~ outcome
+    por Newton-Raphson (regressão logística 1-D, 2 parâmetros). `ridge` no
+    Hessiano evita singularidade quando os scores são quase-degenerados."""
+    x = _logit(np.asarray(scores, dtype=float))
+    y = np.asarray(outcomes, dtype=float)
+    a, b = 1.0, 0.0
+    for _ in range(iters):
+        z = a * x + b
+        pi = _sigmoid(z)
+        w = np.maximum(pi * (1.0 - pi), 1e-9)
+        grad = np.array([np.sum((y - pi) * x), np.sum(y - pi)])
+        h = np.array([[np.sum(w * x * x) + ridge, np.sum(w * x)],
+                     [np.sum(w * x), np.sum(w) + ridge]])
+        delta = np.linalg.solve(h, grad)
+        a += delta[0]
+        b += delta[1]
+        if np.abs(delta).max() < 1e-10:
+            break
+    return float(a), float(b)
+
+
+def apply_platt(scores: np.ndarray, a: float, b: float) -> np.ndarray:
+    return _sigmoid(a * _logit(np.asarray(scores, dtype=float)) + b)
+
+
+def blend_elos(elos_model: np.ndarray, elos_grid: np.ndarray,
+               w: float) -> np.ndarray:
+    """Mistura LINEAR no espaço Elo: (1-w)·Elo + w·escada(grid). w=0 é o
+    Elo puro da Fase 1; w=1 é o baseline de grid puro."""
+    return (1.0 - w) * elos_model + w * elos_grid
+
+
+def run_fase2(races: list[dict], *, n_sims: int = 10000, sim_seed: int = 13,
+             burn_in_season: int = 2022, dev_season: int = 2023,
+             eval_start_season: int = 2024, k_base: float = 24.0,
+             k_rookie: float = 40.0, null_samples: int = 500,
+             w_grid: float | None = None,
+             w_candidates: tuple = (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6,
+                                    0.7, 0.8, 0.9, 1.0)) -> dict:
+    """Passada prequential contínua 2022→fim, com um estágio de
+    DESENVOLVIMENTO (`dev_season`) onde: (a) escolhe-se w minimizando o
+    RPS médio do blend nas corridas de 2023, e (b) ajusta-se Platt no
+    P(pódio) do blend vencedor sobre as mesmas corridas de 2023. A partir
+    de `eval_start_season`, w e Platt ficam CONGELADOS — é aí que as
+    métricas reportadas (RPS, DM, nulo, calibração) são calculadas, cegas
+    ao ajuste de hiperparâmetro. `w_grid` explícito pula a seleção (usado
+    pelo harness sintético, onde 1 temporada de dev não teria poder)."""
+    elo = BacktestElo(k_base=k_base, k_rookie=k_rookie)
+    season_points: dict[int, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+
+    dev_records: list[dict] = []     # p/ seleção de w e ajuste de Platt
+
+    def _predict_bundle(race, season, round_):
+        results = race["results"]
+        n = len(results)
+        names = [r["driver"] for r in results]
+        elos_model = np.array([elo.rating(nm) for nm in names])
+        elos_grid = _grid_elos(results, n)
+        actual_pos = np.array([r["position"] - 1 for r in results])
+        return {"n": n, "names": names, "elos_model": elos_model,
+                "elos_grid": elos_grid, "actual_pos": actual_pos,
+                "dnf": np.array([bool(r["dnf"]) for r in results]),
+                "season": season, "round": round_, "name": race["name"]}
+
+    for race in races:
+        season, round_ = race["season"], race["round"]
+        if len(race["results"]) < 2:
+            continue
+        if season == dev_season:
+            dev_records.append(_predict_bundle(race, season, round_))
+        finish_order = [r["driver"] for r in race["results"] if not r["dnf"]]
+        elo.update(finish_order)
+        for r in race["results"]:
+            season_points[season][r["driver"]] += r["points"]
+
+    if w_grid is None:
+        if not dev_records:
+            raise ValueError(f"nenhuma corrida em {dev_season} para "
+                             "seleção de w (período de desenvolvimento vazio)")
+        best_w, best_rps = w_candidates[0], float("inf")
+        for w in w_candidates:
+            losses = []
+            for rec in dev_records:
+                blended = blend_elos(rec["elos_model"], rec["elos_grid"], w)
+                p = position_probs(blended, n_sims,
+                                   _race_seed(sim_seed, rec["season"],
+                                              rec["round"], 10))
+                losses.append(rps([row.tolist() for row in p],
+                                  rec["actual_pos"].tolist()))
+            mean_rps = float(np.mean(losses))
+            if mean_rps < best_rps:
+                best_rps, best_w = mean_rps, w
+        w_grid = best_w
+    else:
+        best_rps = None
+
+    # Platt: ajusta no P(pódio) do blend VENCEDOR sobre as corridas de dev
+    dev_podium_p, dev_podium_y = [], []
+    for rec in dev_records:
+        blended = blend_elos(rec["elos_model"], rec["elos_grid"], w_grid)
+        p = position_probs(blended, n_sims,
+                           _race_seed(sim_seed, rec["season"], rec["round"], 11))
+        for i in range(rec["n"]):
+            dev_podium_p.append(float(p[i, :3].sum()))
+            dev_podium_y.append(int(rec["actual_pos"][i] < 3))
+    platt_a, platt_b = fit_platt(np.array(dev_podium_p), np.array(dev_podium_y))
+
+    # --- segunda passada: reconstrói o Elo do zero para avaliar 2ª metade
+    # (o estado do Elo em run_fase2 já avançou até o fim no loop acima;
+    # refazemos com um Elo NOVO para reproduzir o estado exatamente como
+    # estava ANTES de cada corrida da avaliação, sem custo extra de rede) --
+    elo2 = BacktestElo(k_base=k_base, k_rookie=k_rookie)
+    season_points2: dict[int, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+    per_race: list[dict] = []
+    podium_raw_pairs: list[tuple[float, int]] = []
+    podium_cal_pairs: list[tuple[float, int]] = []
+    h2h_hits = h2h_total = 0
+    null_race_perm_rps: list[list[float]] = []
+
+    for race in races:
+        season, round_ = race["season"], race["round"]
+        results = race["results"]
+        n = len(results)
+        if n < 2:
+            continue
+        names = [r["driver"] for r in results]
+        actual_pos = np.array([r["position"] - 1 for r in results])
+        dnf_mask = np.array([bool(r["dnf"]) for r in results])
+        is_eval = season >= eval_start_season
+
+        if is_eval:
+            elos_model = np.array([elo2.rating(nm) for nm in names])
+            elos_grid = _grid_elos(results, n)
+            elos_blend = blend_elos(elos_model, elos_grid, w_grid)
+            table = (season_points2[season] if season_points2[season]
+                     else season_points2[season - 1])
+            elos_standings = _standings_elos(results, table, n)
+
+            probs = {
+                "blend": position_probs(elos_blend, n_sims,
+                                        _race_seed(sim_seed, season, round_, 20)),
+                "elo_puro": position_probs(elos_model, n_sims,
+                                          _race_seed(sim_seed, season, round_, 21)),
+                "grid": position_probs(elos_grid, n_sims,
+                                       _race_seed(sim_seed, season, round_, 22)),
+                "standings": position_probs(elos_standings, n_sims,
+                                            _race_seed(sim_seed, season, round_, 23)),
+            }
+            outcomes = actual_pos.tolist()
+            rec = {"season": season, "round": round_, "name": race["name"],
+                  "n_drivers": n, "n_dnf": int(dnf_mask.sum())}
+            for key, p in probs.items():
+                rec[f"rps_{key}"] = rps([row.tolist() for row in p], outcomes)
+
+            for i in range(n):
+                p_raw = float(probs["blend"][i, :3].sum())
+                p_cal = float(apply_platt(np.array([p_raw]), platt_a, platt_b)[0])
+                y = int(actual_pos[i] < 3)
+                podium_raw_pairs.append((p_raw, y))
+                podium_cal_pairs.append((p_cal, y))
+
+            teams: dict[str, list[int]] = defaultdict(list)
+            for i, r in enumerate(results):
+                teams[r["constructor"]].append(i)
+            for idx in teams.values():
+                if len(idx) == 2 and not dnf_mask[idx].any():
+                    a_i, b_i = idx
+                    ra, rb = elos_blend[a_i], elos_blend[b_i]
+                    if ra == rb:
+                        continue
+                    pred_a = ra > rb
+                    real_a = actual_pos[a_i] < actual_pos[b_i]
+                    h2h_hits += int(pred_a == real_a)
+                    h2h_total += 1
+
+            rng = np.random.default_rng(_race_seed(sim_seed, season, round_, 24))
+            cost = _rps_cost_matrix(probs["blend"])
+            null_race_perm_rps.append(
+                [float(cost[rng.permutation(n), actual_pos].mean())
+                 for _ in range(null_samples)])
+            per_race.append(rec)
+
+        finish_order = [r["driver"] for r in results if not r["dnf"]]
+        elo2.update(finish_order)
+        for r in results:
+            season_points2[season][r["driver"]] += r["points"]
+
+    if not per_race:
+        raise ValueError(f"nenhuma corrida a partir de {eval_start_season} "
+                         "para avaliação")
+
+    agg = {}
+    for key in ("rps_blend", "rps_elo_puro", "rps_grid", "rps_standings"):
+        agg[key] = float(np.mean([r[key] for r in per_race]))
+
+    dm = {}
+    losses_blend = [r["rps_blend"] for r in per_race]
+    for base in ("elo_puro", "grid", "standings"):
+        stat, p = diebold_mariano(losses_blend,
+                                  [r[f"rps_{base}"] for r in per_race], h=1)
+        dm[f"blend_vs_{base}"] = {"dm": stat, "p": p,
+                                  "blend_melhor": bool(stat < 0)}
+
+    null_matrix = np.array(null_race_perm_rps)
+    null_dist = sorted(null_matrix.mean(axis=0).tolist())
+    nullref = {"observed": agg["rps_blend"],
+              "null_mean": float(np.mean(null_dist)),
+              "null_p5": float(np.percentile(null_dist, 5)),
+              "tail_p": tail_probability(agg["rps_blend"], null_dist, side="lower"),
+              "percentile": percentile_of(agg["rps_blend"], null_dist),
+              "n_samples": len(null_dist)}
+
+    podium = {
+        "brier_raw": float(np.mean([(p - y) ** 2 for p, y in podium_raw_pairs])),
+        "brier_calibrated": float(np.mean([(p - y) ** 2 for p, y in podium_cal_pairs])),
+        "calibration_raw": calibration_table(
+            [p for p, _ in podium_raw_pairs], [y for _, y in podium_raw_pairs]),
+        "calibration_calibrated": calibration_table(
+            [p for p, _ in podium_cal_pairs], [y for _, y in podium_cal_pairs]),
+    }
+
+    h2h = {"n": h2h_total, "hits": h2h_hits,
+          "acc": h2h_hits / h2h_total if h2h_total else float("nan")}
+    h2h["wilson95"] = _wilson(h2h_hits, h2h_total) if h2h_total else None
+
+    return {"n_eval": len(per_race), "per_race": per_race, "aggregate": agg,
+            "dm": dm, "nullref": nullref, "podium": podium,
+            "h2h_teammates": h2h,
+            "w_grid": w_grid, "w_dev_rps": best_rps,
+            "platt": {"a": platt_a, "b": platt_b},
+            "final_ratings": {k: round(v, 2) for k, v in elo2.ratings.items()},
+            "params": {"n_sims": n_sims, "sim_seed": sim_seed,
+                      "burn_in_season": burn_in_season,
+                      "dev_season": dev_season,
+                      "eval_start_season": eval_start_season,
+                      "k_base": k_base, "k_rookie": k_rookie,
+                      "null_samples": null_samples}}
+
+
+def verdict_h3(result: dict, alpha: float = 0.05) -> dict:
+    """H3-F1b: o blend Elo+grid (peso escolhido SÓ no dev/2023) tem RPS
+    menor que o Elo PURO no período de avaliação cego, DM p<alpha."""
+    dm = result["dm"]["blend_vs_elo_puro"]
+    verdict = "COMPROVADA" if (dm["blend_melhor"] and dm["p"] < alpha) else "REFUTADA"
+    return {"verdict": verdict, "dm": dm, "w_grid": result["w_grid"]}
+
+
+def verdict_h4(result: dict) -> dict:
+    """H4-F1b: a calibração de Platt (ajustada em 2023) reduz o Brier
+    binário do P(pódio) no período de avaliação cego frente ao valor cru."""
+    pod = result["podium"]
+    melhora = pod["brier_calibrated"] < pod["brier_raw"]
+    return {"verdict": "COMPROVADA" if melhora else "REFUTADA",
+           "brier_raw": pod["brier_raw"],
+           "brier_calibrated": pod["brier_calibrated"]}
+
+
+def synthetic_races_h3(informative: bool, seed: int = 7) -> list[dict]:
+    """Cenários canônicos do harness de H3 (grid como feature).
+    `informative=True`: choque de "forma do dia" (form_scale=60)
+    compartilhado entre quali e largada — o grid CARREGA informação que
+    o Elo estático não vê (sensibilidade: o critério tem que confirmar).
+    `informative=False`: mesmo choque de forma, mas grid embaralhado
+    independente do skill — sem informação incremental nenhuma
+    (especificidade: o critério NÃO pode confirmar)."""
+    return synthetic_races(informative=True, grid_random=not informative,
+                           form_scale=60.0, seed=seed)
+
+
+def evaluate_grid_feature_pipeline(races: list[dict], *, n_sims: int = 2000,
+                                   null_samples: int = 200) -> dict:
+    """Pipeline completo da Fase 2 (dev→seleção de w→blend→critério H3)
+    como função série→veredito — contrato do harness do core. Roda a
+    seleção de w de verdade (não fixa) para validar a MECÂNICA completa,
+    não só a lógica do veredito."""
+    result = run_fase2(races, n_sims=n_sims, null_samples=null_samples,
+                       dev_season=2023, eval_start_season=2024)
+    return verdict_h3(result)

@@ -1,11 +1,14 @@
 # f1-predictor
 
-> **Status: Fase 1 — backtestado (2026-07-12).** Backtest prequential
-> ordinal sobre 101 corridas reais (2022–2026): **H1 REFUTADA** — o Elo
-> puro NÃO bate o grid de largada no RPS (0.1410 vs 0.1303, DM p=0.00003);
-> **H2 COMPROVADA** — H2H entre companheiros acerta 62.6% (IC95 fora do
-> zero). **NO-GO para apostas**; ver `docs/RELATORIO_FASE1.md`.
-> Não é ferramenta de investimento.
+> **Status: Fase 2 concluída, Fase 3 construída e GATED (2026-07-12).**
+> Fase 1: **H1 REFUTADA** (Elo puro não bate o grid, RPS 0.1410 vs 0.1303).
+> Fase 2: **H3-F1b COMPROVADA** — Elo+grid (blend) bate o Elo puro
+> (RPS 0.1281 vs 0.1416); **H4-F1b COMPROVADA** — Platt reduz o Brier do
+> pódio (0.093→0.078, com ressalva de sobreconfiança nos extremos). Fase 3:
+> operação (Kelly, bet_log, odds) construída mas **NO-GO** — o gate lê
+> H1-F1 (ainda refutada), nenhuma aposta real sai daqui. The Odds API foi
+> sondada e **não cobre F1**. Ver `docs/RELATORIO_FASE1.md` e
+> `docs/RELATORIO_FASE2.md`. Não é ferramenta de investimento.
 
 Laboratório de previsão de corridas de **Fórmula 1** (vencedor, pódio, top6
 e head-to-head), oitavo consumidor do ecossistema `predictor_core` — e o
@@ -43,9 +46,19 @@ FINAL de 2025: Norris campeão → 1750, linear até 1350; Lindblad (novato) →
 .venv\Scripts\python.exe -m src.predict --circuit Monza --market podium
 .venv\Scripts\python.exe -m src.predict --head-to-head Verstappen Hamilton --circuit Monaco --json
 
+# pós-quali (Fase 2): grid como feature (blend Elo+grid, w vivido)
+.venv\Scripts\python.exe -m src.predict --circuit Hungaroring --grid Norris:1 Verstappen:2 ...
+
 # Fase 1: histórico + backtest (governança: harness → trials → resultados)
 .venv\Scripts\python.exe scripts/build_db.py       # Jolpica → data/f1.db
 .venv\Scripts\python.exe scripts/run_backtest.py   # atesta, pré-registra, roda
+
+# Fase 2: grid como feature + calibração Platt (N+1)
+.venv\Scripts\python.exe scripts/run_fase2.py
+
+# Fase 3: operação (GATED — leia antes de usar)
+.venv\Scripts\python.exe -m src.operate --status
+.venv\Scripts\python.exe -m src.operate --paper-bet --h2h Verstappen Hamilton --circuit Monza --odds 1.80
 
 # Testes e CI
 .venv\Scripts\python.exe -m pytest tests/ -v
@@ -53,8 +66,10 @@ FINAL de 2025: Norris campeão → 1750, linear até 1350; Lindblad (novato) →
 ```
 
 O serving usa o **Elo VIVIDO** do backtest quando `data/ratings.json`
-existe (Verstappen 1696 no topo, não a semente 2025); sem ele, cai na
-semente declarada da Fase 0.
+existe (Verstappen no topo, não a semente 2025); sem ele, cai na semente
+declarada da Fase 0. Com `--grid`, usa o **blend Elo+grid** vivido
+(`data/fase2_params.json`) — sem esse arquivo, ou se o veredito tivesse
+sido refutado, cai automaticamente no Elo puro.
 
 Toda previsão é carimbada com `PredictionPoint` (matures_at = largada + 2h30;
 para o ranking completo o `value` é a ORDENAÇÃO — o formato que o RPS
@@ -67,20 +82,26 @@ emitida na telemetria (domínio `f1`).
 config.yaml                 # sport, season, K base/novato, n_sims/seed
 src/
   config.py                 # loaders + resolve_driver/resolve_circuit
-  model.py                  # F1EloModel (race/h2h/update_ratings)
+  model.py                  # F1EloModel (race/h2h/update_ratings/grid-blend)
   predict.py                # CLI de serving + PredictionPoint + telemetria
-  backtest.py               # prequential ordinal: RPS/nullref/DM + harness
+  backtest.py               # prequential ordinal: RPS/nullref/DM + blend + Platt + harness
+  betting.py                 # Kelly, gate de GO, bet_log append-only, settle
+  operate.py                 # CLI de operação (GATED)
   data/f1_provider.py       # cliente Jolpica (cache imutável, rate limit)
   data/db.py                # SQLite races/results (WAL, leitura read-only)
+  data/odds_provider.py     # cliente The Odds API (sondado: sem F1)
 data/drivers_f1.json        # grid 2026 real (22/11) com Elo semente
 data/circuits_f1.json       # calendário 2026 real + características (metadados)
 data/trials.json            # tentativas PRÉ-REGISTRADAS (versionado!)
-data/backtest_fase1.json    # resultado completo do backtest (versionado)
+data/backtest_fase1.json    # resultado completo do backtest Fase 1 (versionado)
+data/backtest_fase2.json    # resultado completo do backtest Fase 2 (versionado)
 scripts/build_db.py         # Jolpica → data/raw/ → data/f1.db
-scripts/run_backtest.py     # harness → pré-registro → backtest → trials
+scripts/run_backtest.py     # Fase 1: harness → pré-registro → backtest → trials
+scripts/run_fase2.py        # Fase 2: idem, para H3-F1b/H4-F1b
 scripts/ci_check.py         # 3 barreiras: pytest, .ps1 ASCII, parse+smoke
 docs/RELATORIO_FASE1.md     # RPS vs baselines, estratos, vereditos
-tests/                      # 50 testes
+docs/RELATORIO_FASE2.md     # blend, calibração, sondagem de odds, gate
+tests/                      # 79 testes
 vendor/predictor_core/      # v1.1.0 via sync_core (NÃO editar à mão)
 ```
 
@@ -90,5 +111,6 @@ vendor/predictor_core/      # v1.1.0 via sync_core (NÃO editar à mão)
 |---|---|---|
 | 0 | Esqueleto: Elo ordinal, serving (race/h2h), CI | ✅ |
 | 1 | Histórico via Jolpica + backtest prequential ordinal (RPS + nullref) | ✅ H1 refutada, H2 comprovada |
-| 2 | Extensões: **grid de largada como feature** (alvo nº 1 do relatório), DNF/confiabilidade, calibração Platt | ⏳ (cada uma = N+1) |
-| 3 | Operação: odds, bet_log, settle | 🔒 (NO-GO — sem edge sobre o grid) |
+| 2 | Grid de largada como feature (blend), calibração Platt | ✅ H3-F1b e H4-F1b comprovadas |
+| 3 | Operação: Kelly, bet_log, settle, odds | ✅ construída — 🔒 **NO-GO** (gate lê H1-F1, ainda refutada) |
+| 4 | DNF/confiabilidade por equipe como feature (próxima N+1 natural) | ⏳ |

@@ -1,0 +1,817 @@
+{
+  "n_eval": 57,
+  "per_race": [
+    {
+      "season": 2024,
+      "round": 1,
+      "name": "Bahrain Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 10,
+      "rps_blend": 0.1001209140526316,
+      "rps_elo_puro": 0.10564399168421053,
+      "rps_grid": 0.1029927374736842,
+      "rps_standings": 0.11342092231578946
+    },
+    {
+      "season": 2024,
+      "round": 2,
+      "name": "Saudi Arabian Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 8,
+      "rps_blend": 0.10567808494736841,
+      "rps_elo_puro": 0.1099403275263158,
+      "rps_grid": 0.11061581300000001,
+      "rps_standings": 0.10165743036842105
+    },
+    {
+      "season": 2024,
+      "round": 3,
+      "name": "Australian Grand Prix",
+      "n_drivers": 19,
+      "n_dnf": 10,
+      "rps_blend": 0.17501705742690057,
+      "rps_elo_puro": 0.20133845134502923,
+      "rps_grid": 0.15370565467836256,
+      "rps_standings": 0.1626771287134503
+    },
+    {
+      "season": 2024,
+      "round": 4,
+      "name": "Japanese Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 11,
+      "rps_blend": 0.10128817636842107,
+      "rps_elo_puro": 0.10422756526315793,
+      "rps_grid": 0.10556380836842105,
+      "rps_standings": 0.08911380989473686
+    },
+    {
+      "season": 2024,
+      "round": 5,
+      "name": "Chinese Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 3,
+      "rps_blend": 0.10216546794736843,
+      "rps_elo_puro": 0.09840908326315789,
+      "rps_grid": 0.11681778989473682,
+      "rps_standings": 0.1025613714736842
+    },
+    {
+      "season": 2024,
+      "round": 6,
+      "name": "Miami Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 1,
+      "rps_blend": 0.10568877057894736,
+      "rps_elo_puro": 0.10614515636842103,
+      "rps_grid": 0.11288195973684209,
+      "rps_standings": 0.1096367597894737
+    },
+    {
+      "season": 2024,
+      "round": 7,
+      "name": "Emilia Romagna Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 11,
+      "rps_blend": 0.1048597424210526,
+      "rps_elo_puro": 0.12194653699999998,
+      "rps_grid": 0.10198579726315789,
+      "rps_standings": 0.10588725863157893
+    },
+    {
+      "season": 2024,
+      "round": 8,
+      "name": "Monaco Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 13,
+      "rps_blend": 0.11350473599999997,
+      "rps_elo_puro": 0.14442789236842107,
+      "rps_grid": 0.09451364215789473,
+      "rps_standings": 0.13959405926315788
+    },
+    {
+      "season": 2024,
+      "round": 9,
+      "name": "Canadian Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 6,
+      "rps_blend": 0.1484363782631579,
+      "rps_elo_puro": 0.17619652347368425,
+      "rps_grid": 0.13382287110526317,
+      "rps_standings": 0.17101987926315787
+    },
+    {
+      "season": 2024,
+      "round": 10,
+      "name": "Spanish Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 9,
+      "rps_blend": 0.09328961752631577,
+      "rps_elo_puro": 0.10227390694736842,
+      "rps_grid": 0.0942735185263158,
+      "rps_standings": 0.11074062236842105
+    },
+    {
+      "season": 2024,
+      "round": 11,
+      "name": "Austrian Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 8,
+      "rps_blend": 0.14233332178947367,
+      "rps_elo_puro": 0.1622515405789474,
+      "rps_grid": 0.1273005144736842,
+      "rps_standings": 0.15322709268421053
+    },
+    {
+      "season": 2024,
+      "round": 12,
+      "name": "British Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 8,
+      "rps_blend": 0.14039199010526313,
+      "rps_elo_puro": 0.17431851284210526,
+      "rps_grid": 0.1231885717368421,
+      "rps_standings": 0.15743526747368425
+    },
+    {
+      "season": 2024,
+      "round": 13,
+      "name": "Hungarian Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 9,
+      "rps_blend": 0.10172109436842103,
+      "rps_elo_puro": 0.1129227712631579,
+      "rps_grid": 0.11011804063157896,
+      "rps_standings": 0.09840098594736842
+    },
+    {
+      "season": 2024,
+      "round": 14,
+      "name": "Belgian Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 2,
+      "rps_blend": 0.11288802389473682,
+      "rps_elo_puro": 0.11661162331578948,
+      "rps_grid": 0.11834404099999998,
+      "rps_standings": 0.12097838478947369
+    },
+    {
+      "season": 2024,
+      "round": 15,
+      "name": "Dutch Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 12,
+      "rps_blend": 0.09574674094736842,
+      "rps_elo_puro": 0.09491927357894737,
+      "rps_grid": 0.10737484873684211,
+      "rps_standings": 0.0965812317368421
+    },
+    {
+      "season": 2024,
+      "round": 16,
+      "name": "Italian Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 7,
+      "rps_blend": 0.1003526379473684,
+      "rps_elo_puro": 0.10932793294736842,
+      "rps_grid": 0.10308843842105264,
+      "rps_standings": 0.12444327694736843
+    },
+    {
+      "season": 2024,
+      "round": 17,
+      "name": "Azerbaijan Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 6,
+      "rps_blend": 0.15045006757894738,
+      "rps_elo_puro": 0.15165401900000003,
+      "rps_grid": 0.16401334878947368,
+      "rps_standings": 0.15994777942105262
+    },
+    {
+      "season": 2024,
+      "round": 18,
+      "name": "Singapore Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 13,
+      "rps_blend": 0.09770960073684211,
+      "rps_elo_puro": 0.10086726742105263,
+      "rps_grid": 0.11023938936842106,
+      "rps_standings": 0.10964981084210527
+    },
+    {
+      "season": 2024,
+      "round": 19,
+      "name": "United States Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 8,
+      "rps_blend": 0.12136696836842105,
+      "rps_elo_puro": 0.12584472594736842,
+      "rps_grid": 0.13426739494736842,
+      "rps_standings": 0.12813786473684213
+    },
+    {
+      "season": 2024,
+      "round": 20,
+      "name": "Mexico City Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 12,
+      "rps_blend": 0.1261090055263158,
+      "rps_elo_puro": 0.14337508547368422,
+      "rps_grid": 0.1288497320526316,
+      "rps_standings": 0.13663209368421053
+    },
+    {
+      "season": 2024,
+      "round": 21,
+      "name": "São Paulo Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 5,
+      "rps_blend": 0.13472194310526314,
+      "rps_elo_puro": 0.15306188863157894,
+      "rps_grid": 0.14685675610526314,
+      "rps_standings": 0.16883598047368426
+    },
+    {
+      "season": 2024,
+      "round": 22,
+      "name": "Las Vegas Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 4,
+      "rps_blend": 0.1174935342631579,
+      "rps_elo_puro": 0.12393584026315788,
+      "rps_grid": 0.13101930236842105,
+      "rps_standings": 0.11063124342105264
+    },
+    {
+      "season": 2024,
+      "round": 23,
+      "name": "Qatar Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 6,
+      "rps_blend": 0.13150470631578945,
+      "rps_elo_puro": 0.1591838568421053,
+      "rps_grid": 0.11279928715789474,
+      "rps_standings": 0.14646955457894734
+    },
+    {
+      "season": 2024,
+      "round": 24,
+      "name": "Abu Dhabi Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 10,
+      "rps_blend": 0.13711050889473686,
+      "rps_elo_puro": 0.14163919389473684,
+      "rps_grid": 0.15233588968421052,
+      "rps_standings": 0.11646330042105264
+    },
+    {
+      "season": 2025,
+      "round": 1,
+      "name": "Australian Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 6,
+      "rps_blend": 0.15541548915789477,
+      "rps_elo_puro": 0.17510456273684208,
+      "rps_grid": 0.15266728684210523,
+      "rps_standings": 0.14401349821052634
+    },
+    {
+      "season": 2025,
+      "round": 2,
+      "name": "Chinese Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 7,
+      "rps_blend": 0.15782382436842107,
+      "rps_elo_puro": 0.16871897415789475,
+      "rps_grid": 0.160384108,
+      "rps_standings": 0.12877958973684211
+    },
+    {
+      "season": 2025,
+      "round": 3,
+      "name": "Japanese Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 1,
+      "rps_blend": 0.10490093173684209,
+      "rps_elo_puro": 0.13015028821052627,
+      "rps_grid": 0.0916605962631579,
+      "rps_standings": 0.1348096262631579
+    },
+    {
+      "season": 2025,
+      "round": 4,
+      "name": "Bahrain Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 2,
+      "rps_blend": 0.1267071185263158,
+      "rps_elo_puro": 0.14363414736842103,
+      "rps_grid": 0.12348617463157896,
+      "rps_standings": 0.13207975494736843
+    },
+    {
+      "season": 2025,
+      "round": 5,
+      "name": "Saudi Arabian Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 6,
+      "rps_blend": 0.10838049436842105,
+      "rps_elo_puro": 0.10550379731578947,
+      "rps_grid": 0.120336508,
+      "rps_standings": 0.11953063726315787
+    },
+    {
+      "season": 2025,
+      "round": 6,
+      "name": "Miami Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 7,
+      "rps_blend": 0.11139960894736844,
+      "rps_elo_puro": 0.12819064215789475,
+      "rps_grid": 0.10600165415789471,
+      "rps_standings": 0.10628047757894736
+    },
+    {
+      "season": 2025,
+      "round": 7,
+      "name": "Emilia Romagna Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 2,
+      "rps_blend": 0.121113673,
+      "rps_elo_puro": 0.12886044078947367,
+      "rps_grid": 0.12670873852631578,
+      "rps_standings": 0.1357327847368421
+    },
+    {
+      "season": 2025,
+      "round": 8,
+      "name": "Monaco Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 15,
+      "rps_blend": 0.11856658694736844,
+      "rps_elo_puro": 0.12964277315789471,
+      "rps_grid": 0.12227171078947367,
+      "rps_standings": 0.13094168299999998
+    },
+    {
+      "season": 2025,
+      "round": 9,
+      "name": "Spanish Grand Prix",
+      "n_drivers": 19,
+      "n_dnf": 2,
+      "rps_blend": 0.13963219701754384,
+      "rps_elo_puro": 0.1534118912865497,
+      "rps_grid": 0.13727930619883044,
+      "rps_standings": 0.1556656619298246
+    },
+    {
+      "season": 2025,
+      "round": 10,
+      "name": "Canadian Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 12,
+      "rps_blend": 0.13113832336842104,
+      "rps_elo_puro": 0.14174592021052632,
+      "rps_grid": 0.1289931845263158,
+      "rps_standings": 0.15568663084210527
+    },
+    {
+      "season": 2025,
+      "round": 11,
+      "name": "Austrian Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 14,
+      "rps_blend": 0.14869091315789473,
+      "rps_elo_puro": 0.16947626026315793,
+      "rps_grid": 0.1342318077894737,
+      "rps_standings": 0.17090030999999997
+    },
+    {
+      "season": 2025,
+      "round": 12,
+      "name": "British Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 6,
+      "rps_blend": 0.15219021684210526,
+      "rps_elo_puro": 0.16429811457894736,
+      "rps_grid": 0.14683611263157897,
+      "rps_standings": 0.1417759457368421
+    },
+    {
+      "season": 2025,
+      "round": 13,
+      "name": "Belgian Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 1,
+      "rps_blend": 0.1225767194736842,
+      "rps_elo_puro": 0.1441280733157895,
+      "rps_grid": 0.12257982110526318,
+      "rps_standings": 0.1324707495789474
+    },
+    {
+      "season": 2025,
+      "round": 14,
+      "name": "Hungarian Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 11,
+      "rps_blend": 0.11570972805263158,
+      "rps_elo_puro": 0.1367604704210526,
+      "rps_grid": 0.10690160484210527,
+      "rps_standings": 0.13909004652631582
+    },
+    {
+      "season": 2025,
+      "round": 15,
+      "name": "Dutch Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 3,
+      "rps_blend": 0.20152038868421052,
+      "rps_elo_puro": 0.20811493021052635,
+      "rps_grid": 0.19815211810526315,
+      "rps_standings": 0.20066966357894733
+    },
+    {
+      "season": 2025,
+      "round": 16,
+      "name": "Italian Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 6,
+      "rps_blend": 0.11367265721052633,
+      "rps_elo_puro": 0.10969190626315788,
+      "rps_grid": 0.125984133,
+      "rps_standings": 0.1285950202631579
+    },
+    {
+      "season": 2025,
+      "round": 17,
+      "name": "Azerbaijan Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 3,
+      "rps_blend": 0.12819287494736845,
+      "rps_elo_puro": 0.157775894,
+      "rps_grid": 0.11387888084210526,
+      "rps_standings": 0.17800814863157893
+    },
+    {
+      "season": 2025,
+      "round": 18,
+      "name": "Singapore Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 11,
+      "rps_blend": 0.10254115794736844,
+      "rps_elo_puro": 0.10623225436842107,
+      "rps_grid": 0.11005571452631577,
+      "rps_standings": 0.1224596416842105
+    },
+    {
+      "season": 2025,
+      "round": 19,
+      "name": "United States Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 4,
+      "rps_blend": 0.1221263007368421,
+      "rps_elo_puro": 0.13132921057894736,
+      "rps_grid": 0.1196914175263158,
+      "rps_standings": 0.13107829710526314
+    },
+    {
+      "season": 2025,
+      "round": 20,
+      "name": "Mexico City Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 9,
+      "rps_blend": 0.1185474195263158,
+      "rps_elo_puro": 0.12678720542105265,
+      "rps_grid": 0.1196130675263158,
+      "rps_standings": 0.14808469905263158
+    },
+    {
+      "season": 2025,
+      "round": 21,
+      "name": "São Paulo Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 3,
+      "rps_blend": 0.1431876706842105,
+      "rps_elo_puro": 0.16271140057894734,
+      "rps_grid": 0.1414325505263158,
+      "rps_standings": 0.14265226526315788
+    },
+    {
+      "season": 2025,
+      "round": 22,
+      "name": "Las Vegas Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 7,
+      "rps_blend": 0.1731107901578947,
+      "rps_elo_puro": 0.16893842947368418,
+      "rps_grid": 0.18779157431578947,
+      "rps_standings": 0.17270708542105268
+    },
+    {
+      "season": 2025,
+      "round": 23,
+      "name": "Qatar Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 7,
+      "rps_blend": 0.12118329042105262,
+      "rps_elo_puro": 0.12059111952631578,
+      "rps_grid": 0.1358684514736842,
+      "rps_standings": 0.14158668668421054
+    },
+    {
+      "season": 2025,
+      "round": 24,
+      "name": "Abu Dhabi Grand Prix",
+      "n_drivers": 20,
+      "n_dnf": 4,
+      "rps_blend": 0.11275260821052631,
+      "rps_elo_puro": 0.12160422442105263,
+      "rps_grid": 0.11711191347368419,
+      "rps_standings": 0.1339014593157895
+    },
+    {
+      "season": 2026,
+      "round": 1,
+      "name": "Australian Grand Prix",
+      "n_drivers": 22,
+      "n_dnf": 16,
+      "rps_blend": 0.14738290779220778,
+      "rps_elo_puro": 0.16129517034632038,
+      "rps_grid": 0.15675253272727271,
+      "rps_standings": 0.16227340558441558
+    },
+    {
+      "season": 2026,
+      "round": 2,
+      "name": "Chinese Grand Prix",
+      "n_drivers": 22,
+      "n_dnf": 14,
+      "rps_blend": 0.1679611647619048,
+      "rps_elo_puro": 0.2078744675324675,
+      "rps_grid": 0.13977732034632037,
+      "rps_standings": 0.13309434047619043
+    },
+    {
+      "season": 2026,
+      "round": 3,
+      "name": "Japanese Grand Prix",
+      "n_drivers": 22,
+      "n_dnf": 5,
+      "rps_blend": 0.1078587806060606,
+      "rps_elo_puro": 0.1383548454978355,
+      "rps_grid": 0.0968054193939394,
+      "rps_standings": 0.12162282155844156
+    },
+    {
+      "season": 2026,
+      "round": 4,
+      "name": "Miami Grand Prix",
+      "n_drivers": 22,
+      "n_dnf": 12,
+      "rps_blend": 0.11706965164502167,
+      "rps_elo_puro": 0.12197553770562773,
+      "rps_grid": 0.12502157043290044,
+      "rps_standings": 0.13421242424242424
+    },
+    {
+      "season": 2026,
+      "round": 5,
+      "name": "Canadian Grand Prix",
+      "n_drivers": 22,
+      "n_dnf": 18,
+      "rps_blend": 0.17309532904761904,
+      "rps_elo_puro": 0.19418829913419913,
+      "rps_grid": 0.16248333982683985,
+      "rps_standings": 0.14415205393939393
+    },
+    {
+      "season": 2026,
+      "round": 6,
+      "name": "Monaco Grand Prix",
+      "n_drivers": 22,
+      "n_dnf": 7,
+      "rps_blend": 0.18851155116883114,
+      "rps_elo_puro": 0.22248018948051948,
+      "rps_grid": 0.16294973415584416,
+      "rps_standings": 0.1821085502164502
+    },
+    {
+      "season": 2026,
+      "round": 7,
+      "name": "Barcelona Grand Prix",
+      "n_drivers": 22,
+      "n_dnf": 17,
+      "rps_blend": 0.1253069176190476,
+      "rps_elo_puro": 0.14244539497835496,
+      "rps_grid": 0.12175670471861472,
+      "rps_standings": 0.12658165216450215
+    },
+    {
+      "season": 2026,
+      "round": 8,
+      "name": "Austrian Grand Prix",
+      "n_drivers": 22,
+      "n_dnf": 14,
+      "rps_blend": 0.10909013424242424,
+      "rps_elo_puro": 0.1330991955844156,
+      "rps_grid": 0.09436339865800868,
+      "rps_standings": 0.10371769770562772
+    },
+    {
+      "season": 2026,
+      "round": 9,
+      "name": "British Grand Prix",
+      "n_drivers": 22,
+      "n_dnf": 6,
+      "rps_blend": 0.15286606809523814,
+      "rps_elo_puro": 0.17379438536796535,
+      "rps_grid": 0.1416338180952381,
+      "rps_standings": 0.14299589493506493
+    }
+  ],
+  "aggregate": {
+    "rps_blend": 0.12807320312006756,
+    "rps_elo_puro": 0.14156795409965506,
+    "rps_grid": 0.12716546353777586,
+    "rps_standings": 0.13530530374409042
+  },
+  "dm": {
+    "blend_vs_elo_puro": {
+      "dm": -9.339742256901337,
+      "p": 5.118604453107774e-13,
+      "blend_melhor": true
+    },
+    "blend_vs_grid": {
+      "dm": 0.5995976305182157,
+      "p": 0.5511928291438399,
+      "blend_melhor": false
+    },
+    "blend_vs_standings": {
+      "dm": -3.3692098055386768,
+      "p": 0.001370017917635527,
+      "blend_melhor": true
+    }
+  },
+  "nullref": {
+    "observed": 0.12807320312006756,
+    "null_mean": 0.20163639944900796,
+    "null_p5": 0.19647659255591124,
+    "tail_p": 0.0,
+    "percentile": 0.0,
+    "n_samples": 1000
+  },
+  "podium": {
+    "brier_raw": 0.09320082724913495,
+    "brier_calibrated": 0.07831258652126635,
+    "calibration_raw": [
+      {
+        "bin_lo": 0.0,
+        "bin_hi": 0.1,
+        "n": 561,
+        "mean_pred": 0.07154010695187166,
+        "obs_freq": 0.0071301247771836
+      },
+      {
+        "bin_lo": 0.1,
+        "bin_hi": 0.2,
+        "n": 263,
+        "mean_pred": 0.13666007604562738,
+        "obs_freq": 0.03802281368821293
+      },
+      {
+        "bin_lo": 0.2,
+        "bin_hi": 0.3,
+        "n": 221,
+        "mean_pred": 0.24842262443438914,
+        "obs_freq": 0.37104072398190047
+      },
+      {
+        "bin_lo": 0.3,
+        "bin_hi": 0.4,
+        "n": 80,
+        "mean_pred": 0.3328475,
+        "obs_freq": 0.6625
+      },
+      {
+        "bin_lo": 0.4,
+        "bin_hi": 0.5,
+        "n": 31,
+        "mean_pred": 0.4321032258064516,
+        "obs_freq": 0.7096774193548387
+      }
+    ],
+    "calibration_calibrated": [
+      {
+        "bin_lo": 0.0,
+        "bin_hi": 0.1,
+        "n": 783,
+        "mean_pred": 0.013121632152316555,
+        "obs_freq": 0.011494252873563218
+      },
+      {
+        "bin_lo": 0.1,
+        "bin_hi": 0.2,
+        "n": 53,
+        "mean_pred": 0.15102910935480762,
+        "obs_freq": 0.1509433962264151
+      },
+      {
+        "bin_lo": 0.2,
+        "bin_hi": 0.3,
+        "n": 64,
+        "mean_pred": 0.24743202724279123,
+        "obs_freq": 0.234375
+      },
+      {
+        "bin_lo": 0.3,
+        "bin_hi": 0.4,
+        "n": 47,
+        "mean_pred": 0.353694939218662,
+        "obs_freq": 0.44680851063829785
+      },
+      {
+        "bin_lo": 0.4,
+        "bin_hi": 0.5,
+        "n": 55,
+        "mean_pred": 0.4545915169367405,
+        "obs_freq": 0.36363636363636365
+      },
+      {
+        "bin_lo": 0.5,
+        "bin_hi": 0.6,
+        "n": 41,
+        "mean_pred": 0.5466242736144186,
+        "obs_freq": 0.5609756097560976
+      },
+      {
+        "bin_lo": 0.6,
+        "bin_hi": 0.7,
+        "n": 45,
+        "mean_pred": 0.6404859344852498,
+        "obs_freq": 0.6888888888888889
+      },
+      {
+        "bin_lo": 0.7,
+        "bin_hi": 0.8,
+        "n": 18,
+        "mean_pred": 0.7469547627821496,
+        "obs_freq": 0.6111111111111112
+      },
+      {
+        "bin_lo": 0.8,
+        "bin_hi": 0.9,
+        "n": 27,
+        "mean_pred": 0.8537361578116169,
+        "obs_freq": 0.5925925925925926
+      },
+      {
+        "bin_lo": 0.9,
+        "bin_hi": 1.0,
+        "n": 23,
+        "mean_pred": 0.9297981836868708,
+        "obs_freq": 0.7391304347826086
+      }
+    ]
+  },
+  "h2h_teammates": {
+    "n": 286,
+    "hits": 201,
+    "acc": 0.7027972027972028,
+    "wilson95": [
+      0.6474258246106123,
+      0.7527929724930885
+    ]
+  },
+  "w_grid": 0.5,
+  "w_dev_rps": 0.13235619674880383,
+  "platt": {
+    "a": 3.594254800237185,
+    "b": 3.4615454338661933
+  },
+  "params": {
+    "n_sims": 10000,
+    "sim_seed": 13,
+    "burn_in_season": 2022,
+    "dev_season": 2023,
+    "eval_start_season": 2024,
+    "k_base": 24.0,
+    "k_rookie": 40.0,
+    "null_samples": 1000
+  },
+  "verdicts": {
+    "H3-F1b": {
+      "verdict": "COMPROVADA",
+      "dm": {
+        "dm": -9.339742256901337,
+        "p": 5.118604453107774e-13,
+        "blend_melhor": true
+      },
+      "w_grid": 0.5
+    },
+    "H4-F1b": {
+      "verdict": "COMPROVADA",
+      "brier_raw": 0.09320082724913495,
+      "brier_calibrated": 0.07831258652126635
+    }
+  }
+}

@@ -1,5 +1,54 @@
 # HANDOFF.md — f1-predictor
 
+> ## 🏆 FASE 2+3 — GRID COMO FEATURE, CALIBRAÇÃO, OPERAÇÃO GATED (2026-07-12)
+>
+> **H3-F1b COMPROVADA: blend Elo+grid (w=0.5, escolhido no dev/2023) bate
+> o Elo puro na avaliação CEGA 2024-2026 (RPS 0.1281 vs 0.1416, DM −9.34,
+> p≈0) — quase empata com o próprio grid (0.1272). H4-F1b COMPROVADA:
+> Platt reduz o Brier do pódio (0.093→0.078), COM RESSALVA: sobrecorrige
+> os extremos (P90%+ previsto vira ~74% realizado — não confiar
+> literalmente em P(pódio)>85%). H2H entre companheiros sobe para 70.3%
+> com o blend (era 62.6% na Fase 1). Fase 3 (Kelly, bet_log, settle,
+> OddsProvider) construída e testada, mas o GATE continua NO-GO: ele lê
+> o veredito de H1-F1 (Elo vs grid puro), que segue REFUTADA — H3 mede
+> outra coisa (grid ajuda o Elo A SE MESMO, não estabelece edge sobre o
+> mercado). `record_bet(..., real=True)` levanta PermissionError.**
+>
+> Pendência da Fase 1 FECHADA: sondei `/v4/sports` da The Odds API com
+> chave real do usuário (autorização explícita, só leitura) — 57
+> esportes listados, **nenhum é F1/motorsport**. Não há fonte de odds
+> reais de F1 nessa API; a Fase 1b está encerrada por falta de fonte.
+>
+> Lições da Fase 2:
+> - **Harness de "grid como feature" precisa de um mecanismo de
+>   informação NOVA por corrida** (`form_scale` no gerador sintético: um
+>   choque de "forma do dia" compartilhado entre quali e largada) — sem
+>   isso, um grid que é só "outra amostra ruidosa da mesma força estática"
+>   NUNCA ajuda um Elo já convergido, e o harness confirma incorretamente
+>   REFUTADA mesmo com cenário pretensamente "informativo". Achado
+>   metodológico reaproveitável em qualquer domínio com feature "do dia"
+>   (odds de abertura, forma recente, clima).
+> - **w e Platt escolhidos SÓ no dev (2023)**, congelados para a avaliação
+>   cega (2024-2026) — mesmo Elo contínuo 2022→2026, só o hiperparâmetro
+>   fica confinado ao "treino". Testado: truncar a avaliação não muda w
+>   nem Platt.
+> - **Platt de 2 parâmetros tem um limite real**: corrige subconfiança no
+>   meio da distribuição mas sobrecorrige nos extremos — não dá para
+>   "consertar" os dois lados com só 2 graus de liberdade. Reportado
+>   com honestidade em vez de escondido (o Brier agregado melhorou, mas
+>   a tabela de calibração por faixa é que revela o efeito colateral).
+> - **Gate de operação lê a hipótese CERTA**: H1-F1 (Elo vs grid), não
+>   H3-F1b (Elo+grid vs Elo puro) — H3 comprovada não é edge de mercado,
+>   é só "o grid ajuda o modelo internamente". Ver [[gate-de-operacao]]
+>   se essa distinção precisar ser revisitada.
+> - Suíte: **79 verdes** (25 novos); CI 3/3. Relatório:
+>   `docs/RELATORIO_FASE2.md`.
+>
+> Próximo passo natural (Fase 4, N+1): DNF/confiabilidade por equipe como
+> feature — a Fase 1 já apontava DNF como maior fonte de erro residual do
+> Elo. Fase 3 (operação) segue construída e pronta, mas 🔒 NO-GO até H1
+> (ou uma hipótese de edge de mercado equivalente) ser comprovada.
+
 > ## 🏁 FASE 1 — BACKTEST ORDINAL (2026-07-12)
 >
 > **Backtest prequential rodado sobre 101 corridas reais (2022–2026 R9).

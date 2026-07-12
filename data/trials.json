@@ -40,5 +40,44 @@
       "2023-01-01",
       "2026-07-12"
     ]
+  },
+  {
+    "name": "H3-F1b-elo-grid-blend-vs-elo-puro",
+    "registered_at": "2026-07-12T17:34:03Z",
+    "params": {
+      "hipotese": "Elo+grid (peso escolhido SO no periodo de desenvolvimento 2023) tem RPS menor que o Elo PURO no periodo de avaliacao CEGO 2024-2026, DM p<0.05",
+      "modelo": "elo-grid-blend",
+      "semente_elo": 1400,
+      "burn_in": 2022,
+      "dev": 2023,
+      "avaliacao": "2024-2026",
+      "w_candidates": "0.0 a 1.0 passo 0.1, RPS minimo no dev",
+      "k_base": 24,
+      "k_rookie": 40,
+      "alpha": 0.05
+    },
+    "sharpe": null,
+    "notes": "RESULTADO: COMPROVADA — w=0.5, RPS blend 0.1281 vs elo puro 0.1416 (DM -9.340, p=0.0000); 57 corridas",
+    "test_period": [
+      "2024-01-01",
+      "2026-07-12"
+    ]
+  },
+  {
+    "name": "H4-F1b-platt-podium",
+    "registered_at": "2026-07-12T17:34:03Z",
+    "params": {
+      "hipotese": "Calibracao de Platt no P(podio) do blend (ajustada no dev 2023) reduz o Brier binario no periodo de avaliacao CEGO 2024-2026 frente ao valor cru",
+      "modelo": "platt-podium-blend",
+      "burn_in": 2022,
+      "dev": 2023,
+      "avaliacao": "2024-2026"
+    },
+    "sharpe": null,
+    "notes": "RESULTADO: COMPROVADA — Brier cru 0.0932 vs calibrado 0.0783",
+    "test_period": [
+      "2024-01-01",
+      "2026-07-12"
+    ]
   }
 ]
