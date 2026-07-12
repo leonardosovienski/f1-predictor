@@ -1,5 +1,63 @@
 # HANDOFF.md — f1-predictor
 
+> ## 🔬 FASE 4 — EMPRÉSTIMOS CROSS-ECOSSISTEMA (2026-07-12)
+>
+> **A pedido explícito: estudei brasileirao/cs/lol/nba/previsao-cripto/
+> wc-predictor-v2 e importei o que era genuinamente reaproveitável.**
+> Auditoria factual ANTES de codificar: de 7 itens pedidos, só 1 era
+> cópia direta (PrequentialEvaluator+bootstrap do brasileirão) e 1 já
+> estava feito (Plackett-Luce). Os outros 5 exigiram desenho novo — nada
+> pronto em lugar nenhum do ecossistema.
+>
+> **Vendor do core sincronizado manualmente** (v1.1.0→v1.3.0), ISOLADO a
+> este worktree via replicação da lógica do `sync_core.py` — rodar
+> `--write` de verdade tocaria os OUTROS consumidores e o checkout
+> principal do f1-predictor, fora do escopo desta sessão. Trouxe
+> `kernel/rating.py` (RatingBook), `testing/prequential.py` e
+> `measurement/calibration.py`.
+>
+> **H0-F1-formal COMPROVADA**: portei `GridBaselineEvaluator` e
+> `EloPlackettLuceEvaluator` (herdam de `PrequentialEvaluator` do core) +
+> bootstrap pareado (padrão exato do brasileirao-predictor) — reconfirma
+> a Fase 1 por caminho INDEPENDENTE: RPS grid 0.1304 vs Elo 0.1410,
+> bootstrap IC95 [-0.0153,-0.0061] inteiro negativo.
+>
+> **H5/H6/H7-F1c REFUTADAS** (contexto de circuito via `RatingBook` do
+> core por tipo power/downforce/balanced; Reliability via DNF rolling;
+> Pit Efficiency via duração rolling — a Jolpica TEM pit stops reais,
+> descoberta desta fase, `/pitstops.json`, corrigi dois formatos de
+> duração inconsistentes na ingestão). Mecanismo validado em harness
+> sintético (sensibilidade+especificidade corretas nos 3), mas sem sinal
+> suficiente no dado real — nenhuma entra no serving.
+>
+> **Lição metodológica que se repetiu 2x (H6 e H7)**: se a força nova
+> varia pelo MESMO canal que já determina a ordem de chegada
+> historicamente, o Elo aprende sozinho via as próprias atualizações
+> pareadas — só há valor incremental genuíno quando a informação é
+> PERSISTENTE mas o Elo ainda não convergiu na janela real (poucas
+> corridas), ou quando é informação "do dia" que o Elo (memória de
+> médias históricas) não pode ver de jeito nenhum. Corrigi os geradores
+> sintéticos duas vezes até isolar isso (skill FLAT + efeito
+> binário/persistente independente do canal que o Elo já vê).
+>
+> **Choque de volatilidade pós-patch** (CS/LoL): `VolatilityShock` (K
+> temporariamente multiplicado) plugado no `BacktestElo`. Validado SÓ em
+> sintético (RPS pós-salto cai de 0.1831→0.1801 com o choque disparado).
+> NÃO aplicado a dados reais — sem calendário de upgrades aerodinâmicos
+> por equipe, inventar datas violaria a regra de ouro do projeto.
+>
+> **Purge/embargo** (previsao-cripto): parâmetros opcionais no backtest
+> da Fase 4 — checagem de robustez no dado real mostra pesos IDÊNTICOS
+> com/sem gap na fronteira dev/eval.
+>
+> **Intensidade não-homogênea de DNF/SC** (wc-predictor-v2): **fora de
+> escopo, honestamente** — exige dado por VOLTA que a Jolpica não tem
+> (só classificação final + paradas agregadas). Precisaria de FastF1 ou
+> fonte equivalente; registrado como candidato de Fase 5+.
+>
+> Suíte: **106 verdes** (27 novos); CI 3/3. Relatório:
+> `docs/RELATORIO_FASE4.md`.
+
 > ## 🏆 FASE 2+3 — GRID COMO FEATURE, CALIBRAÇÃO, OPERAÇÃO GATED (2026-07-12)
 >
 > **H3-F1b COMPROVADA: blend Elo+grid (w=0.5, escolhido no dev/2023) bate

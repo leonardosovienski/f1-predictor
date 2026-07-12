@@ -39,10 +39,15 @@ from collections import defaultdict
 import numpy as np
 
 from .model import win_probability            # injeta vendor/ no sys.path
+from .context_factors import (CIRCUIT_TYPES, ContextRatingBook,
+                              PitEfficiencyTracker, ReliabilityTracker,
+                              VolatilityShock, circuit_type,
+                              match_circuit_metadata, race_pitstop_summary)
 
 from predictor_core.measurement.metrics import (brier, calibration_table,
                                                 diebold_mariano, log_loss, rps)
 from predictor_core.measurement.nullref import percentile_of, tail_probability
+from predictor_core.testing.prequential import PrequentialEvaluator
 
 _LN10_400 = math.log(10.0) / 400.0
 
@@ -84,17 +89,20 @@ class BacktestElo:
     do par, soma zero) — a equivalência é testada na suíte."""
 
     def __init__(self, k_base: float = 24.0, k_rookie: float = 40.0,
-                 seed_elo: float = SEED_ELO):
+                 seed_elo: float = SEED_ELO,
+                 shock: "VolatilityShock | None" = None):
         self.ratings: dict[str, float] = {}
         self.races_seen: dict[str, int] = defaultdict(int)
         self.k_base, self.k_rookie, self.seed_elo = k_base, k_rookie, seed_elo
+        self.shock = shock
 
     def rating(self, name: str) -> float:
         return self.ratings.get(name, self.seed_elo)
 
     def _k(self, name: str) -> float:
-        return (self.k_rookie if self.races_seen[name] < ROOKIE_RACES
+        base = (self.k_rookie if self.races_seen[name] < ROOKIE_RACES
                 else self.k_base)
+        return base * (self.shock.k_multiplier(name) if self.shock else 1.0)
 
     def update(self, finish_order: list[str]) -> None:
         """finish_order: pilotos CLASSIFICADOS, do 1º ao último."""
@@ -115,6 +123,8 @@ class BacktestElo:
         for m in finish_order:
             self.ratings[m] += delta[m]
             self.races_seen[m] += 1
+            if self.shock:
+                self.shock.tick(m)
 
 
 def _race_seed(base: int, season: int, round_: int, salt: int = 0) -> int:
@@ -734,3 +744,647 @@ def evaluate_grid_feature_pipeline(races: list[dict], *, n_sims: int = 2000,
     result = run_fase2(races, n_sims=n_sims, null_samples=null_samples,
                        dev_season=2023, eval_start_season=2024)
     return verdict_h3(result)
+
+
+# =====================================================================
+# FASE 4a — o grid de largada como PISO OFICIAL (H0), formalizado via
+# PrequentialEvaluator + bootstrap pareado (padrão do brasileirao-predictor)
+# =====================================================================
+#
+# A Fase 1 já mediu isso com um loop manual (run_backtest + Diebold-Mariano).
+# Aqui a MESMA pergunta é respondida por um caminho INDEPENDENTE: o motor
+# ABC do core (`predictor_core.testing.prequential.PrequentialEvaluator`)
+# controla o fatiamento temporal (anti-leakage por CONSTRUÇÃO, não por
+# disciplina) e o veredito usa bootstrap pareado (IC95 do delta de RPS por
+# corrida) em vez de só Diebold-Mariano — duas réguas, uma pergunta. Se os
+# dois caminhos concordam, a conclusão da Fase 1 fica mais dura de derrubar.
+
+def _build_h0_observations(races: list[dict]) -> list[dict]:
+    """Uma observação por corrida: `entries` (grid, visível ANTES da
+    largada) e `results` (posição final — o `target_key` que o
+    PrequentialEvaluator blinda de vazamento)."""
+    obs = []
+    for race in races:
+        results = race["results"]
+        if len(results) < 2:
+            continue
+        obs.append({
+            "season": race["season"], "round": race["round"],
+            "entries": [{"driver": r["driver"], "grid": r["grid"]}
+                       for r in results],
+            "results": [{"driver": r["driver"], "position": r["position"],
+                        "dnf": r["dnf"]} for r in results],
+        })
+    return obs
+
+
+class GridBaselineEvaluator(PrequentialEvaluator):
+    """H0 formal: grid de largada → escada 1750-1350 → Plackett-Luce.
+    MEMORYLESS por design (mesma disciplina do EloBaselineEvaluator do
+    brasileirao: H0 não tem parâmetro ajustado nos dados)."""
+
+    def __init__(self, *, n_sims: int = 5000, sim_seed: int = 13):
+        super().__init__(target_key="results")
+        self.n_sims, self.sim_seed = n_sims, sim_seed
+
+    def train_step(self, history: list) -> None:
+        pass   # sem estado — o grid de HOJE não depende do passado
+
+    def predict_step(self, features: dict) -> np.ndarray:
+        entries = features["entries"]
+        n = len(entries)
+        elos = _grid_elos([{"grid": e["grid"]} for e in entries], n)
+        return position_probs(elos, self.n_sims,
+                              _race_seed(self.sim_seed, features["season"],
+                                        features["round"], 90))
+
+
+class EloPlackettLuceEvaluator(PrequentialEvaluator):
+    """Elo puro (Fase 1) no contrato do PrequentialEvaluator do core.
+    `train_step` reconstrói o Elo do ZERO a cada chamada — determinístico
+    (mesma história → mesmos ratings), mesma disciplina do brasileirao."""
+
+    def __init__(self, *, k_base: float = 24.0, k_rookie: float = 40.0,
+                n_sims: int = 5000, sim_seed: int = 13):
+        super().__init__(target_key="results")
+        self.k_base, self.k_rookie = k_base, k_rookie
+        self.n_sims, self.sim_seed = n_sims, sim_seed
+        self.elo = BacktestElo(k_base=k_base, k_rookie=k_rookie)
+
+    def train_step(self, history: list) -> None:
+        self.elo = BacktestElo(k_base=self.k_base, k_rookie=self.k_rookie)
+        for obs in history:
+            finish_order = [r["driver"] for r in obs["results"] if not r["dnf"]]
+            self.elo.update(finish_order)
+
+    def predict_step(self, features: dict) -> np.ndarray:
+        names = [e["driver"] for e in features["entries"]]
+        elos = np.array([self.elo.rating(nm) for nm in names])
+        return position_probs(elos, self.n_sims,
+                              _race_seed(self.sim_seed, features["season"],
+                                        features["round"], 91))
+
+
+def paired_bootstrap_ci(delta: np.ndarray, *, n_boot: int = 2000,
+                        seed: int = 13) -> tuple:
+    """IC95 por bootstrap PAREADO do delta por corrida (mesmo padrão do
+    brasileirao-predictor: reamostra os ÍNDICES, preservando o pareamento
+    corrida-a-corrida entre os dois previsores)."""
+    rng = np.random.default_rng(seed)
+    n = delta.shape[0]
+    idx = rng.integers(0, n, size=(n_boot, n))
+    means = delta[idx].mean(axis=1)
+    return float(np.percentile(means, 2.5)), float(np.percentile(means, 97.5))
+
+
+def run_h0_formal(races: list[dict], *, burn_in_season: int = 2022,
+                  n_sims: int = 5000, sim_seed: int = 13,
+                  k_base: float = 24.0, k_rookie: float = 40.0,
+                  n_boot: int = 2000, boot_seed: int = 13) -> dict:
+    """Roda GridBaselineEvaluator e EloPlackettLuceEvaluator sobre a MESMA
+    lista de observações (pareamento garantido por construção — nenhum
+    join por índice pode divergir). `min_history` = nº de corridas do
+    burn-in, deixando 2022 fora da avaliação exatamente como na Fase 1."""
+    obs = _build_h0_observations(races)
+    min_history = sum(1 for o in obs if o["season"] <= burn_in_season)
+    if min_history >= len(obs):
+        raise ValueError("nenhuma corrida após o burn-in para avaliar H0")
+
+    grid_ev = GridBaselineEvaluator(n_sims=n_sims, sim_seed=sim_seed)
+    elo_ev = EloPlackettLuceEvaluator(k_base=k_base, k_rookie=k_rookie,
+                                      n_sims=n_sims, sim_seed=sim_seed)
+    grid_out = grid_ev.run(obs, min_history=min_history)
+    elo_out = elo_ev.run(obs, min_history=min_history)
+
+    rps_grid, rps_elo = [], []
+    for g, e in zip(grid_out, elo_out):
+        assert g["index"] == e["index"]
+        outcomes = [r["position"] - 1 for r in g["actual"]]
+        rps_grid.append(rps([row.tolist() for row in g["prediction"]], outcomes))
+        rps_elo.append(rps([row.tolist() for row in e["prediction"]], outcomes))
+
+    rps_grid_arr, rps_elo_arr = np.array(rps_grid), np.array(rps_elo)
+    delta = rps_grid_arr - rps_elo_arr    # negativo => grid (H0) melhor
+    ci = paired_bootstrap_ci(delta, n_boot=n_boot, seed=boot_seed)
+    dm_stat, dm_p = diebold_mariano(rps_grid_arr.tolist(), rps_elo_arr.tolist(), h=1)
+
+    return {"n_eval": len(rps_grid), "rps_grid_h0": float(rps_grid_arr.mean()),
+           "rps_elo": float(rps_elo_arr.mean()),
+           "delta_mean": float(delta.mean()), "bootstrap_ci95": list(ci),
+           "dm": {"dm": dm_stat, "p": dm_p}}
+
+
+def verdict_h0_formal(result: dict, alpha: float = 0.05) -> dict:
+    """H0-F1-formal: o grid de largada (H0) bate o Elo puro no RPS —
+    reafirma o achado da Fase 1 (H1-F1 REFUTADA) por um caminho
+    INDEPENDENTE (PrequentialEvaluator do core + bootstrap pareado, não
+    o loop manual + Diebold-Mariano da Fase 1). COMPROVADA aqui = grid
+    confirmado como piso oficial; CONSISTENTE com H1-F1 REFUTADA, não
+    contraditório — são a mesma verdade vista de dois instrumentos."""
+    ci_lo, ci_hi = result["bootstrap_ci95"]
+    grid_bootstrap = ci_hi < 0.0
+    grid_dm = result["dm"]["dm"] < 0.0 and result["dm"]["p"] < alpha
+    verdict = "COMPROVADA" if (grid_bootstrap and grid_dm) else "REFUTADA"
+    return {"verdict": verdict, "bootstrap_ci95": result["bootstrap_ci95"],
+           "dm": result["dm"]}
+
+
+# =====================================================================
+# FASE 4b/c — rating por CONTEXTO de circuito (CS/LoL: rating por mapa) +
+# decomposição de fatores (NBA: Four Factors) com dado REAL
+# =====================================================================
+#
+# Três adições sequenciais sobre o blend Elo+grid da Fase 2 (w_grid já
+# COMPROVADO, tratado aqui como FIXO — cada adição isola sua própria
+# contribuição marginal, comparada ao melhor blend do passo anterior):
+#
+#   H5-F1c: + bônus de contexto de circuito (RatingBook do core, um por
+#           tipo power/downforce/balanced — os metadados qualitativos já
+#           declarados em data/circuits_f1.json desde a Fase 0, nunca
+#           consumidos até aqui).
+#   H6-F1c: + penalidade de Reliability (taxa de DNF rolling por piloto).
+#   H7-F1c: + penalidade de Pit Efficiency (duração de pit stop rolling
+#           por equipe, z-score contra dispersão HISTÓRICA — nunca a da
+#           corrida corrente, que seria lookahead).
+#
+# w_ctx/w_rel/w_pit escolhidos por busca sequencial (greedy) SÓ no dev
+# (2023): fixa o anterior, varre o candidato seguinte. Frozen a partir de
+# 2024 — a mesma disciplina de w_grid na Fase 2.
+
+REL_SCALE = 200.0   # Elo penalizados por 100% de taxa de DNF, no teto w_rel=1
+PIT_SCALE = 30.0    # Elo penalizados por 1 desvio-padrão de lentidão de boxe, no teto w_pit=1
+
+
+def _fase4_bundle(race: dict, circuit_catalog: list, pitstops_this_race: list,
+                  elo: "BacktestElo", ctxbook: ContextRatingBook,
+                  reltrack: ReliabilityTracker,
+                  pittrack: PitEfficiencyTracker) -> dict | None:
+    """Extrai os componentes ANTES do update (previsão) para uma corrida:
+    Elo do modelo, Elo do grid, bônus de contexto, taxa de reliability e
+    z de pit efficiency — tudo lido do estado ATUAL dos trackers, nunca
+    do resultado desta própria corrida."""
+    results = race["results"]
+    n = len(results)
+    if n < 2:
+        return None
+    names = [r["driver"] for r in results]
+    meta = match_circuit_metadata(race["circuit"], circuit_catalog)
+    ctype = circuit_type(meta["power_sensitivity"], meta["downforce_sensitivity"]) if meta else None
+    pit_by_driver = race_pitstop_summary(pitstops_this_race)
+    return {
+        "season": race["season"], "round": race["round"], "n": n, "names": names,
+        "circuit_type": ctype,
+        "elos_model": np.array([elo.rating(nm) for nm in names]),
+        "elos_grid": _grid_elos(results, n),
+        "ctx_bonus": np.array([ctxbook.bonus(nm, ctype) if ctype else 0.0
+                              for nm in names]),
+        "rel_rate": np.array([reltrack.rate(nm) for nm in names]),
+        "pit_z": np.array([pittrack.z(r["constructor"]) for r in results]),
+        "actual_pos": np.array([r["position"] - 1 for r in results]),
+        "dnf": np.array([bool(r["dnf"]) for r in results]),
+        "constructor_durations": {
+            c: [pit_by_driver[r["driver_id"]] for r in results
+               if r["constructor"] == c and r["driver_id"] in pit_by_driver]
+            for c in {r["constructor"] for r in results}},
+    }
+
+
+def _fase4_advance_state(race: dict, elo: "BacktestElo",
+                         ctxbook: ContextRatingBook,
+                         reltrack: ReliabilityTracker,
+                         pittrack: PitEfficiencyTracker,
+                         bundle: dict, season_points: dict) -> None:
+    """Atualiza TODOS os trackers com o resultado real — sempre DEPOIS de
+    ler o bundle (previsão) da mesma corrida."""
+    results = race["results"]
+    finish_order = [r["driver"] for r in results if not r["dnf"]]
+    elo.update(finish_order)
+    if bundle["circuit_type"]:
+        ctxbook.update(bundle["circuit_type"], finish_order)
+    for r in results:
+        reltrack.update(r["driver"], bool(r["dnf"]))
+    for constructor, durs in bundle["constructor_durations"].items():
+        if durs:
+            pittrack.update(constructor, sum(durs) / len(durs))
+    for r in results:
+        season_points[race["season"]][r["driver"]] += r["points"]
+
+
+def _fase4_elo_adjusted(bundle: dict, w_grid: float, w_ctx: float,
+                        w_rel: float, w_pit: float) -> np.ndarray:
+    return (blend_elos(bundle["elos_model"], bundle["elos_grid"], w_grid)
+           + w_ctx * bundle["ctx_bonus"]
+           - w_rel * REL_SCALE * bundle["rel_rate"]
+           - w_pit * PIT_SCALE * bundle["pit_z"])
+
+
+def run_fase4(races: list[dict], pitstops_by_race: dict, circuit_catalog: list,
+             *, w_grid: float, n_sims: int = 8000, sim_seed: int = 13,
+             burn_in_season: int = 2022, dev_season: int = 2023,
+             eval_start_season: int = 2024, k_base: float = 24.0,
+             k_rookie: float = 40.0, null_samples: int = 500,
+             w_ctx: float | None = None, w_rel: float | None = None,
+             w_pit: float | None = None,
+             w_ctx_candidates: tuple = (0.0, 0.25, 0.5, 0.75, 1.0, 1.5),
+             w_rel_candidates: tuple = (0.0, 0.5, 1.0, 1.5, 2.0, 3.0),
+             w_pit_candidates: tuple = (0.0, 0.5, 1.0, 2.0, 3.0, 5.0),
+             rel_window: int = 12, pit_window: int = 10,
+             purge_races: int = 0, embargo_races: int = 0) -> dict:
+    """Passada prequential contínua com TRÊS fatores novos sobre o blend
+    Elo+grid da Fase 2 (`w_grid` FIXO — já comprovado, não re-buscado
+    aqui). Busca sequencial (greedy) de w_ctx→w_rel→w_pit no dev (2023);
+    congelados para a avaliação CEGA (2024+). `pitstops_by_race`:
+    {(season,round): [...]} de `db.load_pitstops_by_race`.
+
+    `purge_races`/`embargo_races` (previsao-cripto, López de Prado):
+    endurece a fronteira dev→avaliação contra correlação serial residual
+    (ex.: o MESMO circuito perto da virada de temporada). `purge_races`
+    descarta as ÚLTIMAS corridas do dev da BUSCA de peso; `embargo_races`
+    descarta as PRIMEIRAS corridas da avaliação das MÉTRICAS reportadas
+    (o Elo/trackers continuam atualizando por elas — só não contam no
+    RPS agregado). Robustez: comparar com e sem (0 = sem gap, o default
+    já usado nas Fases 2-4 originais)."""
+    elo = BacktestElo(k_base=k_base, k_rookie=k_rookie)
+    ctxbook = ContextRatingBook(default_rating=1400.0)
+    reltrack = ReliabilityTracker(window=rel_window)
+    pittrack = PitEfficiencyTracker(window=pit_window)
+    season_points: dict = defaultdict(lambda: defaultdict(float))
+    dev_records: list = []
+
+    for race in races:
+        bundle = _fase4_bundle(race, circuit_catalog,
+                               pitstops_by_race.get((race["season"], race["round"]), []),
+                               elo, ctxbook, reltrack, pittrack)
+        if bundle is None:
+            continue
+        if race["season"] == dev_season:
+            dev_records.append(bundle)
+        _fase4_advance_state(race, elo, ctxbook, reltrack, pittrack, bundle, season_points)
+
+    if not dev_records:
+        raise ValueError(f"nenhuma corrida em {dev_season} para seleção de pesos")
+    if purge_races >= len(dev_records):
+        raise ValueError(f"purge_races ({purge_races}) >= corridas de dev "
+                         f"({len(dev_records)}) — não sobraria nada para a busca de pesos")
+    dev_for_search = dev_records[:-purge_races] if purge_races > 0 else dev_records
+
+    def _dev_rps(wc: float, wr: float, wp: float) -> float:
+        losses = []
+        for rec in dev_for_search:
+            adj = _fase4_elo_adjusted(rec, w_grid, wc, wr, wp)
+            p = position_probs(adj, n_sims,
+                               _race_seed(sim_seed, rec["season"], rec["round"], 40))
+            losses.append(rps([row.tolist() for row in p], rec["actual_pos"].tolist()))
+        return float(np.mean(losses))
+
+    def _search(candidates: tuple, fixed: tuple, slot: int) -> tuple:
+        """Varre `candidates` no slot `slot` de (wc,wr,wp)=`fixed`, mantendo
+        os outros fixos. Retorna (melhor_w, melhor_rps)."""
+        best_w, best_v = 0.0, _dev_rps(*fixed)
+        for cand in candidates:
+            trial = list(fixed)
+            trial[slot] = cand
+            v = _dev_rps(*trial)
+            if v < best_v:
+                best_v, best_w = v, cand
+        return best_w, best_v
+
+    dev_rps_trace = {}
+    if w_ctx is None:
+        w_ctx, dev_rps_trace["ctx"] = _search(w_ctx_candidates, (0.0, 0.0, 0.0), 0)
+    if w_rel is None:
+        w_rel, dev_rps_trace["rel"] = _search(w_rel_candidates, (w_ctx, 0.0, 0.0), 1)
+    if w_pit is None:
+        w_pit, dev_rps_trace["pit"] = _search(w_pit_candidates, (w_ctx, w_rel, 0.0), 2)
+
+    # --- segunda passada: estado fresco, métricas SÓ na avaliação cega ---
+    elo2 = BacktestElo(k_base=k_base, k_rookie=k_rookie)
+    ctxbook2 = ContextRatingBook(default_rating=1400.0)
+    reltrack2 = ReliabilityTracker(window=rel_window)
+    pittrack2 = PitEfficiencyTracker(window=pit_window)
+    season_points2: dict = defaultdict(lambda: defaultdict(float))
+    per_race: list = []
+    null_race_perm_rps: list = []
+    eval_seen = 0
+
+    for race in races:
+        bundle = _fase4_bundle(race, circuit_catalog,
+                               pitstops_by_race.get((race["season"], race["round"]), []),
+                               elo2, ctxbook2, reltrack2, pittrack2)
+        if bundle is None:
+            continue
+        is_eval = race["season"] >= eval_start_season
+        if is_eval:
+            eval_seen += 1
+        embargoed = is_eval and eval_seen <= embargo_races
+        if is_eval and not embargoed:
+            variants = {
+                "elo_grid": _fase4_elo_adjusted(bundle, w_grid, 0.0, 0.0, 0.0),
+                "plus_ctx": _fase4_elo_adjusted(bundle, w_grid, w_ctx, 0.0, 0.0),
+                "plus_ctx_rel": _fase4_elo_adjusted(bundle, w_grid, w_ctx, w_rel, 0.0),
+                "full": _fase4_elo_adjusted(bundle, w_grid, w_ctx, w_rel, w_pit),
+            }
+            outcomes = bundle["actual_pos"].tolist()
+            rec = {"season": bundle["season"], "round": bundle["round"],
+                  "n_drivers": bundle["n"], "circuit_type": bundle["circuit_type"]}
+            probs_full = None
+            for key, elos in variants.items():
+                p = position_probs(elos, n_sims,
+                                   _race_seed(sim_seed, bundle["season"],
+                                             bundle["round"], 50))
+                rec[f"rps_{key}"] = rps([row.tolist() for row in p], outcomes)
+                if key == "full":
+                    probs_full = p
+            rng = np.random.default_rng(
+                _race_seed(sim_seed, bundle["season"], bundle["round"], 51))
+            cost = _rps_cost_matrix(probs_full)
+            null_race_perm_rps.append(
+                [float(cost[rng.permutation(bundle["n"]), bundle["actual_pos"]].mean())
+                 for _ in range(null_samples)])
+            per_race.append(rec)
+        _fase4_advance_state(race, elo2, ctxbook2, reltrack2, pittrack2, bundle, season_points2)
+
+    if not per_race:
+        raise ValueError(f"nenhuma corrida a partir de {eval_start_season} para avaliação")
+
+    agg = {k: float(np.mean([r[f"rps_{k}"] for r in per_race]))
+          for k in ("elo_grid", "plus_ctx", "plus_ctx_rel", "full")}
+    dm = {}
+    for a, b, tag in (("plus_ctx", "elo_grid", "h5"),
+                      ("plus_ctx_rel", "plus_ctx", "h6"),
+                      ("full", "plus_ctx_rel", "h7")):
+        stat, p = diebold_mariano([r[f"rps_{a}"] for r in per_race],
+                                  [r[f"rps_{b}"] for r in per_race], h=1)
+        dm[tag] = {"dm": stat, "p": p, "melhor": bool(stat < 0),
+                  "rps_a": agg[a], "rps_b": agg[b]}
+
+    null_matrix = np.array(null_race_perm_rps)
+    null_dist = sorted(null_matrix.mean(axis=0).tolist())
+    nullref = {"observed": agg["full"], "null_p5": float(np.percentile(null_dist, 5)),
+              "tail_p": tail_probability(agg["full"], null_dist, side="lower")}
+
+    return {"n_eval": len(per_race), "per_race": per_race, "aggregate": agg,
+           "dm": dm, "nullref": nullref,
+           "weights": {"w_grid": w_grid, "w_ctx": w_ctx, "w_rel": w_rel,
+                      "w_pit": w_pit},
+           "dev_rps": dev_rps_trace,
+           "params": {"n_sims": n_sims, "sim_seed": sim_seed,
+                     "burn_in_season": burn_in_season, "dev_season": dev_season,
+                     "eval_start_season": eval_start_season,
+                     "rel_scale": REL_SCALE, "pit_scale": PIT_SCALE,
+                     "rel_window": rel_window, "pit_window": pit_window}}
+
+
+def verdict_h5(result: dict, alpha: float = 0.05) -> dict:
+    """H5-F1c: bônus de contexto de circuito (RatingBook do core) bate o
+    blend Elo+grid puro no RPS, avaliação cega 2024+."""
+    d = result["dm"]["h5"]
+    return {"verdict": "COMPROVADA" if (d["melhor"] and d["p"] < alpha) else "REFUTADA",
+           "dm": d, "w_ctx": result["weights"]["w_ctx"]}
+
+
+def verdict_h6(result: dict, alpha: float = 0.05) -> dict:
+    """H6-F1c: penalidade de Reliability (DNF rolling) bate o blend
+    anterior (Elo+grid+contexto) no RPS, avaliação cega 2024+."""
+    d = result["dm"]["h6"]
+    return {"verdict": "COMPROVADA" if (d["melhor"] and d["p"] < alpha) else "REFUTADA",
+           "dm": d, "w_rel": result["weights"]["w_rel"]}
+
+
+def verdict_h7(result: dict, alpha: float = 0.05) -> dict:
+    """H7-F1c: penalidade de Pit Efficiency bate o blend anterior
+    (Elo+grid+contexto+reliability) no RPS, avaliação cega 2024+."""
+    d = result["dm"]["h7"]
+    return {"verdict": "COMPROVADA" if (d["melhor"] and d["p"] < alpha) else "REFUTADA",
+           "dm": d, "w_pit": result["weights"]["w_pit"]}
+
+
+# ---------- harness sintético (Fase 4b/c) ----------
+
+def synthetic_races_context(informative: bool, seed: int = 11) -> list[dict]:
+    """Cenário do harness de H5: cada piloto tem uma força-base MAIS uma
+    especialização por tipo de circuito ('circuit' = 'power'/'downforce'/
+    'balanced' direto, sem precisar de metadado — o teste usa o gerador
+    genérico do backtest.py com uma coluna extra). `informative=True`:
+    especialização REAL (correlacionada com o tipo, persistente entre
+    corridas do mesmo tipo). `informative=False`: sem especialização
+    (força única) — o contexto não pode ajudar."""
+    import numpy as _np
+    rng = _np.random.default_rng(seed)
+    n_drivers = 20
+    names = [f"Piloto{i:02d}" for i in range(n_drivers)]
+    base_elo = _np.linspace(1600, 1200, n_drivers)
+    spec = ({t: rng.uniform(-120, 120, n_drivers) for t in CIRCUIT_TYPES}
+           if informative else {t: _np.zeros(n_drivers) for t in CIRCUIT_TYPES})
+    races = []
+    for s in range(3):
+        season = 2022 + s
+        for rnd in range(1, 21):
+            ctype = CIRCUIT_TYPES[rnd % 3]
+            skill = (base_elo + spec[ctype]) * _LN10_400
+            order = _np.argsort(-(skill + rng.gumbel(size=n_drivers)))
+            quali = _np.argsort(-(skill + rng.gumbel(size=n_drivers)))
+            grid_of = _np.empty(n_drivers, dtype=int)
+            grid_of[quali] = _np.arange(1, n_drivers + 1)
+            results = []
+            for pos0, i in enumerate(order):
+                results.append({"driver": names[i], "driver_id": names[i].lower(),
+                                "constructor": f"Eq{i // 2}", "grid": int(grid_of[i]),
+                                "position": pos0 + 1, "status": "Finished",
+                                "dnf": 0, "points": float(max(0, 10 - pos0))})
+            races.append({"season": season, "round": rnd,
+                         "name": f"GP Sintético {season}-{rnd}",
+                         "circuit": f"synth-{ctype}", "date": f"{season}-01-01",
+                         "results": results})
+    return races
+
+
+_SYNTH_CONTEXT_CATALOG = [
+    {"name": "synth-power", "power_sensitivity": 0.9, "downforce_sensitivity": 0.2},
+    {"name": "synth-downforce", "power_sensitivity": 0.2, "downforce_sensitivity": 0.9},
+    {"name": "synth-balanced", "power_sensitivity": 0.5, "downforce_sensitivity": 0.5},
+]
+
+
+def evaluate_context_pipeline(races: list[dict], *, n_sims: int = 1500,
+                              null_samples: int = 100) -> dict:
+    """Pipeline completo de H5 (contexto de circuito) para o harness."""
+    result = run_fase4(races, pitstops_by_race={},
+                       circuit_catalog=_SYNTH_CONTEXT_CATALOG, w_grid=0.5,
+                       n_sims=n_sims, null_samples=null_samples,
+                       dev_season=2023, eval_start_season=2024,
+                       w_rel=0.0, w_pit=0.0)
+    return verdict_h5(result)
+
+
+def synthetic_races_reliability(informative: bool, seed: int = 17) -> list[dict]:
+    """Cenário do harness de H6: skill totalmente FLAT — se o skill
+    variasse na mesma direção da confiabilidade (como numa primeira
+    tentativa desta implementação), o Elo aprenderia o efeito de
+    qualquer jeito via as próprias perdas pareadas do DNF, mascarando a
+    incremental do fator explícito. Com skill flat, só a taxa de DNF
+    PERSISTENTE (independente do rank de força) pode explicar a
+    diferença de RPS. `informative=True`: metade dos pilotos quebra 50%
+    das vezes, a outra metade nunca quebra. `informative=False`: DNF
+    sorteado com a MESMA taxa para todos — a informação por piloto não
+    existe, não tem o que aprender."""
+    rng = np.random.default_rng(seed)
+    n_drivers = 20
+    names = [f"Piloto{i:02d}" for i in range(n_drivers)]
+    base_elo = np.full(n_drivers, 1400.0)
+    dnf_prob = (np.where(np.arange(n_drivers) % 2 == 0, 0.5, 0.0) if informative
+               else np.full(n_drivers, 0.25))
+    races = []
+    for s in range(3):
+        season = 2022 + s
+        for rnd in range(1, 21):
+            skill = base_elo * _LN10_400
+            order = np.argsort(-(skill + rng.gumbel(size=n_drivers)))
+            quali = np.argsort(-(skill + rng.gumbel(size=n_drivers)))
+            grid_of = np.empty(n_drivers, dtype=int)
+            grid_of[quali] = np.arange(1, n_drivers + 1)
+            dnfs = rng.uniform(size=n_drivers) < dnf_prob
+            # DNF vai para o fim do grupo (mesma convenção da Jolpica)
+            finishers = [i for i in order if not dnfs[i]]
+            retirees = [i for i in order if dnfs[i]]
+            final_order = finishers + retirees
+            results = []
+            for pos0, i in enumerate(final_order):
+                results.append({"driver": names[i], "driver_id": names[i].lower(),
+                                "constructor": f"Eq{i // 2}", "grid": int(grid_of[i]),
+                                "position": pos0 + 1,
+                                "status": "Finished" if i in finishers else "Accident",
+                                "dnf": bool(dnfs[i]),
+                                "points": float(max(0, 10 - pos0)) if not dnfs[i] else 0.0})
+            races.append({"season": season, "round": rnd,
+                         "name": f"GP Sintético {season}-{rnd}",
+                         "circuit": "synth-balanced", "date": f"{season}-01-01",
+                         "results": results})
+    return races
+
+
+def evaluate_reliability_pipeline(races: list[dict], *, n_sims: int = 1500,
+                                  null_samples: int = 100) -> dict:
+    """Pipeline completo de H6 (reliability) para o harness — isola o
+    fator fixando w_ctx=0 (sintético não tem contexto de circuito real)."""
+    result = run_fase4(races, pitstops_by_race={},
+                       circuit_catalog=_SYNTH_CONTEXT_CATALOG, w_grid=0.5,
+                       n_sims=n_sims, null_samples=null_samples,
+                       dev_season=2023, eval_start_season=2024,
+                       w_ctx=0.0, w_pit=0.0)
+    return verdict_h6(result)
+
+
+def synthetic_races_pitstops(informative: bool, seed: int = 23) -> list[dict]:
+    """Cenário do harness de H7: metade das equipes tem habilidade de
+    boxe MUITO maior (persistente, binária) — desloca a posição final E
+    gera durações de pit stop correlacionadas. Crucial: o QUALI (grid)
+    NÃO reflete a habilidade de boxe (ela só aparece DURANTE a corrida,
+    igual pit stop real) — senão o blend Elo+grid já capturaria o efeito
+    pela via do grid, mascarando a incremental do pit_z (mesma lição do
+    H6: se skill e o fator novo se moverem pelo MESMO canal que o Elo já
+    enxerga, o Elo aprende sozinho). `informative=False`: toda equipe
+    igual — durações sem relação com a posição final."""
+    rng = np.random.default_rng(seed)
+    n_drivers = 20
+    names = [f"Piloto{i:02d}" for i in range(n_drivers)]
+    n_teams = n_drivers // 2
+    team_pit_skill = (np.where(np.arange(n_teams) % 2 == 0, 500.0, 0.0)
+                      if informative else np.zeros(n_teams))
+    base_elo = np.full(n_drivers, 1400.0)
+    races, pitstops_by_race = [], {}
+    for s in range(3):
+        season = 2022 + s
+        for rnd in range(1, 21):
+            skill = (base_elo + np.repeat(team_pit_skill, 2)) * _LN10_400
+            order = np.argsort(-(skill + rng.gumbel(size=n_drivers)))
+            quali = np.argsort(-(base_elo * _LN10_400 + rng.gumbel(size=n_drivers)))
+            grid_of = np.empty(n_drivers, dtype=int)
+            grid_of[quali] = np.arange(1, n_drivers + 1)
+            results, pits = [], []
+            for pos0, i in enumerate(order):
+                team_idx = i // 2
+                dur = 25.0 - team_pit_skill[team_idx] / 20.0 + rng.normal(scale=1.0)
+                driver_id = names[i].lower()
+                pits.append({"driver_id": driver_id, "duration_s": max(10.0, dur)})
+                results.append({"driver": names[i], "driver_id": driver_id,
+                                "constructor": f"Eq{team_idx}", "grid": int(grid_of[i]),
+                                "position": pos0 + 1, "status": "Finished",
+                                "dnf": 0, "points": float(max(0, 10 - pos0))})
+            races.append({"season": season, "round": rnd,
+                         "name": f"GP Sintético {season}-{rnd}",
+                         "circuit": "synth-balanced", "date": f"{season}-01-01",
+                         "results": results})
+            pitstops_by_race[(season, rnd)] = pits
+    return races, pitstops_by_race
+
+
+def evaluate_pit_pipeline(races_and_pits: tuple, *, n_sims: int = 1500,
+                          null_samples: int = 100) -> dict:
+    """Pipeline completo de H7 (pit efficiency) para o harness — isola o
+    fator fixando w_ctx=w_rel=0."""
+    races, pitstops = races_and_pits
+    result = run_fase4(races, pitstops_by_race=pitstops,
+                       circuit_catalog=_SYNTH_CONTEXT_CATALOG, w_grid=0.5,
+                       n_sims=n_sims, null_samples=null_samples,
+                       dev_season=2023, eval_start_season=2024,
+                       w_ctx=0.0, w_rel=0.0)
+    return verdict_h7(result)
+
+
+# =====================================================================
+# FASE 4d — choque de volatilidade pós-patch (CS/LoL). MECANISMO
+# VALIDADO SÓ EM SINTÉTICO — sem calendário real de upgrades
+# aerodinâmicos, NÃO é acionado no backtest real nem no serving.
+# =====================================================================
+
+def synthetic_races_shock(seed: int = 31, n_drivers: int = 10,
+                          n_races: int = 40, jump_race: int = 20,
+                          jump_size: float = 300.0) -> tuple:
+    """Grid fixo, exceto UM piloto (o mais fraco) que recebe um salto de
+    força NO MEIO da série sintética — o análogo do pacote de upgrade
+    aerodinâmico que muda a força de uma equipe de um fim de semana para
+    o outro. Retorna (corridas, nome_do_piloto_que_recebe_o_salto,
+    índice_da_corrida_do_salto)."""
+    rng = np.random.default_rng(seed)
+    names = [f"Piloto{i:02d}" for i in range(n_drivers)]
+    base_elo = np.linspace(1500.0, 1300.0, n_drivers)
+    shocked = names[-1]
+    races = []
+    for rnd in range(1, n_races + 1):
+        elo_now = base_elo.copy()
+        if rnd >= jump_race:
+            elo_now[-1] += jump_size
+        skill = elo_now * _LN10_400
+        order = np.argsort(-(skill + rng.gumbel(size=n_drivers)))
+        results = [{"driver": names[i], "position": pos0 + 1}
+                  for pos0, i in enumerate(order)]
+        races.append({"round": rnd, "results": results})
+    return races, shocked, jump_race
+
+
+def evaluate_volatility_shock(*, trigger: bool, window: int = 10,
+                              shock_races: int = 8, shock_multiplier: float = 4.0,
+                              n_sims: int = 1500, seed: int = 31) -> float:
+    """RPS médio na JANELA logo após o salto de força — `trigger=True`
+    aciona `VolatilityShock` exatamente no piloto/corrida do salto (o
+    cenário real de uso: alguém decide, com informação externa — "essa
+    equipe trouxe upgrade nesta corrida" —, disparar o choque);
+    `trigger=False` é o Elo padrão, sem choque algum. RPS menor com
+    trigger=True demonstra que o mecanismo ajuda o Elo a reagir mais
+    rápido ao salto."""
+    races, shocked, jump = synthetic_races_shock(seed=seed)
+    shock = VolatilityShock() if trigger else None
+    elo = BacktestElo(shock=shock)
+    losses = []
+    for race in races:
+        names = [r["driver"] for r in race["results"]]
+        actual = [r["position"] - 1 for r in race["results"]]
+        elos = np.array([elo.rating(nm) for nm in names])
+        p = position_probs(elos, n_sims, _race_seed(seed, 2000, race["round"], 60))
+        if jump <= race["round"] < jump + window:
+            losses.append(rps([row.tolist() for row in p], actual))
+        if trigger and race["round"] == jump:
+            shock.trigger(shocked, races=shock_races, multiplier=shock_multiplier)
+        elo.update(names)
+    return float(np.mean(losses))

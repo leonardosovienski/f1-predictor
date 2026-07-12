@@ -2,13 +2,17 @@
 sempre read-only via URI mode=ro).
 
 Tabelas:
-  races   (season, round, name, circuit, date)            PK (season, round)
-  results (season, round, driver_id, driver, constructor,
-           grid, position, status, dnf, points)           PK (season, round, driver_id)
+  races     (season, round, name, circuit, date)          PK (season, round)
+  results   (season, round, driver_id, driver, constructor,
+             grid, position, status, dnf, points)          PK (season, round, driver_id)
+  pitstops  (season, round, driver_id, lap, stop, duration_s)
+                                                            PK (season, round, driver_id, stop)
 
 `build_db` ingere via provider (cache local primeiro — rede só no miss) e é
 idempotente: INSERT OR REPLACE por corrida. Corridas futuras (sem resultado)
-ficam só em `races`.
+ficam só em `races`. Pitstops é best-effort: cobertura da Jolpica para essa
+tabela é mais recente que a de `results` — corrida sem pitstop registrado
+simplesmente não aparece na tabela (não é erro).
 """
 import sqlite3
 from datetime import date
@@ -40,6 +44,15 @@ CREATE TABLE IF NOT EXISTS results (
     points      REAL    NOT NULL,
     PRIMARY KEY (season, round, driver_id)
 );
+CREATE TABLE IF NOT EXISTS pitstops (
+    season      INTEGER NOT NULL,
+    round       INTEGER NOT NULL,
+    driver_id   TEXT    NOT NULL,
+    lap         INTEGER NOT NULL,
+    stop        INTEGER NOT NULL,
+    duration_s  REAL    NOT NULL,
+    PRIMARY KEY (season, round, driver_id, stop)
+);
 """
 
 
@@ -59,7 +72,7 @@ def build_db(provider, seasons: list[int], path: Path | str | None = None) -> di
     p.parent.mkdir(parents=True, exist_ok=True)
     conn = connect(p, readonly=False)
     conn.executescript(_SCHEMA)
-    n_races = n_results = 0
+    n_races = n_results = n_pitstops = 0
     hoje = date.today().isoformat()
     try:
         for season in seasons:
@@ -80,10 +93,19 @@ def build_db(provider, seasons: list[int], path: Path | str | None = None) -> di
                          r["status"], int(r["dnf"]), r["points"]))
                 n_races += 1
                 n_results += len(rows)
+                if hasattr(provider, "fetch_pitstops"):
+                    pits = provider.fetch_pitstops(season, race["round"])
+                    for ps in pits:
+                        conn.execute(
+                            "INSERT OR REPLACE INTO pitstops VALUES (?,?,?,?,?,?)",
+                            (ps["season"], ps["round"], ps["driver_id"],
+                             ps["lap"], ps["stop"], ps["duration_s"]))
+                    n_pitstops += len(pits)
             conn.commit()
     finally:
         conn.close()
-    return {"races": n_races, "results": n_results, "path": str(p)}
+    return {"races": n_races, "results": n_results, "pitstops": n_pitstops,
+           "path": str(p)}
 
 
 def load_races_with_results(path: Path | str | None = None) -> list[dict]:
@@ -104,6 +126,23 @@ def load_races_with_results(path: Path | str | None = None) -> list[dict]:
                 "dnf, points FROM results WHERE season=? AND round=? "
                 "ORDER BY position", (rc["season"], rc["round"])).fetchall()
             out.append({**dict(rc), "results": [dict(r) for r in rows]})
+        return out
+    finally:
+        conn.close()
+
+
+def load_pitstops_by_race(path: Path | str | None = None) -> dict:
+    """{(season, round): [{driver_id, lap, stop, duration_s}, ...]} — chave
+    para juntar com `load_races_with_results` sem duplicar leitura."""
+    conn = connect(path)
+    try:
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            "SELECT season, round, driver_id, lap, stop, duration_s "
+            "FROM pitstops ORDER BY season, round, driver_id, stop").fetchall()
+        out: dict = {}
+        for r in rows:
+            out.setdefault((r["season"], r["round"]), []).append(dict(r))
         return out
     finally:
         conn.close()

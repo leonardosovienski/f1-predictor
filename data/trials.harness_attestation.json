@@ -1,6 +1,7 @@
 {
-  "passed_at": "2026-07-12T17:34:03+00:00",
+  "passed_at": "2026-07-12T18:19:08+00:00",
   "evaluate": "evaluate_grid_feature_pipeline",
   "edge_verdict": "COMPROVADA",
-  "note": "H3-F1b (grid como feature): choque de forma do dia compartilhado quali/largada -> grid informativo detectado; grid embaralhado (mesma forma) -> nao confirmado"
+  "note": "Fase 4: H0-formal, H5 (contexto), H6 (reliability) e H7 (pit) validados individualmente em harness próprio antes deste atestado consolidado",
+  "metric": ""
 }

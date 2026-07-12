@@ -24,6 +24,20 @@ _USER_AGENT = "f1-predictor/0.1 (research; github: pessoal)"
 _RATE_LIMIT_S = 1.0
 
 
+def _parse_duration_s(raw: str) -> float | None:
+    """Ergast/Jolpica formata duração de pit stop como segundos puros
+    ('23.145') OU 'M:SS.sss' quando >= 60s (bandeira vermelha, drive-through
+    contado como stop) — normaliza para float sempre em segundos. String
+    vazia (lacuna de captura da fonte, ocorre em corridas antigas) → None,
+    descartada pelo chamador em vez de quebrar a ingestão inteira."""
+    if not raw:
+        return None
+    if ":" in raw:
+        minutes, seconds = raw.split(":", 1)
+        return int(minutes) * 60.0 + float(seconds)
+    return float(raw)
+
+
 def is_dnf(status: str) -> bool:
     """DNF = não classificado. Ergast/Jolpica: 'Finished' e '+N Lap(s)'
     são classificados; todo o resto (Accident, Engine, Retired...) é DNF."""
@@ -131,4 +145,26 @@ class F1Provider:
                 "dnf": is_dnf(res["status"]),
                 "points": float(res.get("points", 0.0)),
             })
+        return out
+
+    def fetch_pitstops(self, season: int, round_: int) -> list[dict]:
+        """Paradas de UMA corrida: [{driver_id, lap, stop, duration_s}].
+        Duração em segundos (float); vazia se a corrida ainda não
+        aconteceu OU se a Jolpica não tem o dado para aquela temporada
+        (cobertura de pitstops é mais recente que a de results)."""
+        data = self._get(
+            f"{season}/{round_}/pitstops.json?limit=100",
+            f"pitstops_{season}_{round_:02d}",
+            cacheable=lambda d: bool(d["MRData"]["RaceTable"]["Races"]))
+        races = data["MRData"]["RaceTable"]["Races"]
+        if not races:
+            return []
+        out = []
+        for p in races[0].get("PitStops", []):
+            dur = _parse_duration_s(p.get("duration", ""))
+            if dur is None:
+                continue          # duração não capturada pela fonte — descarta o registro
+            out.append({"season": season, "round": round_,
+                       "driver_id": p["driverId"], "lap": int(p["lap"]),
+                       "stop": int(p["stop"]), "duration_s": dur})
         return out
