@@ -1,7 +1,7 @@
 {
-  "passed_at": "2026-07-12T18:54:06+00:00",
-  "evaluate": "evaluate_grid_feature_pipeline",
+  "passed_at": "2026-07-12T19:18:29+00:00",
+  "evaluate": "evaluate_h8_pipeline",
   "edge_verdict": "COMPROVADA",
-  "note": "H3-F1b (grid como feature): choque de forma do dia compartilhado quali/largada -> grid informativo detectado; grid embaralhado (mesma forma) -> nao confirmado",
+  "note": "H8-F1 (choque estrutural de transicao): reembaralhamento real de campo -> choque ajuda (edge); forca estavel -> choque atrapalha ou neutro (noise)",
   "metric": ""
 }

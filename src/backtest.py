@@ -99,6 +99,21 @@ class BacktestElo:
     def rating(self, name: str) -> float:
         return self.ratings.get(name, self.seed_elo)
 
+    def shrink_to_mean(self, factor: float) -> None:
+        """Choque estrutural de transição de regulamento (H8-F1): encolhe
+        TODOS os ratings vistos em direção à semente (1400), na proporção
+        `factor` ∈ [0, 1] — 0 é no-op, 1 reseta todo mundo. Aplicado UMA
+        VEZ na virada de uma temporada de regulamento novo (2022, 2026):
+        `new = seed + (1-factor)·(rating-seed)`. Afeta o campo INTEIRO
+        (regulamento muda o jogo pra todos), diferente do
+        `VolatilityShock` da Fase 4 (K temporário, um piloto/equipe só)."""
+        if not (0.0 <= factor <= 1.0):
+            raise ValueError("factor precisa estar em [0, 1]")
+        if factor == 0.0:
+            return
+        for m in self.ratings:
+            self.ratings[m] = self.seed_elo + (1.0 - factor) * (self.ratings[m] - self.seed_elo)
+
     def _k(self, name: str) -> float:
         base = (self.k_rookie if self.races_seen[name] < ROOKIE_RACES
                 else self.k_base)
@@ -1388,3 +1403,183 @@ def evaluate_volatility_shock(*, trigger: bool, window: int = 10,
             shock.trigger(shocked, races=shock_races, multiplier=shock_multiplier)
         elo.update(names)
     return float(np.mean(losses))
+
+
+# =====================================================================
+# FASE 5 — H8-F1: choque estrutural de TRANSIÇÃO DE REGULAMENTO
+# =====================================================================
+#
+# Motivação: 2026 é o pior estrato do modelo (Fase 1/validação viva) —
+# o Elo carrega 3+ anos de inércia do regulamento ANTERIOR e demora a
+# "desconfiar" do histórico quando o carro muda de categoria inteira.
+# Mecanismo: no primeiro round de uma temporada de regulamento NOVO
+# (2022, 2026 — mudanças reais e documentadas do regulamento técnico da
+# F1, não inventadas), encolhe TODOS os ratings em direção à semente
+# (1400) por um fator fixo — força o modelo a "esquecer" parte do
+# histórico acumulado exatamente no momento em que ele deixa de valer.
+#
+# Calibração CEGA: como o histórico do projeto começa em 2022 (burn-in
+# — não há Elo acumulado de 2021 pra chocar; a virada de 2022 já é
+# um no-op por construção), NÃO existe uma segunda transição real no
+# nosso dado para calibrar o fator. Calibrar em 2026 e aplicar em 2026
+# seria o oposto de cego. Solução adotada: o fator é escolhido SÓ em
+# cenário SINTÉTICO (reembaralhamento de força do campo INTEIRO numa
+# fronteira de temporada conhecida) — nunca olhando o RPS real de 2026 —
+# e aplicado CEGAMENTE ao histórico real.
+
+TRANSITION_SEASONS = (2022, 2026)   # mudanças reais de regulamento técnico da F1
+
+
+def synthetic_races_transition(seed: int = 41, n_drivers: int = 20,
+                               n_seasons_before: int = 3,
+                               races_per_season: int = 20,
+                               reshuffle: bool = True) -> tuple:
+    """Cenário do harness de H8: `n_seasons_before` temporadas com forças
+    ESTÁVEIS, depois uma fronteira de temporada onde o campo INTEIRO é
+    reembaralhado (`reshuffle=True` — análogo a uma mudança real de
+    regulamento; `reshuffle=False`: a força continua a mesma, controle
+    de especificidade — encolher os ratings aí só pode ATRAPALHAR).
+    Retorna (corridas, temporada_da_fronteira)."""
+    rng = np.random.default_rng(seed)
+    names = [f"Piloto{i:02d}" for i in range(n_drivers)]
+    skill_antes = np.linspace(1600.0, 1200.0, n_drivers)
+    skill_depois = (rng.permutation(skill_antes) if reshuffle
+                   else skill_antes.copy())
+    races = []
+    temporada_fronteira = 2022 + n_seasons_before
+    for s in range(n_seasons_before + 2):
+        season = 2022 + s
+        elo_now = skill_antes if season < temporada_fronteira else skill_depois
+        for rnd in range(1, races_per_season + 1):
+            skill = elo_now * _LN10_400
+            order = np.argsort(-(skill + rng.gumbel(size=n_drivers)))
+            results = [{"driver": names[i], "position": pos0 + 1, "dnf": 0}
+                      for pos0, i in enumerate(order)]
+            races.append({"season": season, "round": rnd, "results": results})
+    return races, temporada_fronteira
+
+
+def _rps_window_apos_fronteira(races: list, fronteira: int, shrink_factor: float,
+                               window: int = 8, n_sims: int = 1200,
+                               seed: int = 41) -> float:
+    """RPS médio nas `window` primeiras corridas da temporada de
+    fronteira — a janela que o choque estrutural deveria melhorar."""
+    elo = BacktestElo()
+    losses = []
+    for race in races:
+        results = race["results"]
+        names = [r["driver"] for r in results]
+        actual = [r["position"] - 1 for r in results]
+        if race["season"] == fronteira and race["round"] == 1:
+            elo.shrink_to_mean(shrink_factor)
+        elos = np.array([elo.rating(nm) for nm in names])
+        p = position_probs(elos, n_sims,
+                           _race_seed(seed, race["season"], race["round"], 80))
+        if race["season"] == fronteira and race["round"] <= window:
+            losses.append(rps([row.tolist() for row in p], actual))
+        elo.update(names)
+    return float(np.mean(losses)) if losses else float("nan")
+
+
+def calibrate_shrink_factor_sintetico(*, candidates: tuple = (0.0, 0.2, 0.4, 0.6, 0.8, 1.0),
+                                      seed: int = 41) -> dict:
+    """Calibração CEGA do fator de encolhimento: SÓ no cenário sintético
+    com reembaralhamento real de força na fronteira. Retorna o fator
+    vencedor e o RPS de cada candidato — nunca toca dado real."""
+    races, fronteira = synthetic_races_transition(seed=seed, reshuffle=True)
+    losses = {f: _rps_window_apos_fronteira(races, fronteira, f, seed=seed)
+             for f in candidates}
+    melhor = min(losses, key=losses.get)
+    return {"factor": melhor, "losses_por_candidato": losses}
+
+
+def evaluate_transition_shock_pipeline(*, reshuffle: bool, seed: int = 41,
+                                       shrink_factor: float = 0.6) -> dict:
+    """Harness H8: `reshuffle=True` (força realmente muda na fronteira)
+    tem que mostrar RPS(com choque) < RPS(sem choque) na janela
+    pós-fronteira; `reshuffle=False` (força ESTÁVEL) tem que mostrar o
+    oposto ou neutro — encolher ratings que já estão certos só atrapalha
+    (especificidade: o choque não pode "ajudar" quando não há ruptura)."""
+    races, fronteira = synthetic_races_transition(seed=seed, reshuffle=reshuffle)
+    com_choque = _rps_window_apos_fronteira(races, fronteira, shrink_factor, seed=seed)
+    sem_choque = _rps_window_apos_fronteira(races, fronteira, 0.0, seed=seed)
+    return {"com_choque": com_choque, "sem_choque": sem_choque,
+           "ajuda": com_choque < sem_choque}
+
+
+def run_h8(races: list, *, shrink_factor: float, n_sims: int = 10000,
+          sim_seed: int = 13, burn_in_season: int = 2022,
+          transition_seasons: tuple = TRANSITION_SEASONS,
+          null_samples: int = 500) -> dict:
+    """Passada prequential 2022→fim aplicando o choque estrutural
+    (`shrink_factor`, calibrado às cegas em sintético) no primeiro round
+    de cada temporada em `transition_seasons`. Compara, POR TEMPORADA
+    avaliada (>burn_in), RPS com choque vs SEM choque (Elo comum) —
+    mesmo par de corridas, mesma seed de simulação, só o estado do Elo
+    difere."""
+    def _passada(shrink: float) -> dict:
+        elo = BacktestElo()
+        por_temporada: dict = defaultdict(list)
+        for race in races:
+            results = race["results"]
+            n = len(results)
+            if n < 2:
+                continue
+            names = [r["driver"] for r in results]
+            actual = [r["position"] - 1 for r in results]
+            if race["round"] == 1 and race["season"] in transition_seasons:
+                elo.shrink_to_mean(shrink)
+            is_eval = race["season"] > burn_in_season
+            if is_eval:
+                elos = np.array([elo.rating(nm) for nm in names])
+                p = position_probs(elos, n_sims,
+                                   _race_seed(sim_seed, race["season"],
+                                             race["round"], 85))
+                por_temporada[race["season"]].append(
+                    rps([row.tolist() for row in p], actual))
+            finish_order = [r["driver"] for r in results if not r["dnf"]]
+            elo.update(finish_order)
+        return por_temporada
+
+    com = _passada(shrink_factor)
+    sem = _passada(0.0)
+    temporadas = sorted(com)
+    por_temporada = {}
+    dm_2026 = None
+    for s in temporadas:
+        rps_com = float(np.mean(com[s]))
+        rps_sem = float(np.mean(sem[s]))
+        por_temporada[s] = {"rps_com_choque": rps_com, "rps_sem_choque": rps_sem,
+                           "n": len(com[s])}
+        if s in transition_seasons and s > burn_in_season:
+            stat, p = diebold_mariano(com[s], sem[s], h=1)
+            por_temporada[s]["dm"] = {"dm": stat, "p": p,
+                                      "com_choque_melhor": bool(stat < 0)}
+            if s == 2026:
+                dm_2026 = por_temporada[s]["dm"]
+    return {"por_temporada": por_temporada, "dm_2026": dm_2026,
+           "shrink_factor": shrink_factor,
+           "params": {"transition_seasons": transition_seasons,
+                     "n_sims": n_sims, "burn_in_season": burn_in_season}}
+
+
+def verdict_h8(result: dict, alpha: float = 0.05) -> dict:
+    """H8-F1: o choque estrutural (fator calibrado às cegas em
+    sintético) reduz o RPS de 2026 frente ao Elo comum, DM p<alpha."""
+    dm = result["dm_2026"]
+    if dm is None:
+        return {"verdict": "REFUTADA", "motivo": "2026 fora da avaliação"}
+    verdict = "COMPROVADA" if (dm["com_choque_melhor"] and dm["p"] < alpha) else "REFUTADA"
+    return {"verdict": verdict, "dm": dm, "shrink_factor": result["shrink_factor"]}
+
+
+def evaluate_h8_pipeline(races_e_fronteira: tuple, *,
+                         shrink_factor: float = 0.8) -> dict:
+    """Contrato do harness do core: recebe a série pronta de
+    `synthetic_races_transition` (`edge_generator`=reshuffle=True,
+    `noise_generator`=reshuffle=False) e devolve o veredito."""
+    races, fronteira = races_e_fronteira
+    com = _rps_window_apos_fronteira(races, fronteira, shrink_factor)
+    sem = _rps_window_apos_fronteira(races, fronteira, 0.0)
+    return {"verdict": "COMPROVADA" if com < sem else "REFUTADA",
+           "com_choque": com, "sem_choque": sem}

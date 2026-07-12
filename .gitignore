@@ -7,6 +7,7 @@
 /data/fase2_params.json
 /data/fase4_params.json
 /data/validacao_2026_ultima.json
+/data/fase5_params.json
 # cache imutável da Jolpica e o SQLite (rebuildáveis via scripts/build_db.py)
 /data/raw/
 *.db

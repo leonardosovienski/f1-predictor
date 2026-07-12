@@ -143,5 +143,26 @@
       "2023-01-01",
       "2026-07-12"
     ]
+  },
+  {
+    "name": "H8-F1-choque-transicao-regulamento",
+    "registered_at": "2026-07-12T19:15:00Z",
+    "params": {
+      "hipotese": "Choque estrutural (encolhimento de TODOS os ratings em direcao a semente 1400, no 1o round de temporada com regulamento novo) reduz o RPS de 2026 vs Elo comum, DM p<0.05",
+      "mecanismo": "BacktestElo.shrink_to_mean(factor)",
+      "transition_seasons": [
+        2022,
+        2026
+      ],
+      "calibracao": "CEGA — fator escolhido SO em cenario sintetico (reembaralhamento de campo inteiro numa fronteira conhecida); 2026 real NUNCA influencia a escolha do fator",
+      "baseline_de_sucesso": "grid de largada (H0) — RPS vs grid tambem reportado",
+      "shrink_factor_calibrado": 0.8
+    },
+    "sharpe": null,
+    "notes": "RESULTADO: REFUTADA — fator=0.8, RPS 2026 com_choque=0.1651 vs sem_choque=0.1662 (DM -0.120, p=0.9072)",
+    "test_period": [
+      "2023-01-01",
+      "2026-07-12"
+    ]
   }
 ]

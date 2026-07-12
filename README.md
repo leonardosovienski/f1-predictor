@@ -1,6 +1,6 @@
 # f1-predictor
 
-> **Status: Fases 0-4 concluídas (2026-07-12).** Fase 1: **H1 REFUTADA**
+> **Status: Fases 0-5 concluídas (2026-07-12).** Fase 1: **H1 REFUTADA**
 > (Elo puro não bate o grid, RPS 0.1410 vs 0.1303). Fase 2: **H3-F1b** e
 > **H4-F1b COMPROVADAS** — Elo+grid bate o Elo puro (RPS 0.1281 vs
 > 0.1416) e Platt reduz o Brier do pódio (0.093→0.078, com ressalva de
@@ -11,10 +11,15 @@
 > oficial, reconfirmado via `PrequentialEvaluator` + bootstrap pareado
 > do core); **H5/H6/H7-F1c REFUTADAS** (contexto de circuito, DNF
 > rolling, pit efficiency — mecanismo validado em sintético, sem sinal
-> suficiente no dado real). Choque de volatilidade pós-patch (CS/LoL):
-> mecanismo implementado, só validado em sintético — sem calendário real
-> de upgrades. Ver `docs/RELATORIO_FASE1.md`, `docs/RELATORIO_FASE2.md`
-> e `docs/RELATORIO_FASE4.md`. Não é ferramenta de investimento.
+> suficiente no dado real). Fase 5: **H8-F1 REFUTADA** (choque estrutural
+> de transição de regulamento, calibrado às cegas em sintético — direção
+> certa em 2026 real, mas sem poder estatístico com só 9 corridas).
+> Choque de volatilidade pós-patch (CS/LoL): mecanismo implementado, só
+> validado em sintético — sem calendário real de upgrades. Também há um
+> protocolo de validação viva (`docs/PROMPT_VALIDACAO_2026.md` +
+> `scripts/validate_2026.py`) que retrodiz cada corrida de 2026 e prevê a
+> próxima. Ver `docs/RELATORIO_FASE1.md` a `docs/RELATORIO_FASE5.md`.
+> Não é ferramenta de investimento.
 
 Laboratório de previsão de corridas de **Fórmula 1** (vencedor, pódio, top6
 e head-to-head), oitavo consumidor do ecossistema `predictor_core` — e o
@@ -127,4 +132,5 @@ vendor/predictor_core/      # v1.3.0 via sync manual escopado a este worktree (N
 | 2 | Grid de largada como feature (blend), calibração Platt | ✅ H3-F1b e H4-F1b comprovadas |
 | 3 | Operação: Kelly, bet_log, settle, odds | ✅ construída — 🔒 **NO-GO** (gate lê H1-F1, ainda refutada) |
 | 4 | H0 formal, contexto de circuito, reliability, pit efficiency, choque de patch, purge/embargo | ✅ H0-formal comprovada; H5/H6/H7-F1c refutadas (mecanismo validado, sem sinal real) |
-| 5 | Intensidade não-homogênea de DNF/Safety Car (exige dado por volta — FastF1) | ⏳ (fonte não confirmada) |
+| 5 | Choque estrutural de transição de regulamento (H8-F1), calibrado às cegas em sintético | ✅ REFUTADA (direção certa, sem poder estatístico — reavaliar com mais corridas de 2026) |
+| 6 | Intensidade não-homogênea de DNF/Safety Car (exige dado por volta — FastF1) | ⏳ (fonte não confirmada) |

@@ -1,5 +1,49 @@
 # HANDOFF.md — f1-predictor
 
+> ## 🧪 FASE 5 — CHOQUE ESTRUTURAL DE TRANSIÇÃO DE REGULAMENTO (2026-07-12)
+>
+> **A pedido do usuário, com protocolo científico próprio dele**: testar
+> se "esquecer" parte do Elo acumulado bem na virada de uma temporada
+> com regulamento novo (2022, 2026 — mudanças técnicas reais da F1)
+> ajuda o modelo a reagir mais rápido. O protocolo original pedia
+> calibrar na transição real 2021→2022 e aplicar cegamente em 2026 —
+> **mas nosso histórico começa em 2022** (é o burn-in; não há Elo
+> acumulado de 2021 pra chocar, a virada de 2022 já é um no-op).
+> Adaptei sem avisar depois, avisei ANTES: calibrei o fator só em
+> cenário SINTÉTICO (reembaralhamento do campo inteiro numa fronteira
+> conhecida) e apliquei o resultado às cegas ao histórico real — 2026
+> nunca influenciou a escolha do fator.
+>
+> **H8-F1 REFUTADA, mas com leitura honesta**: fator calibrado (0.8) via
+> harness sintético (sensibilidade+especificidade corretas); aplicado ao
+> real, RPS de 2026 melhora na DIREÇÃO certa (0.1662→0.1651) mas SEM
+> significância (DM p=0.907) — só 9 corridas disputadas em 2026 não dão
+> poder estatístico pra confirmar nem um efeito bem menor que esse.
+> 2023-2025 ficam byte a byte idênticos com/sem o mecanismo (só dispara
+> nos anos de transição declarados) — confirma que não há efeito
+> colateral fora do momento pretendido. Não entra no serving
+> (`fase5_params.json`: shrink_factor=0.0). Reavaliar quando 2026 tiver
+> mais corridas — `scripts/run_fase5.py` é idempotente.
+>
+> **Também nesta sessão**: criei um protocolo de validação viva
+> (`docs/PROMPT_VALIDACAO_2026.md` + `scripts/validate_2026.py`) que
+> retrodiz toda corrida de 2026 já disputada (sem lookahead) e prevê a
+> próxima automaticamente — não é pesquisa nova, é acompanhamento
+> operacional. Rodando, confirma ao vivo o achado da Fase 1: o grid
+> sozinho continua batendo o modelo em 2026 (RPS 0.1339 vs 0.1664 vs
+> 0.1433 do blend; acerto de vencedor 2/9 — Antonelli venceu 5).
+>
+> **Nota operacional**: um `git worktree remove --force` anterior apagou
+> os arquivos de trabalho do worktree usado nas Fases 1-4 antes de travar
+> na pasta raiz (limitação do Windows — não dá pra apagar o diretório em
+> que o próprio processo está rodando). Nada foi perdido de verdade: a
+> `main` já tinha tudo mesclado (fast-forward limpo antes da remoção);
+> reconstruí `f1.db`/`ratings.json`/`fase2_params.json` da rede e eles
+> reproduziram **byte a byte** os `backtest_fase1/2.json` já commitados.
+>
+> Suíte: **116 verdes** (10 novos); CI 3/3. Relatório:
+> `docs/RELATORIO_FASE5.md`.
+
 > ## 🔬 FASE 4 — EMPRÉSTIMOS CROSS-ECOSSISTEMA (2026-07-12)
 >
 > **A pedido explícito: estudei brasileirao/cs/lol/nba/previsao-cripto/
