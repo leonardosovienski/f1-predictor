@@ -153,14 +153,24 @@ def main() -> int:
         print(f"      Rodada {prox['round']}: {prox['name']} ({prox['circuit']}, {prox['date']})")
         meta = match_circuit_metadata(prox["circuit"], load_circuits())
         circuito_curto = meta["name"] if meta else prox["circuit"]
-        r = predict.run_race(circuito_curto)
+
+        quali = provider.fetch_qualifying(2026, prox["round"])
+        if quali:
+            grid = {q["driver"]: q["position"] for q in quali}
+            model = F1EloModel()
+            r = model.predict_race_with_grid(circuito_curto, grid)
+            modo = f"PÓS-QUALI (blend Elo+grid, w={r['w_grid']})"
+        else:
+            r = predict.run_race(circuito_curto)
+            modo = "PRÉ-QUALI (Elo puro vivido — quali ainda não saiu)"
         ordem = list(r["ranking"])
-        print("      Top-5 previsto (Elo vivido, pré-quali):")
+        print(f"      Top-5 previsto [{modo}]:")
         for nm in ordem[:5]:
             v = r["ranking"][nm]
             print(f"        {nm:<24}{v['win']:>7.1%} win  {v['podium']:>7.1%} podio")
         prox_pred = {"round": prox["round"], "name": prox["name"],
                     "circuit": prox["circuit"], "date": prox["date"],
+                    "modo": modo,
                     "top5": {nm: r["ranking"][nm] for nm in ordem[:5]}}
 
     print("[3/3] testes de estresse...")

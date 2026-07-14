@@ -31,6 +31,17 @@ _SCHEDULE_FIXTURE = {"MRData": {"RaceTable": {"Races": [
      "date": "2022-03-27", "Circuit": {"circuitName": "Jeddah Corniche Circuit"}},
 ]}}}
 
+_QUALIFYING_FIXTURE = {"MRData": {"RaceTable": {"Races": [{
+    "season": "2026", "round": "10",
+    "QualifyingResults": [
+        {"position": "1", "Driver": {"driverId": "antonelli", "givenName": "Andrea Kimi",
+                                     "familyName": "Antonelli"},
+         "Constructor": {"name": "Mercedes"}},
+        {"position": "2", "Driver": {"driverId": "max_verstappen", "givenName": "Max",
+                                     "familyName": "Verstappen"},
+         "Constructor": {"name": "Red Bull"}},
+    ]}]}}}
+
 _EMPTY_FIXTURE = {"MRData": {"RaceTable": {"Races": []}}}
 
 
@@ -71,6 +82,23 @@ def test_fetch_schedule_parse_do_cache(provider, tmp_path):
     assert [r["round"] for r in sched] == [1, 2]
     assert sched[0]["circuit"] == "Bahrain International Circuit"
     assert sched[0]["date"] == "2022-03-20"
+
+
+def test_fetch_qualifying_parse_do_cache(provider, tmp_path):
+    (tmp_path / "qualifying_2026_10.json").write_text(
+        json.dumps(_QUALIFYING_FIXTURE), encoding="utf-8")
+    grid = provider.fetch_qualifying(2026, 10)
+    assert len(grid) == 2
+    assert grid[0]["driver"] == "Andrea Kimi Antonelli"
+    assert grid[0]["position"] == 1
+    assert grid[1]["driver"] == "Max Verstappen"
+    assert grid[1]["constructor"] == "Red Bull"
+
+
+def test_fetch_qualifying_vazia_antes_do_quali(provider, tmp_path):
+    (tmp_path / "qualifying_2026_11.json").write_text(
+        json.dumps({"MRData": {"RaceTable": {"Races": []}}}), encoding="utf-8")
+    assert provider.fetch_qualifying(2026, 11) == []
 
 
 def test_offline_sem_cache_levanta(provider):

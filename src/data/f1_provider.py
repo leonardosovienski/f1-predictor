@@ -147,6 +147,29 @@ class F1Provider:
             })
         return out
 
+    def fetch_qualifying(self, season: int, round_: int) -> list[dict]:
+        """Resultado do QUALI (grid de largada) de uma corrida, ANTES da
+        corrida acontecer: [{driver, driver_id, constructor, position}]
+        ordenado por posição de largada. Vazia se o quali ainda não
+        aconteceu (imutável depois — sessão de classificação não é
+        re-corrida). Fonte do `--grid` automático do serving pós-quali."""
+        data = self._get(
+            f"{season}/{round_}/qualifying.json?limit=100",
+            f"qualifying_{season}_{round_:02d}",
+            cacheable=lambda d: bool(d["MRData"]["RaceTable"]["Races"]))
+        races = data["MRData"]["RaceTable"]["Races"]
+        if not races:
+            return []
+        out = []
+        for q in races[0]["QualifyingResults"]:
+            drv = q["Driver"]
+            out.append({"season": season, "round": round_,
+                       "driver_id": drv["driverId"],
+                       "driver": f"{drv['givenName']} {drv['familyName']}",
+                       "constructor": q["Constructor"]["name"],
+                       "position": int(q["position"])})
+        return out
+
     def fetch_pitstops(self, season: int, round_: int) -> list[dict]:
         """Paradas de UMA corrida: [{driver_id, lap, stop, duration_s}].
         Duração em segundos (float); vazia se a corrida ainda não
