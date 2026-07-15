@@ -1,8 +1,10 @@
 # f1-predictor
 
-> 🔒 **Laboratório SELADO em 2026-07-12** (commit `9415c7b`, branch
-> único `main`, árvore limpa) — em espera por mais corridas de 2026
-> antes de qualquer nova tentativa. Nenhuma pendência aberta.
+> 🔒 **Coleta científica forward iniciada em 2026-07-15** (commit de base
+> `19e3ec4`; `main` e branch atual reconciliadas). R1–R9 permanecem apenas
+> retropredições reproduzíveis: há **0 corridas temporalmente válidas para
+> H8**. Novas corridas usam snapshots PRE_EVENT imutáveis; o gate real segue
+> **NO-GO** e H8 permanece bloqueada até 15 corridas completas.
 
 > **Status: Fases 0-5 concluídas (2026-07-12).** Fase 1: **H1 REFUTADA**
 > (Elo puro não bate o grid, RPS 0.1410 vs 0.1303). Fase 2: **H3-F1b** e

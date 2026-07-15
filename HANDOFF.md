@@ -2,10 +2,14 @@
 
 > ## 🔒 SELADO — auditoria final (2026-07-12)
 >
-> Auditoria estritamente de leitura confirmou: `git status` limpo (nada
-> a commitar, nenhum untracked), `HEAD` em `9415c7b` (Fase 5), branch
-> único `main` (a antiga `claude/project-review-testing-694fed` foi
-> mesclada por fast-forward e apagada). **Nenhuma pendência aberta.**
+> Reconciliação factual posterior confirmou `main` e a branch atual em
+> `19e3ec4` (sem commits exclusivos e árvore limpa). A referência anterior
+> a `9415c7b` era uma fotografia desatualizada. R1–R9 têm retropredições
+> reproduzíveis, mas **0 corridas temporalmente válidas para H8**: não há
+> snapshots pré-evento históricos. A coleta forward começa na próxima
+> corrida pelo `python -m src.snapshots`; nunca converter R1–R9 em evidência
+> forward. O gate de 15 corridas completas e o gate real `NO-GO` permanecem
+> congelados. Nenhum H8 deve ser executado sem autorização explícita.
 > Próximo gatilho natural: mais corridas de 2026 disputadas — rodar
 > `scripts/validate_2026.py` (acompanhamento) e, quando fizer sentido
 > pelo calendário, `scripts/run_fase5.py` de novo (H8-F1 pode ganhar
