@@ -76,6 +76,14 @@ def _project_commit(root: Path) -> str:
     return result.stdout.strip()
 
 
+def _git(root: Path, *args: str) -> str:
+    result = subprocess.run(["git", "-C", str(root), *args], text=True,
+                            capture_output=True, check=False)
+    if result.returncode != 0:
+        raise SnapshotError("proveniÃªncia Git do projeto nÃ£o pÃ´de ser determinada")
+    return result.stdout.strip()
+
+
 def _core_identity(root: Path) -> dict[str, str]:
     vendor = root / "vendor" / "predictor_core"
     version = vendor / "VERSION"
@@ -85,14 +93,30 @@ def _core_identity(root: Path) -> dict[str, str]:
             "hash": _sha256_file(vendor / "CORE_MANIFEST.json")}
 
 
-def _tools_hash(root: Path) -> str | None:
-    tools = root.parent / "tools"
-    files = [tools / name for name in ("operational_runner.py", "secret_redaction.py")]
-    present = [path for path in files if path.is_file()]
-    if not present:
-        return None
-    return _sha256_bytes(b"".join(path.name.encode() + b"\0" + path.read_bytes() + b"\0"
-                                   for path in present))
+def _tools_provenance() -> dict[str, Any]:
+    workspace = ROOT.parent
+    if str(workspace) not in sys.path:
+        sys.path.insert(0, str(workspace))
+    try:
+        from tools.tools_provenance import ToolsProvenanceError, collect_tools_provenance
+        return collect_tools_provenance(workspace / "tools", strict=True)
+    except (ImportError, OSError, RuntimeError) as exc:
+        raise SnapshotError(f"proveniÃªncia strict de tools indisponÃ­vel: {exc}") from exc
+
+
+def _consumer_provenance(root: Path, core: dict[str, str], inputs: dict[str, str], generated: datetime) -> dict[str, Any]:
+    return {
+        "project_name": "f1-predictor",
+        "project_commit": _project_commit(root),
+        "project_branch": _git(root, "branch", "--show-current") or None,
+        "project_worktree_clean": not bool(_git(root, "status", "--porcelain")),
+        "predictor_core_version": core["version"],
+        "predictor_core_hash": core["hash"],
+        "input_hashes": inputs,
+        "artifact_schema_version": "f1-forward-snapshot/1.1",
+        "generated_at_utc": _utc_text(generated),
+        "artifact_kind": "pre_event_snapshot",
+    }
 
 
 def _event(conn, season: int, round_: int) -> dict[str, Any]:
@@ -216,6 +240,7 @@ def create_pre_event_snapshot(*, season: int, round_: int, scheduled_start_utc: 
               "phase2_parameters": _sha256_file(params_path),
               "config": _sha256_file(root / "config.yaml")}
     core = _core_identity(root)
+    consumer = _consumer_provenance(root, core, inputs, generated)
     payload: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION, "status": PRE_EVENT,
         "maturity_status": "PENDING", "event_id": event_id(event),
@@ -227,7 +252,8 @@ def create_pre_event_snapshot(*, season: int, round_: int, scheduled_start_utc: 
         "ratings": {name: output["ranking"][name]["elo"] for name in output["ranking"]},
         "frozen_parameters": _load_fase2_params(params_path), "model_output": output,
         "project_commit": _project_commit(root), "predictor_core_version": core["version"],
-        "predictor_core_hash": core["hash"], "tools_hash": _tools_hash(root),
+        "predictor_core_hash": core["hash"], "tools_provenance": _tools_provenance(),
+        "consumer_provenance": consumer,
         "input_hashes": inputs, "audit_metadata": {"network_used": False, "database_write": False,
         "ratings_write": False, "model_training": False},
     }
@@ -281,6 +307,9 @@ def mature_snapshot(*, season: int, round_: int, snapshots_root: Path,
     if not pre_path.is_file():
         raise SnapshotError("maturação sem snapshot PRE_EVENT é proibida")
     pre = load_and_verify_snapshot(pre_path)
+    consumer = pre.get("consumer_provenance")
+    if not isinstance(consumer, dict):
+        raise SnapshotError("snapshot PRE_EVENT sem consumer_provenance; maturaÃ§Ã£o strict proibida")
     target = _matured_path(snapshots_root, event)
     if target.exists():
         raise SnapshotError(f"maturação já existe; overwrite proibido: {target}")
@@ -304,6 +333,9 @@ def mature_snapshot(*, season: int, round_: int, snapshots_root: Path,
         "metrics": {"actual_winner": winner["driver"], "actual_winner_probability": probability,
                     "winner_brier": round((1.0 - probability) ** 2, 8),
                     "winner_hit": top == winner["driver"]},
+        "tools_provenance": _tools_provenance(), "consumer_provenance": {
+            **consumer, "artifact_kind": "matured_snapshot",
+            "generated_at_utc": _utc_text(matured)},
         "audit_metadata": {"model_reexecuted": False, "database_write": False,
                            "ratings_write": False, "network_used": False}}
     payload["payload_hash"] = _payload_hash(payload)
@@ -369,11 +401,13 @@ def main(argv: list[str] | None = None) -> int:
             conn = db.connect(ROOT / "data" / "f1.db", readonly=True)
             try: event = _event(conn, args.season, args.round)
             finally: conn.close()
-            result = load_and_verify_snapshot(_snapshot_path(args.snapshots_dir, event))
+            result = {"snapshot": load_and_verify_snapshot(_snapshot_path(args.snapshots_dir, event)),
+                      "tools_provenance": _tools_provenance()}
         elif args.command == "mature-snapshot":
             result = {"path": str(mature_snapshot(season=args.season, round_=args.round, snapshots_root=args.snapshots_dir))}
         else:
-            result = snapshot_status(season=args.season, snapshots_root=args.snapshots_dir)
+            result = {**snapshot_status(season=args.season, snapshots_root=args.snapshots_dir),
+                      "tools_provenance": _tools_provenance()}
     except SnapshotError as exc:
         print(str(exc), file=sys.stderr)
         return 2

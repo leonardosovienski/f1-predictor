@@ -54,7 +54,12 @@ def _manual_pre(root: Path, snapshots_root: Path) -> Path:
                "grand_prix": event["name"], "scheduled_start_utc": "2026-03-08T10:00:00Z",
                "generated_at_utc": "2026-03-08T09:00:00Z", "grid": [{key: row[key] for key in ("driver_id", "driver", "constructor", "grid")} | {"position": row["grid"]} for row in rows],
                "model_output": {"ranking": ranking}, "input_hashes": {"fixture": "x"},
-               "project_commit": "fixture", "predictor_core_hash": "fixture"}
+               "project_commit": "fixture", "predictor_core_hash": "fixture",
+               "consumer_provenance": {"project_name": "f1-predictor", "project_commit": "fixture",
+               "project_branch": None, "project_worktree_clean": True, "predictor_core_version": "fixture",
+               "predictor_core_hash": "fixture", "input_hashes": {"fixture": "x"},
+               "artifact_schema_version": "f1-forward-snapshot/1.1", "generated_at_utc": "2026-03-08T09:00:00Z",
+               "artifact_kind": "pre_event_snapshot"}}
     payload["payload_hash"] = snapshots._payload_hash(payload)
     snapshots._atomic_create(path, payload)
     return path
@@ -66,7 +71,14 @@ def test_valid_snapshot_is_deterministic_and_does_not_write_db_or_ratings(tmp_pa
     monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: pytest.fail("rede não permitida"))
     first = _create_r10(tmp_path / "one")
     second = _create_r10(tmp_path / "two")
-    assert json.loads(first.read_text(encoding="utf-8")) == json.loads(second.read_text(encoding="utf-8"))
+    first_payload, second_payload = json.loads(first.read_text(encoding="utf-8")), json.loads(second.read_text(encoding="utf-8"))
+    first_payload.pop("tools_provenance"); second_payload.pop("tools_provenance")
+    first_payload.pop("payload_hash"); second_payload.pop("payload_hash")
+    assert first_payload == second_payload
+    persisted = json.loads(first.read_text(encoding="utf-8"))
+    assert persisted["tools_provenance"]["version"] == "1.1.0"
+    assert persisted["consumer_provenance"]["project_name"] == "f1-predictor"
+    assert persisted["consumer_provenance"]["input_hashes"] == persisted["input_hashes"]
     assert snapshots.load_and_verify_snapshot(first)["status"] == snapshots.PRE_EVENT
     assert before == (_sha(db_path), _sha(ratings))
 
