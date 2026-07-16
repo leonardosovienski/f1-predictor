@@ -76,7 +76,8 @@ def test_valid_snapshot_is_deterministic_and_does_not_write_db_or_ratings(tmp_pa
     first_payload.pop("payload_hash"); second_payload.pop("payload_hash")
     assert first_payload == second_payload
     persisted = json.loads(first.read_text(encoding="utf-8"))
-    assert persisted["tools_provenance"]["version"] == "1.1.0"
+    tools_version = (ROOT.parent / "tools" / "VERSION").read_text(encoding="utf-8").strip()
+    assert persisted["tools_provenance"]["version"] == tools_version
     assert persisted["consumer_provenance"]["project_name"] == "f1-predictor"
     assert persisted["consumer_provenance"]["input_hashes"] == persisted["input_hashes"]
     assert snapshots.load_and_verify_snapshot(first)["status"] == snapshots.PRE_EVENT
