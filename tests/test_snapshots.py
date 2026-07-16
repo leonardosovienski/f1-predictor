@@ -48,7 +48,11 @@ def _manual_pre(root: Path, snapshots_root: Path) -> Path:
     rows = snapshots._result_rows(root, 2026, 1)
     event = {"season": 2026, "round": 1, "name": "Australian Grand Prix"}
     path = snapshots._snapshot_path(snapshots_root, event)
-    ranking = {row["driver"]: {"win": 0.05} for row in rows}
+    # vencedor real (position=1) com a maior P(win): a escrita em disco
+    # alfabetiza as chaves (sort_keys=True), então winner_hit só é correto
+    # se a maturação olhar a probabilidade, não a primeira chave
+    ranking = {row["driver"]: {"win": 0.9 if row["position"] == 1 else 0.01}
+               for row in rows}
     payload = {"schema_version": snapshots.SCHEMA_VERSION, "status": snapshots.PRE_EVENT,
                "event_id": snapshots.event_id(event), "season": 2026, "round": 1,
                "grand_prix": event["name"], "scheduled_start_utc": "2026-03-08T10:00:00Z",
@@ -124,6 +128,9 @@ def test_detects_hash_tampering_and_maturity_contract(tmp_path):
                                         now=datetime(2026, 3, 8, 14, tzinfo=timezone.utc))
     result = snapshots.h8_eligibility(pre, matured)
     assert result["status"] == "VALID_FOR_H8"
+    metrics = json.loads(matured.read_text(encoding="utf-8"))["metrics"]
+    assert metrics["winner_hit"] is True
+    assert metrics["actual_winner_probability"] == 0.9
     with pytest.raises(snapshots.SnapshotError, match="já existe"):
         snapshots.mature_snapshot(season=2026, round_=1, snapshots_root=snapshots_root, root=root)
     status = snapshots.snapshot_status(season=2026, snapshots_root=snapshots_root)
