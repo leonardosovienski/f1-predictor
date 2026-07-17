@@ -120,7 +120,13 @@ class F1EloModel:
         if weather not in ("dry", "wet"):
             raise ValueError(f"weather desconhecido: {weather!r} (dry|wet)")
         pilotos = {resolve_driver(n)["name"]: int(p) for n, p in grid.items()}
-        if len(set(pilotos.values())) != len(pilotos):
+        # position=0 ("saiu do pit lane") NÃO é única — múltiplos pilotos
+        # podem largar do pit lane na mesma corrida (penalidades de grid);
+        # o próprio blend abaixo já trata todo 0 como "última posição" (n+1),
+        # então a validação não pode exigir unicidade para 0. Só posições
+        # reais (>=1) precisam ser únicas.
+        nonzero = [p for p in pilotos.values() if p != 0]
+        if len(set(nonzero)) != len(nonzero):
             raise ValueError("posições de grid repetidas")
         names = list(pilotos)
         n = len(names)

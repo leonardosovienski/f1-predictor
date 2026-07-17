@@ -191,8 +191,13 @@ def _load_grid(path: Path) -> tuple[list[dict[str, Any]], dict[str, Any], str]:
             raise SnapshotError(f"construtor inconsistente para {name}: {constructor!r}")
         if not isinstance(position, int) or position < 0:
             raise SnapshotError(f"posição de grid inválida para {name}")
-        if position in positions or driver_id in ids or name in names:
-            raise SnapshotError("grid contém posição ou identidade duplicada")
+        if driver_id in ids or name in names:
+            raise SnapshotError("grid contém identidade duplicada")
+        # position=0 ("saiu do pit lane", ver src/model.py) NÃO é única: mais
+        # de um piloto pode largar do pit lane na mesma corrida (múltiplas
+        # penalidades de grid) — só posições reais (>=1) precisam ser únicas.
+        if position != 0 and position in positions:
+            raise SnapshotError("grid contém posição duplicada")
         positions.add(position); ids.add(driver_id); names.add(name)
         rows.append({"driver_id": driver_id, "driver": name,
                      "constructor": constructor, "position": position})

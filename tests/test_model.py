@@ -46,6 +46,23 @@ def test_head_to_head(model):
                - win_probability(r["elo_a"], r["elo_b"])) < 1e-3
 
 
+def test_predict_race_with_grid_accepts_multiple_pit_lane_starters(model):
+    # Regressão: a checagem de duplicidade rejeitava position=0 repetido,
+    # mas o próprio blend (linha "pilotos[nm] if pilotos[nm] > 0 else n+1")
+    # já trata todo 0 como "última posição" — múltiplos pilotos podem
+    # largar do pit lane na mesma corrida (penalidades de grid).
+    names = list(model.ratings)[:4]
+    grid = {names[0]: 0, names[1]: 0, names[2]: 1, names[3]: 2}
+    result = model.predict_race_with_grid("Monza", grid)
+    assert len(result["ranking"]) == 4
+
+
+def test_predict_race_with_grid_still_rejects_duplicate_nonzero_position(model):
+    names = list(model.ratings)[:2]
+    with pytest.raises(ValueError, match="posições de grid repetidas"):
+        model.predict_race_with_grid("Monza", {names[0]: 1, names[1]: 1})
+
+
 def test_h2h_erros(model):
     with pytest.raises(ValueError):
         model.predict_head_to_head("Verstappen", "verstappen", "Monza")

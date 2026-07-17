@@ -97,6 +97,28 @@ def test_rejects_naive_and_late_timestamp(tmp_path):
         _create_r10(tmp_path, now=datetime(2026, 7, 19, 13, tzinfo=timezone.utc))
 
 
+def test_accepts_multiple_pit_lane_starters_at_position_zero(tmp_path):
+    # Regressão: position=0 ("saiu do pit lane", ver src/model.py) é
+    # documentado como não-único, mas _load_grid rejeitava qualquer posição
+    # repetida incluindo 0 — bloqueava o cenário real de múltiplas
+    # penalidades de grid na mesma corrida. Posições reais (>=1) continuam
+    # exigindo unicidade.
+    pit_lane = _grid_file(tmp_path, mutate=lambda rows: (
+        rows.__setitem__(0, {**rows[0], "position": 0}),
+        rows.__setitem__(1, {**rows[1], "position": 0}),
+    ))
+    path = _create_r10(tmp_path, grid=pit_lane)
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    positions = [row["position"] for row in payload["grid"]]
+    assert positions.count(0) == 2
+
+
+def test_still_rejects_duplicate_nonzero_position(tmp_path):
+    duplicated = _grid_file(tmp_path, mutate=lambda rows: rows.__setitem__(1, {**rows[1], "position": rows[0]["position"]}))
+    with pytest.raises(snapshots.SnapshotError, match="posição duplicada"):
+        _create_r10(tmp_path, grid=duplicated)
+
+
 def test_rejects_existing_result_grid_absent_ambiguous_identity_and_overwrite(tmp_path):
     with pytest.raises(snapshots.SnapshotError, match="resultado já existe"):
         snapshots.create_pre_event_snapshot(season=2026, round_=1,
