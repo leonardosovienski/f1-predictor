@@ -323,7 +323,9 @@ def mature_snapshot(*, season: int, round_: int, snapshots_root: Path,
         raise SnapshotError("resultado sem vencedor")
     predicted = pre["model_output"]["ranking"]
     probability = predicted[winner["driver"]]["win"]
-    top = next(iter(predicted))
+    # a ordem das chaves no disco é alfabética (sort_keys=True na escrita);
+    # o favorito tem que sair da probabilidade, nunca da posição da chave
+    top = max(predicted, key=lambda name: predicted[name]["win"])
     matured = now or datetime.now(timezone.utc)
     payload: dict[str, Any] = {"schema_version": SCHEMA_VERSION, "status": MATURED,
         "event_id": pre["event_id"], "season": season, "round": round_,
