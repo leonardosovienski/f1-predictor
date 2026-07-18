@@ -111,6 +111,7 @@ src/
   data/f1_provider.py       # cliente Jolpica (cache imutável, rate limit, pitstops)
   data/db.py                # SQLite races/results/pitstops (WAL, leitura read-only)
   data/odds_provider.py     # cliente The Odds API (sondado: sem F1)
+  snapshots.py               # cadeia forward PRE_EVENT/MATURED imutável (snapshot pré-corrida, maturação sem reexecutar o modelo)
 data/drivers_f1.json        # grid 2026 real (22/11) com Elo semente
 data/circuits_f1.json       # calendário 2026 real + características (metadados)
 data/trials.json            # tentativas PRÉ-REGISTRADAS (versionado!)
@@ -125,8 +126,8 @@ scripts/ci_check.py         # 3 barreiras: pytest, .ps1 ASCII, parse+smoke
 docs/RELATORIO_FASE1.md     # RPS vs baselines, estratos, vereditos
 docs/RELATORIO_FASE2.md     # blend, calibração, sondagem de odds, gate
 docs/RELATORIO_FASE4.md     # H0-formal, contexto/reliability/pit, choque de patch, purge/embargo
-tests/                      # 106 testes
-vendor/predictor_core/      # v1.3.0 via sync manual escopado a este worktree (NÃO editar à mão)
+tests/                      # 126 testes
+vendor/predictor_core/      # v1.3.1 via sync manual escopado a este worktree (NÃO editar à mão)
 ```
 
 ## Roadmap
