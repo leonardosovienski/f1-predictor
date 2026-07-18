@@ -1,5 +1,19 @@
 # HANDOFF.md — f1-predictor
 
+> ## ADENDO ECOSSISTEMA (2026-07-18)
+>
+> Vendor de `predictor_core` byte-idêntico ao canônico, sincronizado em
+> `c99a545`. Suíte: 100% verde. Bug real corrigido numa rodada anterior:
+> modelo de grid rejeitava múltiplos largadores do pit-lane na posição 0
+> (`9ce89a6`). Auditoria hostil adicional 2026-07-18 (DNF e posições
+> duplicadas em `update_ratings`): nenhum bug novo — DNF já tratado
+> corretamente por design ("quem não está no dict não pontua nem perde"),
+> duplicata de posição já rejeitada. Gate H8 segue corretamente fechado:
+> `H8_REQUIRED_RACES=15`, só 9 corridas maturadas confirmadas em
+> 2026-07-17 (não força conclusão antes da amostra mínima). Sem incidente
+> de segurança próprio. Documento canônico do ecossistema:
+> `../ECOSYSTEM_HANDOFF.md`.
+>
 > ## 🔒 SELADO — auditoria final (2026-07-12)
 >
 > Reconciliação factual posterior confirmou `main` e a branch atual em
