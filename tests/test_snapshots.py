@@ -157,3 +157,64 @@ def test_detects_hash_tampering_and_maturity_contract(tmp_path):
         snapshots.mature_snapshot(season=2026, round_=1, snapshots_root=snapshots_root, root=root)
     status = snapshots.snapshot_status(season=2026, snapshots_root=snapshots_root)
     assert status["valid_h8_races"] == 1
+
+
+def test_mature_rejects_duplicate_final_position(tmp_path):
+    # Empate/corrupção: duas linhas do resultado com a MESMA posição final
+    # não podem maturar (classificação oficial da F1 tem posições únicas).
+    import sqlite3
+    root = _temp_root_with_db(tmp_path)
+    snapshots_root = tmp_path / "snaps"
+    _manual_pre(root, snapshots_root)
+    conn = sqlite3.connect(root / "data" / "f1.db")
+    conn.execute("UPDATE results SET position=1 WHERE season=2026 AND round=1 "
+                 "AND driver_id=(SELECT driver_id FROM results WHERE season=2026 "
+                 "AND round=1 AND position=2)")
+    conn.commit(); conn.close()
+    with pytest.raises(snapshots.SnapshotError, match="posição final duplicada"):
+        snapshots.mature_snapshot(season=2026, round_=1, snapshots_root=snapshots_root,
+                                  root=root, now=datetime(2026, 3, 8, 14, tzinfo=timezone.utc))
+
+
+def test_truncated_snapshot_file_is_invalid_for_h8(tmp_path):
+    pre = _create_r10(tmp_path / "trunc")
+    raw = pre.read_text(encoding="utf-8")
+    pre.write_text(raw[: len(raw) // 2], encoding="utf-8")
+    with pytest.raises(snapshots.SnapshotError, match="ilegível"):
+        snapshots.load_and_verify_snapshot(pre)
+    assert snapshots.h8_eligibility(pre, None)["status"] == "INVALID_FOR_H8"
+
+
+def test_snapshot_status_empty_season_reports_full_gate(tmp_path):
+    status = snapshots.snapshot_status(season=2026, snapshots_root=tmp_path / "vazio")
+    assert status["valid_h8_races"] == 0
+    assert status["missing_to_gate"] == snapshots.H8_REQUIRED_RACES == 15
+
+
+def test_pre_event_uses_the_same_params_it_freezes(tmp_path):
+    # Regressão: o modelo lia fase2_params do ROOT do processo enquanto o
+    # payload congelava/hasheava os params do `root` passado — proveniência
+    # divergia da previsão quando root != ROOT.
+    root = _temp_root_with_db(tmp_path)
+    for name in ("ratings.json", "drivers_f1.json", "fase2_params.json"):
+        shutil.copy2(ROOT / "data" / name, root / "data" / name)
+    shutil.copy2(ROOT / "config.yaml", root / "config.yaml")
+    (root / "vendor" / "predictor_core").mkdir(parents=True)
+    for name in ("VERSION", "CORE_MANIFEST.json"):
+        shutil.copy2(ROOT / "vendor" / "predictor_core" / name,
+                     root / "vendor" / "predictor_core" / name)
+    # muda o w_grid SÓ no root alternativo — a previsão tem que refletir isso
+    params = json.loads((root / "data" / "fase2_params.json").read_text(encoding="utf-8"))
+    params["w_grid"] = 0.99
+    (root / "data" / "fase2_params.json").write_text(json.dumps(params), encoding="utf-8")
+    import subprocess
+    subprocess.run(["git", "init", "-q", str(root)], check=True)
+    subprocess.run(["git", "-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t",
+                    "commit", "--allow-empty", "-q", "-m", "fixture"], check=True)
+    path = snapshots.create_pre_event_snapshot(
+        season=2026, round_=10, scheduled_start_utc="2026-07-19T13:00:00Z",
+        grid_file=_grid_file(tmp_path), snapshots_root=tmp_path / "snaps",
+        now=datetime(2026, 7, 15, 10, tzinfo=timezone.utc), root=root)
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    assert payload["frozen_parameters"]["w_grid"] == 0.99
+    assert payload["model_output"]["w_grid"] == 0.99

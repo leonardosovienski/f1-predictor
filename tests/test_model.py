@@ -119,3 +119,40 @@ def test_update_ratings_erros(model):
         model.update_ratings({"Max Verstappen": 1})          # só 1 piloto
     with pytest.raises(ValueError):
         model.update_ratings({"Max Verstappen": 1, "Lando Norris": 1})  # empate
+
+
+def test_update_ratings_rejeita_alias_duplicado(model):
+    # Regressão: "Verstappen" e "Max Verstappen" resolvem para a MESMA
+    # identidade — o dict de posições colapsava silenciosamente (last-wins)
+    # e a corrida era processada com n inflado e posição errada.
+    antes = dict(model.ratings)
+    with pytest.raises(ValueError, match="duplicado"):
+        model.update_ratings({"Verstappen": 1, "Max Verstappen": 2,
+                              "Norris": 3})
+    assert model.ratings == antes                    # nada aplicado
+
+
+def test_update_ratings_rejeita_posicao_invalida(model):
+    # posição final é 1..n; 0 e negativos não são resultado válido
+    with pytest.raises(ValueError, match="inválida"):
+        model.update_ratings({"Max Verstappen": 0, "Lando Norris": 1})
+    with pytest.raises(ValueError, match="inválida"):
+        model.update_ratings({"Max Verstappen": -5, "Lando Norris": 2})
+
+
+def test_predict_race_with_grid_rejeita_alias_duplicado(model):
+    # aliases colapsavam no dict e o grid encolhia silenciosamente
+    with pytest.raises(ValueError, match="duplicado"):
+        model.predict_race_with_grid("Monza", {"Verstappen": 1,
+                                               "Max Verstappen": 2,
+                                               "Norris": 3})
+
+
+def test_update_ratings_deterministico_e_independente_de_ordem(model):
+    # mesma corrida, dicts em ordens diferentes → mesmos deltas (a
+    # atualização usa os ratings PRÉ-corrida para todos os pares)
+    res = {"Max Verstappen": 2, "Lando Norris": 1, "Lewis Hamilton": 3}
+    m2 = F1EloModel(ratings_file=model.path.with_name("ordem.json"))
+    d1 = model.update_ratings(res)
+    d2 = m2.update_ratings(dict(reversed(list(res.items()))))
+    assert d1 == d2

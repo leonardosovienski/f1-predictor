@@ -80,7 +80,7 @@ def _git(root: Path, *args: str) -> str:
     result = subprocess.run(["git", "-C", str(root), *args], text=True,
                             capture_output=True, check=False)
     if result.returncode != 0:
-        raise SnapshotError("proveniÃªncia Git do projeto nÃ£o pÃ´de ser determinada")
+        raise SnapshotError("proveniência Git do projeto não pôde ser determinada")
     return result.stdout.strip()
 
 
@@ -101,7 +101,7 @@ def _tools_provenance() -> dict[str, Any]:
         from tools.tools_provenance import ToolsProvenanceError, collect_tools_provenance
         return collect_tools_provenance(workspace / "tools", strict=True)
     except (ImportError, OSError, RuntimeError) as exc:
-        raise SnapshotError(f"proveniÃªncia strict de tools indisponÃ­vel: {exc}") from exc
+        raise SnapshotError(f"proveniência strict de tools indisponível: {exc}") from exc
 
 
 def _consumer_provenance(root: Path, core: dict[str, str], inputs: dict[str, str], generated: datetime) -> dict[str, Any]:
@@ -237,8 +237,11 @@ def create_pre_event_snapshot(*, season: int, round_: int, scheduled_start_utc: 
     circuit = match_circuit_metadata(event["circuit"], load_circuits())
     if circuit is None:
         raise SnapshotError(f"circuito do evento sem identidade canônica: {event['circuit']!r}")
-    output = model.predict_race_with_grid(circuit["name"], grid_map)
     params_path = root / "data" / "fase2_params.json"
+    # os parâmetros usados pelo modelo têm que ser OS MESMOS congelados/
+    # hasheados no payload (root pode não ser o ROOT do processo)
+    output = model.predict_race_with_grid(circuit["name"], grid_map,
+                                          params_file=params_path)
     inputs = {"grid": _sha256_file(grid_file), "database": _sha256_file(root / "data" / "f1.db"),
               "ratings": _sha256_file(root / "data" / "ratings.json"),
               "drivers": _sha256_file(root / "data" / "drivers_f1.json"),
@@ -296,6 +299,10 @@ def _result_rows(root: Path, season: int, round_: int) -> list[dict[str, Any]]:
         rows = conn.execute("SELECT driver_id, driver, constructor, grid, position, status, dnf, points FROM results WHERE season=? AND round=? ORDER BY position", (season, round_)).fetchall()
         if not rows:
             raise SnapshotError("resultado oficial ainda não existe no banco")
+        positions = [row["position"] for row in rows]
+        if len(set(positions)) != len(positions):
+            raise SnapshotError("resultado com posição final duplicada "
+                                "(classificação oficial exige posições únicas)")
         return [dict(row) for row in rows]
     finally:
         conn.close()
@@ -314,7 +321,7 @@ def mature_snapshot(*, season: int, round_: int, snapshots_root: Path,
     pre = load_and_verify_snapshot(pre_path)
     consumer = pre.get("consumer_provenance")
     if not isinstance(consumer, dict):
-        raise SnapshotError("snapshot PRE_EVENT sem consumer_provenance; maturaÃ§Ã£o strict proibida")
+        raise SnapshotError("snapshot PRE_EVENT sem consumer_provenance; maturação strict proibida")
     target = _matured_path(snapshots_root, event)
     if target.exists():
         raise SnapshotError(f"maturação já existe; overwrite proibido: {target}")

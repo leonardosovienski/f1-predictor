@@ -1,5 +1,35 @@
 # HANDOFF.md — f1-predictor
 
+> ## 🔍 EVOLUÇÃO FINAL — AUDITORIA HOSTIL (2026-07-19)
+>
+> Rodada de auditoria/testes hostis sobre ingestão, ratings, lifecycle de
+> snapshots e gates. **4 bugs reais corrigidos, nenhum científico**:
+> 1. `update_ratings` aceitava aliases que resolvem para a MESMA
+>    identidade ("Verstappen" + "Max Verstappen") — o dict de posições
+>    colapsava silenciosamente (last-wins) e a corrida era processada com
+>    n inflado; agora rejeita com erro claro (nada é aplicado).
+> 2. `update_ratings` aceitava posição final 0/negativa; agora exige 1..n.
+> 3. `predict_race_with_grid` tinha o mesmo colapso silencioso de alias no
+>    grid; agora rejeita. Também ganhou `params_file` opcional — e
+>    `create_pre_event_snapshot(root=...)` passa a usar OS MESMOS
+>    `fase2_params.json` que congela/hasheia no payload (antes o modelo lia
+>    do ROOT do processo enquanto a proveniência hasheava o do `root`
+>    passado — divergência latente quando root != ROOT).
+> 4. `mature_snapshot` agora rejeita resultado com posição final duplicada
+>    (empate/corrupção de banco não pode maturar); e 3 strings de erro de
+>    `snapshots.py` estavam com mojibake (UTF-8 lido como Latin-1) —
+>    corrigidas.
+>
+> Verificação de estado científico: `H8_REQUIRED_RACES=15` confirmado no
+> código; `snapshot-status` real = **0 corridas VALID_FOR_H8** (nenhum
+> snapshot forward criado ainda — não confundir com as 9 corridas
+> disputadas de 2026, que são retropredição). Gate H8 segue fechado;
+> gate de operação segue NO-GO (H1-F1 refutada). Trials: 9 pré-registradas,
+> vereditos inalterados. Suíte: **134 verdes** (8 novos testes hostis:
+> alias duplicado, posição inválida, empate na maturação, snapshot
+> truncado, temporada vazia, coerência de params congelados, determinismo
+> independente de ordem). CI 3/3.
+
 > ## ADENDO ECOSSISTEMA (2026-07-18)
 >
 > Vendor de `predictor_core` byte-idêntico ao canônico, sincronizado em

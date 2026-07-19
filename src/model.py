@@ -105,7 +105,8 @@ class F1EloModel:
                 "ranking": ranking, "model": "elo-plackett-luce-fase0"}
 
     def predict_race_with_grid(self, circuit: str, grid: dict,
-                               weather: str = "dry") -> dict:
+                               weather: str = "dry",
+                               params_file: Path | str | None = None) -> dict:
         """Ranking PÓS-QUALI — Elo misturado ao grid de largada (Fase 2:
         H3-F1b COMPROVADA — RPS 0.1281 vs 0.1416 do Elo puro, DM p≈0).
 
@@ -119,6 +120,10 @@ class F1EloModel:
         c = resolve_circuit(circuit)
         if weather not in ("dry", "wet"):
             raise ValueError(f"weather desconhecido: {weather!r} (dry|wet)")
+        entradas = [resolve_driver(n)["name"] for n in grid]
+        if len(set(entradas)) != len(entradas):
+            raise ValueError("piloto duplicado no grid (aliases que "
+                             "resolvem para a mesma identidade)")
         pilotos = {resolve_driver(n)["name"]: int(p) for n, p in grid.items()}
         # position=0 ("saiu do pit lane") NÃO é única — múltiplos pilotos
         # podem largar do pit lane na mesma corrida (penalidades de grid);
@@ -133,7 +138,7 @@ class F1EloModel:
         if n < 2:
             raise ValueError("grid precisa de pelo menos 2 pilotos")
 
-        params = _load_fase2_params()
+        params = _load_fase2_params(params_file)
         elos_model = np.array([self.ratings[nm] for nm in names])
         if params["usar_blend"]:
             grid_raw = np.array([pilotos[nm] if pilotos[nm] > 0 else n + 1
@@ -199,8 +204,13 @@ class F1EloModel:
         K individuais (novato anda mais rápido), dividido por (n-1).
         DNFs/ausentes: quem não está no dict não pontua nem perde."""
         nomes = [resolve_driver(n)["name"] for n in race_results]
+        if len(set(nomes)) != len(nomes):
+            raise ValueError("piloto duplicado no resultado (aliases que "
+                             "resolvem para a mesma identidade)")
         pos = {resolve_driver(n)["name"]: int(p)
                for n, p in race_results.items()}
+        if any(p < 1 for p in pos.values()):
+            raise ValueError("posição final inválida (< 1) no resultado")
         if len(set(pos.values())) != len(pos):
             raise ValueError("posições repetidas no resultado")
         n = len(nomes)
