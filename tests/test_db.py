@@ -41,6 +41,42 @@ def test_build_e_load(tmp_path):
     assert rows[1]["dnf"] == 1
 
 
+def test_corrida_do_proprio_dia_e_ingerida(tmp_path):
+    # Regressão: `date >= hoje` pulava a corrida do PRÓPRIO dia mesmo já
+    # terminada — só ingeria no dia seguinte. Agora tenta buscar; se ainda
+    # não correu, o provider devolve vazio (e não vira cache imutável).
+    from datetime import date
+
+    class HojeProvider:
+        def __init__(self, com_resultado):
+            self.com_resultado = com_resultado
+
+        def fetch_schedule(self, season):
+            return [{"season": 2026, "round": 1, "name": "GP Hoje",
+                     "circuit": "H", "date": date.today().isoformat()}]
+
+        def fetch_results(self, season, round_):
+            if not self.com_resultado:
+                return []                     # ainda não largou
+            base = {"season": season, "round": round_, "constructor": "Eq",
+                    "status": "Finished", "dnf": False, "points": 1.0}
+            return [{**base, "driver_id": "a", "driver": "Alice",
+                     "grid": 1, "position": 1},
+                    {**base, "driver_id": "b", "driver": "Bob",
+                     "grid": 2, "position": 2}]
+
+    # já terminou: resultado entra no mesmo build
+    db1 = tmp_path / "com.db"
+    stats = build_db(HojeProvider(True), [2026], path=db1)
+    assert stats["results"] == 2
+    assert len(load_races_with_results(db1)) == 1
+    # ainda não largou: fica só na agenda, sem erro
+    db2 = tmp_path / "sem.db"
+    stats = build_db(HojeProvider(False), [2026], path=db2)
+    assert stats["results"] == 0
+    assert load_races_with_results(db2) == []
+
+
 def test_rebuild_idempotente(tmp_path):
     db = tmp_path / "f1.db"
     build_db(FakeProvider(), [2022], path=db)

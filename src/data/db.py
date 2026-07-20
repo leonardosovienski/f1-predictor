@@ -81,7 +81,10 @@ def build_db(provider, seasons: list[int], path: Path | str | None = None) -> di
                     "INSERT OR REPLACE INTO races VALUES (?,?,?,?,?)",
                     (race["season"], race["round"], race["name"],
                      race["circuit"], race["date"]))
-                if race["date"] >= hoje:      # ainda não correu — só agenda
+                # `>` (não `>=`): corrida do PRÓPRIO dia já pode ter
+                # terminado — tenta buscar; se ainda não correu, o provider
+                # devolve vazio e o guard de cache não congela a resposta.
+                if race["date"] > hoje:       # ainda não correu — só agenda
                     n_races += 1
                     continue
                 rows = provider.fetch_results(season, race["round"])

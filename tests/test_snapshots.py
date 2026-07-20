@@ -31,11 +31,29 @@ def _grid_file(tmp_path: Path, *, mutate=None) -> Path:
     return path
 
 
+def _next_open_round() -> tuple[int, str]:
+    """Primeira rodada de 2026 SEM resultado no banco vivo (o fixture não
+    pode apodrecer a cada corrida disputada — regressão: R10 hardcoded
+    quebrou 7 testes no dia seguinte ao GP da Bélgica)."""
+    conn = snapshots.db.connect(ROOT / "data" / "f1.db", readonly=True)
+    try:
+        row = conn.execute(
+            "SELECT r.round, r.date FROM races r WHERE r.season=2026 AND NOT "
+            "EXISTS(SELECT 1 FROM results x WHERE x.season=2026 AND x.round=r.round) "
+            "ORDER BY r.round LIMIT 1").fetchone()
+    finally:
+        conn.close()
+    assert row is not None, "temporada 2026 já terminou — atualizar fixture"
+    return int(row[0]), f"{row[1]}T13:00:00Z"
+
+
 def _create_r10(tmp_path: Path, *, now=None, grid=None):
+    round_, start = _next_open_round()
     return snapshots.create_pre_event_snapshot(
-        season=2026, round_=10, scheduled_start_utc="2026-07-19T13:00:00Z",
+        season=2026, round_=round_, scheduled_start_utc=start,
         grid_file=grid or _grid_file(tmp_path), snapshots_root=tmp_path / "snapshots",
-        now=now or datetime(2026, 7, 15, 10, tzinfo=timezone.utc))
+        now=now or (snapshots._parse_utc(start, "start")
+                    - __import__("datetime").timedelta(days=1)))
 
 
 def _temp_root_with_db(tmp_path: Path) -> Path:
@@ -93,8 +111,9 @@ def test_rejects_naive_and_late_timestamp(tmp_path):
         snapshots.create_pre_event_snapshot(season=2026, round_=10,
             scheduled_start_utc="2026-07-19T13:00:00", grid_file=_grid_file(tmp_path),
             snapshots_root=tmp_path / "snapshots")
+    _, start = _next_open_round()
     with pytest.raises(snapshots.SnapshotError, match="após início"):
-        _create_r10(tmp_path, now=datetime(2026, 7, 19, 13, tzinfo=timezone.utc))
+        _create_r10(tmp_path, now=snapshots._parse_utc(start, "start"))
 
 
 def test_accepts_multiple_pit_lane_starters_at_position_zero(tmp_path):
@@ -211,10 +230,12 @@ def test_pre_event_uses_the_same_params_it_freezes(tmp_path):
     subprocess.run(["git", "init", "-q", str(root)], check=True)
     subprocess.run(["git", "-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t",
                     "commit", "--allow-empty", "-q", "-m", "fixture"], check=True)
+    round_, start = _next_open_round()
     path = snapshots.create_pre_event_snapshot(
-        season=2026, round_=10, scheduled_start_utc="2026-07-19T13:00:00Z",
+        season=2026, round_=round_, scheduled_start_utc=start,
         grid_file=_grid_file(tmp_path), snapshots_root=tmp_path / "snaps",
-        now=datetime(2026, 7, 15, 10, tzinfo=timezone.utc), root=root)
+        now=snapshots._parse_utc(start, "start")
+        - __import__("datetime").timedelta(days=1), root=root)
     payload = json.loads(path.read_text(encoding="utf-8"))
     assert payload["frozen_parameters"]["w_grid"] == 0.99
     assert payload["model_output"]["w_grid"] == 0.99

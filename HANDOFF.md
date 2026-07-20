@@ -1,5 +1,34 @@
 # HANDOFF.md — f1-predictor
 
+> ## 🔧 RESOLUÇÃO DE PENDÊNCIAS (2026-07-20)
+>
+> Continuação da rodada de evolução final:
+> 1. **`build_db` corrigido**: `date >= hoje` pulava a corrida do PRÓPRIO
+>    dia mesmo já terminada (só ingeria no dia seguinte); agora `>` —
+>    corrida de hoje é buscada e, se ainda não correu, a resposta vazia
+>    não vira cache (guard existente). Teste novo cobre os dois lados.
+> 2. **GP da Bélgica (R10, 2026-07-19) ingerido** — gatilho natural
+>    documentado. `validate_2026.py` rerodado: Antonelli venceu (5ª
+>    vitória), acerto de vencedor do blend 2/10, RPS médio 2026
+>    elo=0.1654 / grid=0.1334 / blend=0.1425 — o grid puro segue batendo
+>    o modelo; gate de operação segue NO-GO. Nenhum snapshot forward de
+>    R10 existia (a coleta ainda não começou), então H8 segue 0/15 —
+>    a R10 é retropredição como R1–R9, nunca evidência forward.
+> 3. **Fixture time-bomb corrigido**: os testes de snapshot usavam R10
+>    hardcoded como "corrida futura" e quebraram (7 falhas) no dia
+>    seguinte ao GP; agora o fixture escolhe dinamicamente a primeira
+>    rodada de 2026 sem resultado no banco.
+> 4. **OP-4 (parte f1) verificado**: rebuild OFFLINE do `f1.db` a partir
+>    do cache `data/raw/` reproduz o banco vivo com dump lógico SHA-256
+>    idêntico — o caminho de backup/restore do f1-predictor é o próprio
+>    cache + `build_db` (determinístico). Registrado em
+>    `../PENDENCIAS_ABERTAS.md`.
+>
+> OP-3 (glossário) já estava resolvida em 2026-07-19
+> (`../GLOSSARIO_STATUS.md`). Demais pendências do ecossistema são
+> `CORRECTLY_DEFERRED`/`REJECTED` por decisão registrada ou exigem ação
+> humana (SEC-1) — não reabertas. Suíte: **135 verdes**; CI 3/3.
+
 > ## 🔍 EVOLUÇÃO FINAL — AUDITORIA HOSTIL (2026-07-19)
 >
 > Rodada de auditoria/testes hostis sobre ingestão, ratings, lifecycle de

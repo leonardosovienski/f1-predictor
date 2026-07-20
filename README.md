@@ -126,7 +126,7 @@ scripts/ci_check.py         # 3 barreiras: pytest, .ps1 ASCII, parse+smoke
 docs/RELATORIO_FASE1.md     # RPS vs baselines, estratos, vereditos
 docs/RELATORIO_FASE2.md     # blend, calibração, sondagem de odds, gate
 docs/RELATORIO_FASE4.md     # H0-formal, contexto/reliability/pit, choque de patch, purge/embargo
-tests/                      # 134 testes
+tests/                      # 135 testes
 vendor/predictor_core/      # v1.3.1 via sync manual escopado a este worktree (NÃO editar à mão)
 ```
 
