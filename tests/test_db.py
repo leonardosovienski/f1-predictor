@@ -1,4 +1,6 @@
 """SQLite f1.db — ingestão idempotente, corrida futura, ordem prequential."""
+import pytest
+
 from src.data.db import build_db, connect, load_races_with_results
 
 
@@ -108,6 +110,66 @@ def test_replay_de_resultado_corrigido_remove_linha_obsoleta(tmp_path):
         assert conn.execute("SELECT COUNT(*) FROM results WHERE driver_id='b'").fetchone()[0] == 0
     finally:
         conn.close()
+
+
+@pytest.mark.parametrize("mutation", [
+    lambda rows: rows.__setitem__(1, {**rows[1], "position": 1}),
+    lambda rows: rows.__setitem__(1, {**rows[1], "driver_id": "a"}),
+    lambda rows: rows.__setitem__(1, {**rows[1], "points": float("nan")}),
+    lambda rows: rows.__setitem__(1, {**rows[1], "grid": -1}),
+])
+def test_ingestao_rejeita_resultado_corrompido_sem_apagar_anterior(
+        tmp_path, mutation):
+    class CorruptProvider(FakeProvider):
+        corrupt = False
+
+        def fetch_results(self, season, round_):
+            rows = super().fetch_results(season, round_)
+            if self.corrupt:
+                mutation(rows)
+            return rows
+
+    provider = CorruptProvider()
+    db = tmp_path / "f1.db"
+    build_db(provider, [2022], path=db)
+    provider.corrupt = True
+    with pytest.raises(ValueError):
+        build_db(provider, [2022], path=db)
+    conn = connect(db)
+    try:
+        assert conn.execute("SELECT COUNT(*) FROM results").fetchone()[0] == 4
+        assert conn.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+    finally:
+        conn.close()
+
+
+def test_resposta_vazia_nao_apaga_resultado_maduro(tmp_path):
+    class EmptyReplayProvider(FakeProvider):
+        empty = False
+
+        def fetch_results(self, season, round_):
+            return [] if self.empty else super().fetch_results(season, round_)
+
+    provider = EmptyReplayProvider()
+    db = tmp_path / "f1.db"
+    build_db(provider, [2022], path=db)
+    provider.empty = True
+    build_db(provider, [2022], path=db)
+    conn = connect(db)
+    try:
+        assert conn.execute("SELECT COUNT(*) FROM results").fetchone()[0] == 4
+    finally:
+        conn.close()
+
+
+def test_ingestao_rejeita_pitstop_nao_finito(tmp_path):
+    class BadPitProvider(FakeProvider):
+        def fetch_pitstops(self, season, round_):
+            return [{"season": season, "round": round_, "driver_id": "a",
+                     "lap": 1, "stop": 1, "duration_s": float("inf")}]
+
+    with pytest.raises(ValueError, match="pitstop inválida"):
+        build_db(BadPitProvider(), [2022], path=tmp_path / "f1.db")
 
 
 def test_leitura_read_only(tmp_path):

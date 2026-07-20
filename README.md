@@ -7,7 +7,10 @@
 > realmente atômica e limpa falhas parciais; maturação anterior à largada é
 > rejeitada e revalidada na elegibilidade; replay de resultado oficial
 > corrigido remove linhas obsoletas. Ratings e parâmetros não finitos
-> (NaN/Inf) também passam a falhar fechados. Suíte: **146 testes verdes**;
+> (NaN/Inf) também passam a falhar fechados. A ingestão valida o lote
+> completo antes de substituir uma corrida (identidade, posições, grid,
+> DNF, pontos e pitstops); payload inválido não apaga o resultado anterior.
+> Suíte: **152 testes verdes**;
 > `scripts/ci_check.py`: 3/3 barreiras verdes. Veredito: **PASS LOCAL COM
 > GATE CIENTÍFICO FECHADO**.
 
@@ -165,7 +168,7 @@ docs/RELATORIO_FASE2.md     # blend, calibração, sondagem de odds, gate
 docs/RELATORIO_FASE4.md     # H0-formal, contexto/reliability/pit, choque de patch, purge/embargo
 docs/RELATORIO_FASE5.md     # H8-F1, protocolo sintético, leitura honesta sem poder estatístico
 docs/PROMPT_VALIDACAO_2026.md  # protocolo da validação viva
-tests/                      # 146 testes
+tests/                      # 152 testes
 vendor/predictor_core/      # v1.3.1 via sync manual escopado a este worktree (NÃO editar à mão)
 ```
 

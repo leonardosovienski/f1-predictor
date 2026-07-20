@@ -15,6 +15,7 @@ tabela é mais recente que a de `results` — corrida sem pitstop registrado
 simplesmente não aparece na tabela (não é erro).
 """
 import sqlite3
+import math
 from datetime import date
 from pathlib import Path
 
@@ -56,6 +57,62 @@ CREATE TABLE IF NOT EXISTS pitstops (
 """
 
 
+def _validate_result_rows(rows: list[dict], season: int, round_: int) -> None:
+    """Fail closed before replacing an existing official race result."""
+    driver_ids: set[str] = set()
+    positions: set[int] = set()
+    grid_positions: set[int] = set()
+    for row in rows:
+        if row.get("season") != season or row.get("round") != round_:
+            raise ValueError("resultado pertence a outra corrida")
+        driver_id = row.get("driver_id")
+        if not isinstance(driver_id, str) or not driver_id.strip() \
+                or driver_id in driver_ids:
+            raise ValueError("driver_id ausente ou duplicado no resultado")
+        if not all(isinstance(row.get(key), str) and row[key].strip()
+                   for key in ("driver", "constructor", "status")):
+            raise ValueError("identidade/status inválido no resultado")
+        position = row.get("position")
+        grid = row.get("grid")
+        if isinstance(position, bool) or not isinstance(position, int) \
+                or position < 1 or position in positions:
+            raise ValueError("posição final inválida ou duplicada")
+        if isinstance(grid, bool) or not isinstance(grid, int) or grid < 0 \
+                or (grid > 0 and grid in grid_positions):
+            raise ValueError("posição de grid inválida ou duplicada")
+        points = row.get("points")
+        if isinstance(points, bool) or not isinstance(points, (int, float)) \
+                or not math.isfinite(float(points)):
+            raise ValueError("pontos inválidos/não finitos")
+        if row.get("dnf") not in (True, False, 0, 1):
+            raise ValueError("indicador DNF inválido")
+        driver_ids.add(driver_id)
+        positions.add(position)
+        if grid > 0:
+            grid_positions.add(grid)
+
+
+def _validate_pitstop_rows(rows: list[dict], season: int, round_: int) -> None:
+    keys: set[tuple[str, int]] = set()
+    for row in rows:
+        driver_id = row.get("driver_id")
+        lap, stop, duration = row.get("lap"), row.get("stop"), row.get("duration_s")
+        if row.get("season") != season or row.get("round") != round_:
+            raise ValueError("pitstop pertence a outra corrida")
+        if not isinstance(driver_id, str) or not driver_id.strip():
+            raise ValueError("pitstop sem identidade única")
+        if (isinstance(lap, bool) or not isinstance(lap, int) or lap < 1
+                or isinstance(stop, bool) or not isinstance(stop, int) or stop < 1):
+            raise ValueError("lap/stop inválido")
+        key = (driver_id, stop)
+        if key in keys:
+            raise ValueError("pitstop sem identidade única")
+        if (isinstance(duration, bool) or not isinstance(duration, (int, float))
+                or not math.isfinite(float(duration)) or duration < 0):
+            raise ValueError("duração de pitstop inválida/não finita")
+        keys.add(key)
+
+
 def connect(path: Path | str | None = None, readonly: bool = True) -> sqlite3.Connection:
     """Read-only por default (P12): quem lê nunca segura lock de escrita."""
     p = Path(path or DB_PATH)
@@ -92,6 +149,7 @@ def build_db(provider, seasons: list[int], path: Path | str | None = None) -> di
                 # Replace the set so a corrected replay cannot retain a stale
                 # driver row. Empty still means unavailable and deletes none.
                 if rows:
+                    _validate_result_rows(rows, season, race["round"])
                     conn.execute("DELETE FROM results WHERE season=? AND round=?",
                                  (season, race["round"]))
                 for r in rows:
@@ -104,6 +162,7 @@ def build_db(provider, seasons: list[int], path: Path | str | None = None) -> di
                 n_results += len(rows)
                 if hasattr(provider, "fetch_pitstops"):
                     pits = provider.fetch_pitstops(season, race["round"])
+                    _validate_pitstop_rows(pits, season, race["round"])
                     for ps in pits:
                         conn.execute(
                             "INSERT OR REPLACE INTO pitstops VALUES (?,?,?,?,?,?)",

@@ -30,7 +30,11 @@
 > inválidas/duplicadas, pit lane empatado em zero, novo piloto, timestamps
 > inválidos, snapshot duplicado/truncado, maturação prematura, resultado
 > corrigido, replay, falha parcial, concorrência/determinismo e NaN/Inf.
-> Suíte completa: **146 verdes**; CI local: **3/3**. Nenhum parâmetro,
+> Fechamento adicional: `build_db` agora valida atomicamente cada lote de
+> resultado/pitstops antes da substituição. Corrida/round divergente,
+> identidade ou posição duplicada, grid inválido, DNF malformado e
+> NaN/Inf abortam sem apagar o dado anterior; resposta vazia também não é
+> destrutiva. Suíte completa: **152 verdes**; CI local: **3/3**. Nenhum parâmetro,
 > threshold, K-factor, trial ou veredito científico mudou. Veredito local:
 > **PASS LOCAL COM GATE CIENTÍFICO FECHADO**.
 
