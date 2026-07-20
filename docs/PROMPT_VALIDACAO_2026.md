@@ -42,6 +42,13 @@ EXATAMENTE como estava ANTES dela (prequential — reusar `BacktestElo` e
 - **vencedor**: o modelo acertou o P1 previsto (maior P(win))?
 - **pódio**: quantos dos 3 do pódio real estavam nos 3 primeiros do
   ranking previsto?
+- **erro médio de posição** (2026-07-20, adicionado a pedido do usuário):
+  |posição prevista − posição real| médio por piloto, comparando as DUAS
+  ordens de chegada completas (22 pilotos), não só quem ficou em 1º — o
+  RPS já pontua isso internamente, esta é só a versão legível por
+  humano. Referência de contexto: duas ordens aleatórias independentes
+  erram, em média, ~n/3 posições (≈7,3 para n=22) — o modelo fica bem
+  abaixo disso, mas ainda longe de exato.
 - comparação lado a lado com o que o **grid de largada sozinho** teria
   previsto (o baseline H0 — sempre relatar os dois).
 

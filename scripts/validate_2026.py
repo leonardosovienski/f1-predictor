@@ -37,6 +37,24 @@ SIM_SEED = 13
 W_GRID = 0.5   # comprovado na Fase 2 (H3-F1b)
 
 
+def _ordem_prevista(names: list, elos: list) -> list:
+    """Ordem de chegada prevista: pilotos ordenados por força decrescente
+    (estimativa pontual — não precisa de simulação, é o mesmo critério que
+    já decide o vencedor previsto em expectativa)."""
+    idx = sorted(range(len(names)), key=lambda i: -elos[i])
+    return [names[i] for i in idx]
+
+
+def _erro_medio_posicao(ordem_prevista: list, ordem_real: list) -> float:
+    """Erro médio |posição prevista - posição real| por piloto, comparando
+    as DUAS ordens completas (não só o vencedor) — mede o quanto a previsão
+    inteira erra o grid de chegada, não só quem ficou em 1º."""
+    prev_rank = {nm: i for i, nm in enumerate(ordem_prevista)}
+    real_rank = {nm: i for i, nm in enumerate(ordem_real)}
+    erros = [abs(prev_rank[nm] - real_rank[nm]) for nm in ordem_real]
+    return sum(erros) / len(erros)
+
+
 def retrodicao_2026(races: list) -> list:
     """Elo contínuo 2022→hoje; para cada corrida de 2026 JÁ disputada,
     previsão ANTES do update (sem lookahead), três candidatos: Elo puro,
@@ -50,6 +68,7 @@ def retrodicao_2026(races: list) -> list:
             continue
         names = [r["driver"] for r in results]
         actual_pos = [r["position"] - 1 for r in results]
+        ordem_real = [nm for nm, _ in sorted(zip(names, actual_pos), key=lambda t: t[1])]
 
         if race["season"] == 2026:
             elos_model = [elo.rating(nm) for nm in names]
@@ -59,7 +78,7 @@ def retrodicao_2026(races: list) -> list:
                                     W_GRID).tolist()
             row = {"round": race["round"], "name": race["name"],
                   "circuit": race["circuit"], "date": race["date"],
-                  "n_drivers": n}
+                  "n_drivers": n, "ordem_real": ordem_real}
             for tag, elos in (("model", elos_model), ("grid", elos_grid),
                              ("blend", elos_blend)):
                 import numpy as np
@@ -72,6 +91,10 @@ def retrodicao_2026(races: list) -> list:
                 top3_idx = set(p[:, :3].sum(axis=1).argsort()[::-1][:3].tolist())
                 real_top3_idx = {i for i, pos in enumerate(actual_pos) if pos < 3}
                 row[f"podio_acertos_{tag}"] = len(top3_idx & real_top3_idx)
+                ordem_prevista = _ordem_prevista(names, elos)
+                row[f"ordem_prevista_{tag}"] = ordem_prevista
+                row[f"erro_medio_posicao_{tag}"] = round(
+                    _erro_medio_posicao(ordem_prevista, ordem_real), 3)
             row["vencedor_real"] = names[actual_pos.index(0)]
             linhas.append(row)
 
@@ -129,10 +152,12 @@ def main() -> int:
     if not linhas:
         print("      nenhuma corrida de 2026 com resultado ainda.")
     else:
-        print(f"      {'corrida':<24}{'RPS elo':>9}{'RPS grid':>10}{'RPS blend':>11}  vencedor real / previsto (blend)")
+        print(f"      {'corrida':<24}{'RPS elo':>9}{'RPS grid':>10}{'RPS blend':>11}"
+             f"{'erro pos.':>11}  vencedor real / previsto (blend)")
         for row in linhas:
             print(f"      {row['name'][:22]:<24}{row['rps_model']:>9.4f}"
-                  f"{row['rps_grid']:>10.4f}{row['rps_blend']:>11.4f}  "
+                  f"{row['rps_grid']:>10.4f}{row['rps_blend']:>11.4f}"
+                  f"{row['erro_medio_posicao_blend']:>11.2f}  "
                   f"{row['vencedor_real']} / {row['vencedor_previsto_blend']}")
         n = len(linhas)
         acertos_blend = sum(1 for r in linhas
@@ -141,6 +166,16 @@ def main() -> int:
         print(f"      RPS medio 2026: elo={sum(r['rps_model'] for r in linhas)/n:.4f} "
               f"grid={sum(r['rps_grid'] for r in linhas)/n:.4f} "
               f"blend={sum(r['rps_blend'] for r in linhas)/n:.4f}")
+        print(f"      erro medio de posicao (blend, 22 pilotos): "
+              f"{sum(r['erro_medio_posicao_blend'] for r in linhas)/n:.2f}")
+
+        ultima = linhas[-1]
+        print(f"\n      Ordem completa prevista x real — {ultima['name']} "
+             f"(corrida mais recente, erro medio {ultima['erro_medio_posicao_blend']:.2f}):")
+        print(f"      {'pos':>4}  {'real':<24}{'previsto (blend)':<24}")
+        for i, (real_nm, prev_nm) in enumerate(
+                zip(ultima["ordem_real"], ultima["ordem_prevista_blend"]), start=1):
+            print(f"      {i:>4}  {real_nm:<24}{prev_nm:<24}")
 
     print("[2/3] próxima corrida do calendário...")
     provider = F1Provider()
