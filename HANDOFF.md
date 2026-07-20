@@ -1,5 +1,9 @@
 # HANDOFF.md — f1-predictor
 
+> **Sincronia Git (revalidada em 2026-07-20):** o HEAD local `030a5b7`
+> está um commit à frente de `origin/main` (`2bf2dad`). Nenhum push foi
+> feito nesta rodada.
+
 > ## FECHAMENTO FINAL — INTEGRIDADE DE REPLAY E MATURAÇÃO (2026-07-20)
 >
 > Auditoria direta de código, banco, artefatos e casos hostis. Estado real:

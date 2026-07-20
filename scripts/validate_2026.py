@@ -15,7 +15,7 @@ Uso:
 import json
 import sys
 from collections import defaultdict
-from datetime import date, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -103,9 +103,28 @@ def retrodicao_2026(races: list) -> list:
     return linhas
 
 
-def proxima_corrida(schedule: list) -> dict | None:
-    hoje = date.today().isoformat()
-    futuras = [r for r in schedule if r["date"] >= hoje]
+def proxima_corrida(schedule: list, now: datetime | None = None) -> dict | None:
+    """Primeira corrida cuja largada ainda não ocorreu.
+
+    Caches legados sem horário mantêm o comportamento conservador por data;
+    calendários atuais usam o instante UTC oficial e não chamam uma corrida
+    já iniciada de futura.
+    """
+    instant = now or datetime.now(timezone.utc)
+    if instant.tzinfo is None or instant.utcoffset() is None:
+        raise ValueError("now deve conter timezone")
+    instant = instant.astimezone(timezone.utc)
+    futuras = []
+    for race in schedule:
+        scheduled = race.get("scheduled_start_utc")
+        if scheduled:
+            start = datetime.fromisoformat(scheduled.replace("Z", "+00:00"))
+            if start.tzinfo is None or start.utcoffset() is None:
+                raise ValueError("scheduled_start_utc deve conter timezone")
+            if start.astimezone(timezone.utc) > instant:
+                futuras.append(race)
+        elif race["date"] >= instant.date().isoformat():
+            futuras.append(race)
     return futuras[0] if futuras else None
 
 

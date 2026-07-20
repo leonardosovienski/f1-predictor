@@ -26,7 +26,8 @@ _RESULTS_FIXTURE = {"MRData": {"RaceTable": {"Races": [{
 
 _SCHEDULE_FIXTURE = {"MRData": {"RaceTable": {"Races": [
     {"season": "2022", "round": "1", "raceName": "Bahrain Grand Prix",
-     "date": "2022-03-20", "Circuit": {"circuitName": "Bahrain International Circuit"}},
+     "date": "2022-03-20", "time": "15:00:00Z",
+     "Circuit": {"circuitName": "Bahrain International Circuit"}},
     {"season": "2022", "round": "2", "raceName": "Saudi Arabian Grand Prix",
      "date": "2022-03-27", "Circuit": {"circuitName": "Jeddah Corniche Circuit"}},
 ]}}}
@@ -92,6 +93,8 @@ def test_fetch_schedule_parse_do_cache(provider, tmp_path):
     assert [r["round"] for r in sched] == [1, 2]
     assert sched[0]["circuit"] == "Bahrain International Circuit"
     assert sched[0]["date"] == "2022-03-20"
+    assert sched[0]["scheduled_start_utc"] == "2022-03-20T15:00:00Z"
+    assert sched[1]["scheduled_start_utc"] is None
 
 
 def test_fetch_qualifying_parse_do_cache(provider, tmp_path):
