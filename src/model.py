@@ -46,7 +46,20 @@ def _load_fase2_params(path: Path | str | None = None) -> dict:
     if not p.exists():
         return dict(_FASE2_DEFAULTS)
     saved = json.loads(p.read_text(encoding="utf-8"))
-    return {**_FASE2_DEFAULTS, **saved}
+    if not isinstance(saved, dict):
+        raise ValueError("parâmetros da Fase 2 devem ser um objeto JSON")
+    params = {**_FASE2_DEFAULTS, **saved}
+    for key in ("w_grid", "platt_a", "platt_b"):
+        value = params[key]
+        if isinstance(value, bool) or not isinstance(value, (int, float)) \
+                or not math.isfinite(float(value)):
+            raise ValueError(f"parâmetro da Fase 2 inválido: {key}")
+    for key in ("usar_blend", "usar_calibracao"):
+        if not isinstance(params[key], bool):
+            raise ValueError(f"parâmetro da Fase 2 inválido: {key}")
+    if not 0.0 <= float(params["w_grid"]) <= 1.0:
+        raise ValueError("parâmetro da Fase 2 inválido: w_grid")
+    return params
 
 
 class F1EloModel:
@@ -65,6 +78,14 @@ class F1EloModel:
             ROOT / cfg.get("ratings_file", "data/ratings.json"))
         if self.path.exists():
             vividos = json.loads(self.path.read_text(encoding="utf-8"))
+            if not isinstance(vividos, dict):
+                raise ValueError("ratings devem ser um objeto JSON")
+            invalid = [key for key, value in vividos.items()
+                       if isinstance(value, bool)
+                       or not isinstance(value, (int, float))
+                       or not math.isfinite(float(value))]
+            if invalid:
+                raise ValueError(f"rating inválido/não finito: {invalid[0]}")
             # só pilotos do grid: um ratings.json com histórico (aposentados)
             # não pode inflar o grid do serving
             self.ratings.update({k: float(v) for k, v in vividos.items()

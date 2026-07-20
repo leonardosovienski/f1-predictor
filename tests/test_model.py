@@ -1,4 +1,6 @@
 """Modelo Elo ordinal de F1 — Fase 0. Ratings em tmp_path."""
+import json
+
 import pytest
 
 from src.model import F1EloModel, win_probability
@@ -156,3 +158,22 @@ def test_update_ratings_deterministico_e_independente_de_ordem(model):
     d1 = model.update_ratings(res)
     d2 = m2.update_ratings(dict(reversed(list(res.items()))))
     assert d1 == d2
+
+
+@pytest.mark.parametrize("invalid", [float("nan"), float("inf"), float("-inf")])
+def test_rejeita_rating_nao_finito(tmp_path, invalid):
+    path = tmp_path / "ratings.json"
+    path.write_text(json.dumps({"Max Verstappen": invalid}), encoding="utf-8")
+    with pytest.raises(ValueError, match="não finito"):
+        F1EloModel(ratings_file=path)
+
+
+@pytest.mark.parametrize("invalid", [float("nan"), float("inf")])
+def test_rejeita_parametro_nao_finito(model, tmp_path, invalid):
+    params = tmp_path / "params.json"
+    params.write_text(json.dumps({"usar_blend": True, "w_grid": invalid}),
+                      encoding="utf-8")
+    names = list(model.ratings)[:2]
+    with pytest.raises(ValueError, match="parâmetro"):
+        model.predict_race_with_grid("Monza", {names[0]: 1, names[1]: 2},
+                                     params_file=params)

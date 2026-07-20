@@ -88,6 +88,12 @@ def build_db(provider, seasons: list[int], path: Path | str | None = None) -> di
                     n_races += 1
                     continue
                 rows = provider.fetch_results(season, race["round"])
+                # Non-empty is the complete official snapshot for the race.
+                # Replace the set so a corrected replay cannot retain a stale
+                # driver row. Empty still means unavailable and deletes none.
+                if rows:
+                    conn.execute("DELETE FROM results WHERE season=? AND round=?",
+                                 (season, race["round"]))
                 for r in rows:
                     conn.execute(
                         "INSERT OR REPLACE INTO results VALUES (?,?,?,?,?,?,?,?,?,?)",

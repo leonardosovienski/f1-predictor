@@ -195,6 +195,78 @@ def test_mature_rejects_duplicate_final_position(tmp_path):
                                   root=root, now=datetime(2026, 3, 8, 14, tzinfo=timezone.utc))
 
 
+def test_rejects_premature_maturation_and_revalidates_timestamp(tmp_path):
+    root = _temp_root_with_db(tmp_path)
+    snapshots_root = tmp_path / "snaps"
+    pre = _manual_pre(root, snapshots_root)
+    with pytest.raises(snapshots.SnapshotError, match="prematura"):
+        snapshots.mature_snapshot(
+            season=2026, round_=1, snapshots_root=snapshots_root, root=root,
+            now=datetime(2026, 3, 8, 9, 30, tzinfo=timezone.utc))
+
+    matured = snapshots.mature_snapshot(
+        season=2026, round_=1, snapshots_root=snapshots_root, root=root,
+        now=datetime(2026, 3, 8, 14, tzinfo=timezone.utc))
+    payload = json.loads(matured.read_text(encoding="utf-8"))
+    payload["matured_at_utc"] = "2026-03-08T09:30:00Z"
+    payload["payload_hash"] = snapshots._payload_hash(payload)
+    matured.write_text(json.dumps(payload), encoding="utf-8")
+    result = snapshots.h8_eligibility(pre, matured)
+    assert result["status"] == "INVALID_FOR_H8"
+    assert "prematura" in result["reason"]
+
+
+def test_atomic_create_cleans_partial_file_on_write_error(tmp_path, monkeypatch):
+    destination = tmp_path / "snapshots" / "event.json"
+
+    def fail_fsync(_fd):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(snapshots.os, "fsync", fail_fsync)
+    with pytest.raises(snapshots.SnapshotError, match="atômico"):
+        snapshots._atomic_create(destination, {"event": 1})
+    assert not destination.exists()
+    assert list(destination.parent.glob("*.tmp")) == []
+
+
+def test_atomic_create_has_exactly_one_concurrent_winner(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+
+    destination = tmp_path / "snapshots" / "event.json"
+
+    def publish(value):
+        try:
+            snapshots._atomic_create(destination, {"event": value})
+            return "created"
+        except snapshots.SnapshotError:
+            return "exists"
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        outcomes = list(pool.map(publish, (1, 2)))
+    assert sorted(outcomes) == ["created", "exists"]
+    assert json.loads(destination.read_text(encoding="utf-8"))["event"] in (1, 2)
+
+
+def test_corrected_result_invalidates_existing_maturity(tmp_path):
+    import sqlite3
+
+    root = _temp_root_with_db(tmp_path)
+    snapshots_root = tmp_path / "snaps"
+    pre = _manual_pre(root, snapshots_root)
+    matured = snapshots.mature_snapshot(
+        season=2026, round_=1, snapshots_root=snapshots_root, root=root,
+        now=datetime(2026, 3, 8, 14, tzinfo=timezone.utc))
+    assert snapshots.h8_eligibility(pre, matured, root=root)["status"] == "VALID_FOR_H8"
+
+    conn = sqlite3.connect(root / "data" / "f1.db")
+    conn.execute("UPDATE results SET status='Disqualified', dnf=1, points=0 "
+                 "WHERE season=2026 AND round=1 AND position=2")
+    conn.commit(); conn.close()
+    result = snapshots.h8_eligibility(pre, matured, root=root)
+    assert result["status"] == "INVALID_FOR_H8"
+    assert "corrigido" in result["reason"]
+
+
 def test_truncated_snapshot_file_is_invalid_for_h8(tmp_path):
     pre = _create_r10(tmp_path / "trunc")
     raw = pre.read_text(encoding="utf-8")

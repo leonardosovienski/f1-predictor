@@ -89,6 +89,27 @@ def test_rebuild_idempotente(tmp_path):
     assert n == 4
 
 
+def test_replay_de_resultado_corrigido_remove_linha_obsoleta(tmp_path):
+    class CorrectedProvider(FakeProvider):
+        corrected = False
+
+        def fetch_results(self, season, round_):
+            rows = super().fetch_results(season, round_)
+            return rows[:1] if self.corrected else rows
+
+    provider = CorrectedProvider()
+    db = tmp_path / "f1.db"
+    build_db(provider, [2022], path=db)
+    provider.corrected = True
+    build_db(provider, [2022], path=db)
+    conn = connect(db)
+    try:
+        assert conn.execute("SELECT COUNT(*) FROM results").fetchone()[0] == 2
+        assert conn.execute("SELECT COUNT(*) FROM results WHERE driver_id='b'").fetchone()[0] == 0
+    finally:
+        conn.close()
+
+
 def test_leitura_read_only(tmp_path):
     db = tmp_path / "f1.db"
     build_db(FakeProvider(), [2022], path=db)

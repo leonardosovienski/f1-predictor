@@ -1,5 +1,39 @@
 # HANDOFF.md — f1-predictor
 
+> ## FECHAMENTO FINAL — INTEGRIDADE DE REPLAY E MATURAÇÃO (2026-07-20)
+>
+> Auditoria direta de código, banco, artefatos e casos hostis. Estado real:
+> banco íntegro (`integrity_check=ok`), 114 corridas, 2.058 resultados e
+> 3.750 pitstops; em 2026 há 22 eventos no calendário, 10 disputados com
+> 220 resultados, mas **0 pares PRE_EVENT→MATURED `VALID_FOR_H8`**.
+> `H8_REQUIRED_RACES = 15` permanece literal em `src/snapshots.py`; faltam
+> 15 evidências forward válidas, não cinco corridas disputadas.
+>
+> Bugs reais corrigidos nesta rodada:
+>
+> 1. `_atomic_create` escrevia diretamente no nome final; ENOSPC/erro
+>    parcial podia deixar JSON truncado e consumir definitivamente o id
+>    imutável. Agora grava+`fsync` em temporário, publica por hard link
+>    atômico sem overwrite concorrente e sempre limpa o temporário.
+> 2. `mature_snapshot` aceitava timestamp anterior à largada, e
+>    `h8_eligibility` não revalidava tempo/identidade após leitura. Ambos
+>    agora falham fechados (`INVALID_FOR_H8`).
+> 3. `build_db` fazia apenas `INSERT OR REPLACE`: replay de resultado
+>    oficial corrigido com menos linhas preservava piloto obsoleto. Uma
+>    resposta não vazia agora substitui transacionalmente o conjunto da
+>    corrida; resposta vazia não apaga resultado maduro.
+> 4. JSON de ratings/parâmetros aceitava NaN/Inf, contaminando simulação e
+>    serialização. Validação finita e de tipo foi adicionada.
+>
+> Cobertura hostil inclui banco/temporada vazios, DNF/DNS/DSQ/Lapped,
+> ausência e substituto (rejeição explícita fora do grid canônico), posições
+> inválidas/duplicadas, pit lane empatado em zero, novo piloto, timestamps
+> inválidos, snapshot duplicado/truncado, maturação prematura, resultado
+> corrigido, replay, falha parcial, concorrência/determinismo e NaN/Inf.
+> Suíte completa: **146 verdes**; CI local: **3/3**. Nenhum parâmetro,
+> threshold, K-factor, trial ou veredito científico mudou. Veredito local:
+> **PASS LOCAL COM GATE CIENTÍFICO FECHADO**.
+
 > ## 📋 RECONCILIAÇÃO DE PENDÊNCIAS DO ECOSSISTEMA (2026-07-20)
 >
 > Revisão de `../PENDENCIAS_ABERTAS.md` procurando itens de f1-predictor

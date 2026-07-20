@@ -12,6 +12,7 @@ import argparse
 import hashlib
 import json
 import os
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 import subprocess
@@ -152,13 +153,25 @@ def _matured_path(snapshots_root: Path, event: dict[str, Any]) -> Path:
 def _atomic_create(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+    temporary: Path | None = None
     try:
-        with path.open("x", encoding="utf-8", newline="\n") as handle:
+        # Write and fsync outside the immutable namespace. Publishing with a
+        # hard link is atomic and refuses to replace a concurrent winner.
+        fd, name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp",
+                                    dir=path.parent)
+        temporary = Path(name)
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
             handle.write(encoded)
             handle.flush()
             os.fsync(handle.fileno())
+        os.link(temporary, path)
     except FileExistsError as exc:
         raise SnapshotError(f"artefato já existe; overwrite proibido: {path}") from exc
+    except OSError as exc:
+        raise SnapshotError(f"falha ao publicar artefato atômico {path}: {exc}") from exc
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 
 def _load_grid(path: Path) -> tuple[list[dict[str, Any]], dict[str, Any], str]:
@@ -319,6 +332,11 @@ def mature_snapshot(*, season: int, round_: int, snapshots_root: Path,
     if not pre_path.is_file():
         raise SnapshotError("maturação sem snapshot PRE_EVENT é proibida")
     pre = load_and_verify_snapshot(pre_path)
+    matured = now or datetime.now(timezone.utc)
+    matured = _parse_utc(_utc_text(matured), "matured_at_utc")
+    scheduled = _parse_utc(pre["scheduled_start_utc"], "scheduled_start_utc")
+    if matured <= scheduled:
+        raise SnapshotError("maturação prematura: evento ainda não iniciou")
     consumer = pre.get("consumer_provenance")
     if not isinstance(consumer, dict):
         raise SnapshotError("snapshot PRE_EVENT sem consumer_provenance; maturação strict proibida")
@@ -338,7 +356,6 @@ def mature_snapshot(*, season: int, round_: int, snapshots_root: Path,
     # a ordem das chaves no disco é alfabética (sort_keys=True na escrita);
     # o favorito tem que sair da probabilidade, nunca da posição da chave
     top = max(predicted, key=lambda name: predicted[name]["win"])
-    matured = now or datetime.now(timezone.utc)
     payload: dict[str, Any] = {"schema_version": SCHEMA_VERSION, "status": MATURED,
         "event_id": pre["event_id"], "season": season, "round": round_,
         "matured_at_utc": _utc_text(matured), "pre_event_path": str(pre_path),
@@ -357,7 +374,8 @@ def mature_snapshot(*, season: int, round_: int, snapshots_root: Path,
     return target
 
 
-def h8_eligibility(pre_path: Path, matured_path: Path | None) -> dict[str, Any]:
+def h8_eligibility(pre_path: Path, matured_path: Path | None,
+                   *, root: Path | None = None) -> dict[str, Any]:
     try:
         pre = load_and_verify_snapshot(pre_path)
     except SnapshotError as exc:
@@ -372,21 +390,42 @@ def h8_eligibility(pre_path: Path, matured_path: Path | None) -> dict[str, Any]:
         return {"status": "INVALID_FOR_H8", "reason": "vínculo criptográfico PRE_EVENT→MATURED inválido"}
     if _payload_hash(matured) != matured.get("payload_hash"):
         return {"status": "INVALID_FOR_H8", "reason": "hash de maturação inconsistente"}
+    try:
+        matured_at = _parse_utc(matured.get("matured_at_utc", ""), "matured_at_utc")
+        scheduled = _parse_utc(pre["scheduled_start_utc"], "scheduled_start_utc")
+    except (SnapshotError, AttributeError, TypeError) as exc:
+        return {"status": "INVALID_FOR_H8", "reason": str(exc)}
+    if matured_at <= scheduled:
+        return {"status": "INVALID_FOR_H8", "reason": "maturação prematura"}
+    if (matured.get("schema_version") != SCHEMA_VERSION
+            or matured.get("event_id") != pre["event_id"]
+            or matured.get("season") != pre.get("season")
+            or matured.get("round") != pre.get("round")):
+        return {"status": "INVALID_FOR_H8", "reason": "identidade da maturação inconsistente"}
     names = {row["driver"] for row in pre["grid"]}
-    result_names = {row.get("driver") for row in matured.get("official_results", [])}
+    official_results = matured.get("official_results", [])
+    result_names = {row.get("driver") for row in official_results}
     if names != result_names or not matured.get("metrics"):
         return {"status": "INVALID_FOR_H8", "reason": "identidades/métricas incompletas"}
+    if root is not None:
+        try:
+            current_results = _result_rows(root, int(pre["season"]), int(pre["round"]))
+        except (SnapshotError, KeyError, TypeError, ValueError) as exc:
+            return {"status": "INVALID_FOR_H8", "reason": f"resultado atual indisponível: {exc}"}
+        if _canonical(current_results) != _canonical(official_results):
+            return {"status": "INVALID_FOR_H8", "reason": "resultado oficial corrigido após maturação"}
     return {"status": "VALID_FOR_H8", "event_id": pre["event_id"],
             "pre_event_payload_hash": pre["payload_hash"], "matured_payload_hash": matured["payload_hash"]}
 
 
-def snapshot_status(*, season: int, snapshots_root: Path) -> dict[str, Any]:
+def snapshot_status(*, season: int, snapshots_root: Path,
+                    root: Path = ROOT) -> dict[str, Any]:
     entries = []
     for pre in sorted((snapshots_root / "pre_event" / str(season)).glob("*.json")) if (snapshots_root / "pre_event" / str(season)).exists() else []:
         try:
             payload = load_and_verify_snapshot(pre)
             mature = _matured_path(snapshots_root, {"season": payload["season"], "round": payload["round"], "name": payload["grand_prix"]})
-            entries.append({"round": payload["round"], "event_id": payload["event_id"], "snapshot": str(pre), **h8_eligibility(pre, mature)})
+            entries.append({"round": payload["round"], "event_id": payload["event_id"], "snapshot": str(pre), **h8_eligibility(pre, mature, root=root)})
         except SnapshotError as exc:
             entries.append({"snapshot": str(pre), "status": "INVALID_FOR_H8", "reason": str(exc)})
     valid = sum(item["status"] == "VALID_FOR_H8" for item in entries)

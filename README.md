@@ -1,5 +1,16 @@
 # f1-predictor
 
+> ✅ **Fechamento técnico local — 2026-07-20**: auditoria final confirmou
+> `H8_REQUIRED_RACES = 15`, **10 corridas disputadas/retropreditas** e
+> **0 corridas forward maturadas válidas para H8**. Três bugs operacionais
+> foram corrigidos sem mudar ciência: publicação de snapshot agora é
+> realmente atômica e limpa falhas parciais; maturação anterior à largada é
+> rejeitada e revalidada na elegibilidade; replay de resultado oficial
+> corrigido remove linhas obsoletas. Ratings e parâmetros não finitos
+> (NaN/Inf) também passam a falhar fechados. Suíte: **146 testes verdes**;
+> `scripts/ci_check.py`: 3/3 barreiras verdes. Veredito: **PASS LOCAL COM
+> GATE CIENTÍFICO FECHADO**.
+
 > 🐛 **Bug de ingestão corrigido em 2026-07-20**: a Jolpica usa `"Lapped"`
 > (2023+) em vez de `"+N Lap(s)"` (só 2022) para o mesmo conceito
 > (classificado, voltas atrás do líder); `is_dnf()` só reconhecia o
@@ -154,7 +165,7 @@ docs/RELATORIO_FASE2.md     # blend, calibração, sondagem de odds, gate
 docs/RELATORIO_FASE4.md     # H0-formal, contexto/reliability/pit, choque de patch, purge/embargo
 docs/RELATORIO_FASE5.md     # H8-F1, protocolo sintético, leitura honesta sem poder estatístico
 docs/PROMPT_VALIDACAO_2026.md  # protocolo da validação viva
-tests/                      # 136 testes
+tests/                      # 146 testes
 vendor/predictor_core/      # v1.3.1 via sync manual escopado a este worktree (NÃO editar à mão)
 ```
 
