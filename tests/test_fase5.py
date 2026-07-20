@@ -1,4 +1,7 @@
 """Fase 5 — H8-F1: choque estrutural de transição de regulamento."""
+import json
+from pathlib import Path
+
 import pytest
 
 from src.backtest import (BacktestElo, calibrate_shrink_factor_sintetico,
@@ -64,6 +67,18 @@ def test_h8_historical_rejects_missing_burn_in():
         run_h8_historical_windows(
             [race for race in _historical_fixture() if race["season"] != 2014],
             transitions=(2016,), burn_in_seasons=2, window=8, n_sims=100)
+
+
+def test_h8_historical_artifact_is_retrospective_and_complete():
+    artifact = Path(__file__).parents[1] / "data" / "backtest_h8_historical.json"
+    payload = json.loads(artifact.read_text(encoding="utf-8"))
+    assert payload["artifact_kind"] == "H8_RETROSPECTIVE_AUXILIARY"
+    assert payload["classification"] == "NOT_SUPPORTED_HISTORICALLY"
+    assert payload["n"] == len(payload["races"]) == 24
+    assert payload["forward_h8_unchanged"] is True
+    assert payload["mean_delta"] > 0
+    assert payload["dm"]["p_value"] < 0.05
+    assert len(payload["input_hashes"]) == 188
 
 
 # ---------- calibração cega + harness ----------

@@ -1,5 +1,12 @@
 # f1-predictor
 
+> 🧪 **Validação histórica auxiliar H8 — 2026-07-20:** protocolo congelado
+> no commit `57336fd` antes da coleta; 24 corridas nas transições 2014,
+> 2017 e 2022. O choque de fator 0,8 piorou o RPS (`0,158475` contra
+> `0,150776`; delta `+0,007699`; DM `p=0,03147`):
+> **`NOT_SUPPORTED_HISTORICALLY`**. O mecanismo permanece desativado.
+> Isto reforça a refutação, mas não é amostra forward: H8 segue 0/15.
+
 > ✅ **Fechamento técnico local — 2026-07-20**: auditoria final confirmou
 > `H8_REQUIRED_RACES = 15`, **10 corridas disputadas/retropreditas** e
 > **0 corridas forward maturadas válidas para H8**. Três bugs operacionais
@@ -153,6 +160,7 @@ data/backtest_fase1.json    # resultado completo do backtest Fase 1 (versionado)
 data/backtest_fase2.json    # resultado completo do backtest Fase 2 (versionado)
 data/backtest_fase4.json    # resultado completo do backtest Fase 4 (versionado)
 data/backtest_fase5.json    # resultado completo do backtest Fase 5 — H8-F1 (versionado)
+data/backtest_h8_historical.json # robustez histórica auxiliar (24 corridas; não conta forward)
 data/fase2_params.json      # w do blend + Platt vividos (runtime, gitignored)
 data/fase5_params.json      # fator de choque calibrado — shrink_factor=0.0 no serving (runtime, gitignored)
 data/validacao_2026_ultima.json  # última rodada de validate_2026.py (runtime, gitignored)
@@ -161,14 +169,16 @@ scripts/run_backtest.py     # Fase 1: harness → pré-registro → backtest →
 scripts/run_fase2.py        # Fase 2: idem, para H3-F1b/H4-F1b
 scripts/run_fase4.py        # Fase 4: idem, para H0-formal/H5/H6/H7-F1c
 scripts/run_fase5.py        # Fase 5: idem, para H8-F1 (idempotente)
+scripts/run_h8_historical.py # replay congelado 2014/2017/2022
 scripts/validate_2026.py    # validação viva: retrodiz 2026 + prevê a próxima corrida
 scripts/ci_check.py         # 3 barreiras: pytest, .ps1 ASCII, parse+smoke
 docs/RELATORIO_FASE1.md     # RPS vs baselines, estratos, vereditos
 docs/RELATORIO_FASE2.md     # blend, calibração, sondagem de odds, gate
 docs/RELATORIO_FASE4.md     # H0-formal, contexto/reliability/pit, choque de patch, purge/embargo
 docs/RELATORIO_FASE5.md     # H8-F1, protocolo sintético, leitura honesta sem poder estatístico
+docs/PROTOCOLO_H8_HISTORICO.md / RELATORIO_H8_HISTORICO.md # pré-registro e resultado auxiliar
 docs/PROMPT_VALIDACAO_2026.md  # protocolo da validação viva
-tests/                      # 152 testes
+tests/                      # 155 testes
 vendor/predictor_core/      # v1.3.1 via sync manual escopado a este worktree (NÃO editar à mão)
 ```
 
@@ -181,5 +191,5 @@ vendor/predictor_core/      # v1.3.1 via sync manual escopado a este worktree (N
 | 2 | Grid de largada como feature (blend), calibração Platt | ✅ H3-F1b e H4-F1b comprovadas |
 | 3 | Operação: Kelly, bet_log, settle, odds | ✅ construída — 🔒 **NO-GO** (gate lê H1-F1, ainda refutada) |
 | 4 | H0 formal, contexto de circuito, reliability, pit efficiency, choque de patch, purge/embargo | ✅ H0-formal comprovada; H5/H6/H7-F1c refutadas (mecanismo validado, sem sinal real) |
-| 5 | Choque estrutural de transição de regulamento (H8-F1), calibrado às cegas em sintético | ✅ REFUTADA (direção certa, sem poder estatístico — reavaliar com mais corridas de 2026) |
+| 5 | Choque estrutural de transição de regulamento (H8-F1), calibrado às cegas em sintético | ❌ REFUTADA; auxiliar histórica 2014/2017/2022 também desfavorável (`p=0,0315`); mecanismo desativado |
 | 6 | Intensidade não-homogênea de DNF/Safety Car (exige dado por volta — FastF1) | ⏳ (fonte não confirmada) |
