@@ -14,11 +14,11 @@ import json
 import os
 import time
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
+from ..config import ROOT  # injeta vendor/ no sys.path antes do core
 from predictor_core.data.contracts import DataUnavailableError
-
-from ..config import ROOT
 
 _USER_AGENT = "f1-predictor/0.1 (research; github: pessoal)"
 _RATE_LIMIT_S = 1.0
@@ -115,12 +115,38 @@ class F1Provider:
     # ---------- endpoints ----------
 
     def fetch_schedule(self, season: int) -> list[dict]:
-        """Calendário da temporada: [{season, round, name, circuit, date}]."""
+        """Calendário com instante oficial UTC quando publicado pela fonte."""
         data = self._get(f"{season}.json?limit=30", f"schedule_{season}")
         races = data["MRData"]["RaceTable"]["Races"]
-        return [{"season": int(r["season"]), "round": int(r["round"]),
-                 "name": r["raceName"], "circuit": r["Circuit"]["circuitName"],
-                 "date": r["date"]} for r in races]
+        out = []
+        for race in races:
+            scheduled = None
+            if race.get("time"):
+                parsed = datetime.fromisoformat(
+                    f"{race['date']}T{race['time']}".replace("Z", "+00:00"))
+                if parsed.tzinfo is None or parsed.utcoffset() is None:
+                    raise DataUnavailableError("Jolpica publicou largada sem timezone")
+                scheduled = parsed.astimezone(timezone.utc).isoformat(
+                    timespec="seconds").replace("+00:00", "Z")
+            out.append({"season": int(race["season"]),
+                        "round": int(race["round"]),
+                        "name": race["raceName"],
+                        "circuit": race["Circuit"]["circuitName"],
+                        "date": race["date"],
+                        "scheduled_start_utc": scheduled,
+                        "qualifying_start_utc": self._session_start(race.get("Qualifying"))})
+        return out
+
+    @staticmethod
+    def _session_start(session: dict | None) -> str | None:
+        if not session or not session.get("date") or not session.get("time"):
+            return None
+        parsed = datetime.fromisoformat(
+            f"{session['date']}T{session['time']}".replace("Z", "+00:00"))
+        if parsed.tzinfo is None or parsed.utcoffset() is None:
+            raise DataUnavailableError("Jolpica publicou sessão sem timezone")
+        return parsed.astimezone(timezone.utc).isoformat(
+            timespec="seconds").replace("+00:00", "Z")
 
     def fetch_results(self, season: int, round_: int) -> list[dict]:
         """Resultado de UMA corrida: lista por piloto com posição final

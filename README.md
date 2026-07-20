@@ -1,5 +1,14 @@
 # f1-predictor
 
+## Coleta forward automática
+
+`scripts/capture_next_forward_snapshot.py` consulta a agenda/classificação da
+Jolpica, mas só publica um snapshot na janela iniciada duas horas após o quali
+e encerrada exatamente na largada. Fora da janela é um no-op; resultado já
+existente, grid incompleto, identidade divergente ou checkout/proveniência
+inválidos continuam fail-closed. Instalação opcional no Task Scheduler:
+`powershell -File scripts/install_forward_snapshot_task.ps1 -RunNow`.
+
 > 🧪 **Validação histórica auxiliar H8 — 2026-07-20:** protocolo congelado
 > no commit `57336fd` antes da coleta; 24 corridas nas transições 2014,
 > 2017 e 2022. O choque de fator 0,8 piorou o RPS (`0,158475` contra
