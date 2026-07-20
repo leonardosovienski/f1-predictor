@@ -1573,6 +1573,84 @@ def verdict_h8(result: dict, alpha: float = 0.05) -> dict:
     return {"verdict": verdict, "dm": dm, "shrink_factor": result["shrink_factor"]}
 
 
+def run_h8_historical_windows(
+        races: list, *, transitions: tuple[int, ...] = (2014, 2017, 2022),
+        burn_in_seasons: int = 2, window: int = 8,
+        shrink_factor: float = 0.8, n_sims: int = 10000,
+        sim_seed: int = 13, alpha: float = 0.05) -> dict:
+    """Retrospective H8 check, strictly separate from the forward gate."""
+    by_season: dict[int, list] = defaultdict(list)
+    for race in sorted(races, key=lambda item: (item["season"], item["round"])):
+        by_season[int(race["season"])].append(race)
+
+    pooled_shock, pooled_plain = [], []
+    per_transition, race_rows = {}, []
+    for transition in transitions:
+        needed = tuple(range(transition - burn_in_seasons, transition + 1))
+        missing = [season for season in needed if not by_season.get(season)]
+        if missing:
+            raise ValueError(f"temporadas ausentes para transição {transition}: {missing}")
+        shock, plain = BacktestElo(), BacktestElo()
+        losses_shock, losses_plain = [], []
+        for season in needed:
+            for race in by_season[season]:
+                results = race["results"]
+                if len(results) < 2:
+                    continue
+                names = [row["driver"] for row in results]
+                actual = [row["position"] - 1 for row in results]
+                if season == transition and race["round"] == 1:
+                    shock.shrink_to_mean(shrink_factor)
+                if season == transition and race["round"] <= window:
+                    seed = _race_seed(sim_seed, season, race["round"], 86)
+                    p_shock = position_probs(
+                        np.array([shock.rating(name) for name in names]), n_sims, seed)
+                    p_plain = position_probs(
+                        np.array([plain.rating(name) for name in names]), n_sims, seed)
+                    loss_shock = rps([row.tolist() for row in p_shock], actual)
+                    loss_plain = rps([row.tolist() for row in p_plain], actual)
+                    losses_shock.append(loss_shock)
+                    losses_plain.append(loss_plain)
+                    race_rows.append({"transition": transition,
+                                      "round": int(race["round"]),
+                                      "grand_prix": race.get("name"),
+                                      "rps_shock": loss_shock,
+                                      "rps_plain": loss_plain,
+                                      "delta": loss_shock - loss_plain})
+                finishers = [row["driver"] for row in results if not row["dnf"]]
+                if len(finishers) >= 2:
+                    shock.update(finishers)
+                    plain.update(finishers)
+        if len(losses_shock) != window:
+            raise ValueError(f"transição {transition}: esperadas {window} corridas, "
+                             f"obtidas {len(losses_shock)}")
+        stat, p_value = diebold_mariano(losses_shock, losses_plain, h=1)
+        deltas = np.array(losses_shock) - np.array(losses_plain)
+        per_transition[transition] = {
+            "n": len(losses_shock), "rps_shock": float(np.mean(losses_shock)),
+            "rps_plain": float(np.mean(losses_plain)),
+            "mean_delta": float(np.mean(deltas)),
+            "dm": {"statistic": stat, "p_value": p_value}}
+        pooled_shock.extend(losses_shock)
+        pooled_plain.extend(losses_plain)
+
+    pooled_stat, pooled_p = diebold_mariano(pooled_shock, pooled_plain, h=1)
+    mean_delta = float(np.mean(np.array(pooled_shock) - np.array(pooled_plain)))
+    classification = ("SUPPORTED_HISTORICALLY" if mean_delta < 0 and pooled_p < alpha
+                      else "NOT_SUPPORTED_HISTORICALLY" if mean_delta >= 0 and pooled_p < alpha
+                      else "INCONCLUSIVE_HISTORICALLY")
+    return {"classification": classification, "forward_h8_unchanged": True,
+            "n": len(pooled_shock), "mean_delta": mean_delta,
+            "rps_shock": float(np.mean(pooled_shock)),
+            "rps_plain": float(np.mean(pooled_plain)),
+            "dm": {"statistic": pooled_stat, "p_value": pooled_p},
+            "per_transition": per_transition, "races": race_rows,
+            "protocol": {"transitions": list(transitions),
+                         "burn_in_seasons": burn_in_seasons, "window": window,
+                         "shrink_factor": shrink_factor, "n_sims": n_sims,
+                         "sim_seed": sim_seed, "alpha": alpha}}
+
+
 def evaluate_h8_pipeline(races_e_fronteira: tuple, *,
                          shrink_factor: float = 0.8) -> dict:
     """Contrato do harness do core: recebe a série pronta de

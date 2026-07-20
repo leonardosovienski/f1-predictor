@@ -3,7 +3,8 @@ import pytest
 
 from src.backtest import (BacktestElo, calibrate_shrink_factor_sintetico,
                           evaluate_h8_pipeline, evaluate_transition_shock_pipeline,
-                          run_h8, synthetic_races_transition, verdict_h8)
+                          run_h8, run_h8_historical_windows,
+                          synthetic_races_transition, verdict_h8)
 
 
 # ---------- shrink_to_mean ----------
@@ -36,6 +37,33 @@ def test_shrink_to_mean_valida_fator():
         elo.shrink_to_mean(1.5)
     with pytest.raises(ValueError):
         elo.shrink_to_mean(-0.1)
+
+
+def _historical_fixture():
+    races, _ = synthetic_races_transition(
+        n_drivers=8, n_seasons_before=2, races_per_season=8)
+    # generator starts at 2022; relabel to an arbitrary historical window
+    return [{**race, "season": race["season"] - 8} for race in races[:24]]
+
+
+def test_h8_historical_is_separate_and_uses_frozen_window():
+    result = run_h8_historical_windows(
+        _historical_fixture(), transitions=(2016,), burn_in_seasons=2,
+        window=8, n_sims=200)
+    assert result["n"] == 8
+    assert result["forward_h8_unchanged"] is True
+    assert len(result["races"]) == 8
+    assert result["protocol"]["shrink_factor"] == 0.8
+    assert result["classification"] in {
+        "SUPPORTED_HISTORICALLY", "NOT_SUPPORTED_HISTORICALLY",
+        "INCONCLUSIVE_HISTORICALLY"}
+
+
+def test_h8_historical_rejects_missing_burn_in():
+    with pytest.raises(ValueError, match="temporadas ausentes"):
+        run_h8_historical_windows(
+            [race for race in _historical_fixture() if race["season"] != 2014],
+            transitions=(2016,), burn_in_seasons=2, window=8, n_sims=100)
 
 
 # ---------- calibração cega + harness ----------
