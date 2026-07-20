@@ -1,5 +1,30 @@
 # HANDOFF.md — f1-predictor
 
+> ## 📋 RECONCILIAÇÃO DE PENDÊNCIAS DO ECOSSISTEMA (2026-07-20)
+>
+> Revisão de `../PENDENCIAS_ABERTAS.md` procurando itens de f1-predictor
+> genuinamente acionáveis dentro do escopo desta auditoria (sem tocar
+> `SEC-1`/itens de outros consumidores nem promover lifecycle
+> compartilhado). Três imprecisões factuais corrigidas no documento:
+> 1. **SCI-6 estava desatualizada e confundia exatamente o que a missão
+>    pede pra não confundir**: dizia "9 corridas maturadas confirmadas"
+>    — na verdade são 10 corridas DISPUTADAS (retropredição) e **0**
+>    corridas MATURADAS forward (`VALID_FOR_H8`; `snapshots/` nem existe).
+> 2. **INC-1 estava factualmente errada sobre o F1**: afirmava que só o
+>    cs-predictor tem vínculo criptográfico entre snapshots PRE_EVENT/
+>    MATURED — mas `src/snapshots.py` hasheia (SHA-256) e vincula
+>    `pre_event_payload_hash` desde sempre (`mature_snapshot`/
+>    `h8_eligibility` rejeitam hash inconsistente). Corrigida só a parte
+>    f1 (LoL não verificado, fora de escopo).
+> 3. **Branch órfã não catalogada** achada: `claude/belgium-quali-gp-test-72bff2`
+>    — verificada como subconjunto estrito de `main` (mesmo padrão da já
+>    catalogada `reintegracao-f1-ondas-2-3`), documentada, nenhuma ação
+>    destrutiva tomada (apagar branch é decisão do usuário).
+>
+> Nenhum bug de código novo encontrado nesta revisão; os gaps restantes
+> (SCI-1/SCI-4 deferidas, OP-4 parte não-f1, SCI-6 aguardando amostra)
+> são governança científica normal, não pendências corrigíveis à força.
+
 > ## 🐛 BUG CIENTÍFICO REAL — CONVENÇÃO DE STATUS "Lapped" (2026-07-20)
 >
 > Investigando um print de resultado real (GP da Bélgica, R10) contra o

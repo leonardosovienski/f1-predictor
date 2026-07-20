@@ -10,15 +10,19 @@
 > completa antes/depois.
 
 > 🔒 **Coleta científica forward iniciada em 2026-07-15** (commit de base
-> `19e3ec4`; `main` e branch atual reconciliadas). R1–R9 permanecem apenas
-> retropredições reproduzíveis: há **0 corridas temporalmente válidas para
-> H8**. Novas corridas usam snapshots PRE_EVENT imutáveis; o gate real segue
-> **NO-GO** e H8 permanece bloqueada até 15 corridas completas.
+> `19e3ec4`; `main` e branch atual reconciliadas). R1–R10 permanecem apenas
+> retropredições reproduzíveis (R10 = GP da Bélgica, ingerido 2026-07-19):
+> há **0 corridas temporalmente válidas para H8** — o diretório `snapshots/`
+> ainda não existe, a coleta forward declarada não produziu nenhum snapshot
+> real ainda. Novas corridas usam snapshots PRE_EVENT imutáveis; o gate
+> real segue **NO-GO** e H8 permanece bloqueada até 15 corridas com par
+> PRE_EVENT→MATURED válido (não 15 corridas disputadas).
 
-> **Status: Fases 0-5 concluídas (2026-07-12).** Fase 1: **H1 REFUTADA**
-> (Elo puro não bate o grid, RPS 0.1410 vs 0.1303). Fase 2: **H3-F1b** e
-> **H4-F1b COMPROVADAS** — Elo+grid bate o Elo puro (RPS 0.1281 vs
-> 0.1416) e Platt reduz o Brier do pódio (0.093→0.078, com ressalva de
+> **Status: Fases 0-5 concluídas (2026-07-12), reexecutadas com dado
+> corrigido em 2026-07-20** (ver banner acima). Fase 1: **H1 REFUTADA**
+> (Elo puro não bate o grid, RPS 0.1399 vs 0.1303). Fase 2: **H3-F1b** e
+> **H4-F1b COMPROVADAS** — Elo+grid bate o Elo puro (RPS 0.1274 vs
+> 0.1407) e Platt reduz o Brier do pódio (0.0930→0.0794, com ressalva de
 > sobreconfiança nos extremos). Fase 3: operação (Kelly, bet_log, odds)
 > construída mas **NO-GO** — o gate lê H1-F1, ainda refutada; The Odds
 > API foi sondada e **não cobre F1**. Fase 4 (empréstimos
@@ -28,12 +32,13 @@
 > rolling, pit efficiency — mecanismo validado em sintético, sem sinal
 > suficiente no dado real). Fase 5: **H8-F1 REFUTADA** (choque estrutural
 > de transição de regulamento, calibrado às cegas em sintético — direção
-> certa em 2026 real, mas sem poder estatístico com só 9 corridas).
-> Choque de volatilidade pós-patch (CS/LoL): mecanismo implementado, só
-> validado em sintético — sem calendário real de upgrades. Também há um
-> protocolo de validação viva (`docs/PROMPT_VALIDACAO_2026.md` +
-> `scripts/validate_2026.py`) que retrodiz cada corrida de 2026 e prevê a
-> próxima. Ver `docs/RELATORIO_FASE1.md` a `docs/RELATORIO_FASE5.md`.
+> certa em 2026 real, mas sem poder estatístico com só 10 corridas
+> disputadas). Choque de volatilidade pós-patch (CS/LoL): mecanismo
+> implementado, só validado em sintético — sem calendário real de
+> upgrades. Também há um protocolo de validação viva
+> (`docs/PROMPT_VALIDACAO_2026.md` + `scripts/validate_2026.py`) que
+> retrodiz cada corrida de 2026 e prevê a próxima. Ver
+> `docs/RELATORIO_FASE1.md` a `docs/RELATORIO_FASE5.md`.
 > Não é ferramenta de investimento.
 
 Laboratório de previsão de corridas de **Fórmula 1** (vencedor, pódio, top6
@@ -89,6 +94,12 @@ FINAL de 2025: Norris campeão → 1750, linear até 1350; Lindblad (novato) →
 # Fase 4: H0 formal + contexto de circuito + reliability + pit efficiency
 .venv\Scripts\python.exe scripts/run_fase4.py
 
+# Fase 5: H8-F1, choque estrutural de transição de regulamento
+.venv\Scripts\python.exe scripts/run_fase5.py
+
+# Validação viva: retrodiz 2026 disputado + prevê a próxima corrida
+.venv\Scripts\python.exe scripts/validate_2026.py
+
 # Testes e CI
 .venv\Scripts\python.exe -m pytest tests/ -v
 .venv\Scripts\python.exe scripts/ci_check.py
@@ -127,14 +138,22 @@ data/trials.json            # tentativas PRÉ-REGISTRADAS (versionado!)
 data/backtest_fase1.json    # resultado completo do backtest Fase 1 (versionado)
 data/backtest_fase2.json    # resultado completo do backtest Fase 2 (versionado)
 data/backtest_fase4.json    # resultado completo do backtest Fase 4 (versionado)
+data/backtest_fase5.json    # resultado completo do backtest Fase 5 — H8-F1 (versionado)
+data/fase2_params.json      # w do blend + Platt vividos (runtime, gitignored)
+data/fase5_params.json      # fator de choque calibrado — shrink_factor=0.0 no serving (runtime, gitignored)
+data/validacao_2026_ultima.json  # última rodada de validate_2026.py (runtime, gitignored)
 scripts/build_db.py         # Jolpica → data/raw/ → data/f1.db (races+results+pitstops)
 scripts/run_backtest.py     # Fase 1: harness → pré-registro → backtest → trials
 scripts/run_fase2.py        # Fase 2: idem, para H3-F1b/H4-F1b
 scripts/run_fase4.py        # Fase 4: idem, para H0-formal/H5/H6/H7-F1c
+scripts/run_fase5.py        # Fase 5: idem, para H8-F1 (idempotente)
+scripts/validate_2026.py    # validação viva: retrodiz 2026 + prevê a próxima corrida
 scripts/ci_check.py         # 3 barreiras: pytest, .ps1 ASCII, parse+smoke
 docs/RELATORIO_FASE1.md     # RPS vs baselines, estratos, vereditos
 docs/RELATORIO_FASE2.md     # blend, calibração, sondagem de odds, gate
 docs/RELATORIO_FASE4.md     # H0-formal, contexto/reliability/pit, choque de patch, purge/embargo
+docs/RELATORIO_FASE5.md     # H8-F1, protocolo sintético, leitura honesta sem poder estatístico
+docs/PROMPT_VALIDACAO_2026.md  # protocolo da validação viva
 tests/                      # 136 testes
 vendor/predictor_core/      # v1.3.1 via sync manual escopado a este worktree (NÃO editar à mão)
 ```
