@@ -4,6 +4,17 @@
 > estreia do `metrics.rps`, do `nullref` e do Diebold-Mariano do core em
 > um domínio de ordenação completa (22 posições).
 
+> **Errata 2026-07-20** (não destrutiva — números originais preservados
+> abaixo): `is_dnf()` não reconhecia o status `"Lapped"` (convenção da
+> Jolpica a partir de 2023 para "classificado, voltas atrás do líder",
+> equivalente a `"+N Lap(s)"` só usado em 2022) — 363 resultados reais
+> ficaram indevidamente marcados DNF. Corrigido; backtest reexecutado com
+> o banco corrigido: **H1-F1 e H2-F1 permanecem com o MESMO veredito**
+> (H1 REFUTADA, H2 COMPROVADA), com RPS modelo 0.1399 (era 0.1410) e H2H
+> 65,0%/392-603 (era 62,6%/253-404) sobre 80 corridas (era 79 — o GP da
+> Bélgica também entrou nesta janela). Ver `../HANDOFF.md` para a tabela
+> completa antes/depois de todas as 9 trials.
+
 ## Veredito das hipóteses pré-registradas
 
 | Hipótese | Veredito | Evidência |

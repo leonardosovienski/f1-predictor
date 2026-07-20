@@ -5,6 +5,11 @@
 > feature do modelo, não só baseline separado) e **H4-F1b** (calibração
 > de Platt no P(pódio)).
 
+> **Errata 2026-07-20** (não destrutiva): `is_dnf()` corrigido (bug real
+> descrito em `../HANDOFF.md`); reexecutado — **H3-F1b e H4-F1b mantêm o
+> MESMO veredito** (ambas COMPROVADAS), w=0.5 inalterado, RPS blend 0.1274
+> (era 0.1281), Brier calibrado 0.0794 (era 0.0783).
+
 ## Veredito das hipóteses pré-registradas
 
 | Hipótese | Veredito | Evidência |

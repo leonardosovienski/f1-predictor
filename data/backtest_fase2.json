@@ -1,14 +1,14 @@
 {
-  "n_eval": 57,
+  "n_eval": 58,
   "per_race": [
     {
       "season": 2024,
       "round": 1,
       "name": "Bahrain Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 10,
-      "rps_blend": 0.1001209140526316,
-      "rps_elo_puro": 0.10564399168421053,
+      "n_dnf": 0,
+      "rps_blend": 0.09936451242105261,
+      "rps_elo_puro": 0.10650517515789473,
       "rps_grid": 0.1029927374736842,
       "rps_standings": 0.11342092231578946
     },
@@ -17,9 +17,9 @@
       "round": 2,
       "name": "Saudi Arabian Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 8,
-      "rps_blend": 0.10567808494736841,
-      "rps_elo_puro": 0.1099403275263158,
+      "n_dnf": 2,
+      "rps_blend": 0.10890922057894739,
+      "rps_elo_puro": 0.11622660315789475,
       "rps_grid": 0.11061581300000001,
       "rps_standings": 0.10165743036842105
     },
@@ -28,9 +28,9 @@
       "round": 3,
       "name": "Australian Grand Prix",
       "n_drivers": 19,
-      "n_dnf": 10,
-      "rps_blend": 0.17501705742690057,
-      "rps_elo_puro": 0.20133845134502923,
+      "n_dnf": 3,
+      "rps_blend": 0.1763939782456141,
+      "rps_elo_puro": 0.20367603169590642,
       "rps_grid": 0.15370565467836256,
       "rps_standings": 0.1626771287134503
     },
@@ -39,9 +39,9 @@
       "round": 4,
       "name": "Japanese Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 11,
-      "rps_blend": 0.10128817636842107,
-      "rps_elo_puro": 0.10422756526315793,
+      "n_dnf": 3,
+      "rps_blend": 0.0999282484736842,
+      "rps_elo_puro": 0.10284898889473686,
       "rps_grid": 0.10556380836842105,
       "rps_standings": 0.08911380989473686
     },
@@ -51,8 +51,8 @@
       "name": "Chinese Grand Prix",
       "n_drivers": 20,
       "n_dnf": 3,
-      "rps_blend": 0.10216546794736843,
-      "rps_elo_puro": 0.09840908326315789,
+      "rps_blend": 0.09972227684210525,
+      "rps_elo_puro": 0.09560413968421051,
       "rps_grid": 0.11681778989473682,
       "rps_standings": 0.1025613714736842
     },
@@ -62,8 +62,8 @@
       "name": "Miami Grand Prix",
       "n_drivers": 20,
       "n_dnf": 1,
-      "rps_blend": 0.10568877057894736,
-      "rps_elo_puro": 0.10614515636842103,
+      "rps_blend": 0.10400074594736844,
+      "rps_elo_puro": 0.10295026484210527,
       "rps_grid": 0.11288195973684209,
       "rps_standings": 0.1096367597894737
     },
@@ -72,9 +72,9 @@
       "round": 7,
       "name": "Emilia Romagna Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 11,
-      "rps_blend": 0.1048597424210526,
-      "rps_elo_puro": 0.12194653699999998,
+      "n_dnf": 1,
+      "rps_blend": 0.10469838373684211,
+      "rps_elo_puro": 0.1218807877368421,
       "rps_grid": 0.10198579726315789,
       "rps_standings": 0.10588725863157893
     },
@@ -83,9 +83,9 @@
       "round": 8,
       "name": "Monaco Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 13,
-      "rps_blend": 0.11350473599999997,
-      "rps_elo_puro": 0.14442789236842107,
+      "n_dnf": 4,
+      "rps_blend": 0.11002970857894738,
+      "rps_elo_puro": 0.13685096642105263,
       "rps_grid": 0.09451364215789473,
       "rps_standings": 0.13959405926315788
     },
@@ -94,9 +94,9 @@
       "round": 9,
       "name": "Canadian Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 6,
-      "rps_blend": 0.1484363782631579,
-      "rps_elo_puro": 0.17619652347368425,
+      "n_dnf": 5,
+      "rps_blend": 0.14873028731578947,
+      "rps_elo_puro": 0.17502285947368418,
       "rps_grid": 0.13382287110526317,
       "rps_standings": 0.17101987926315787
     },
@@ -105,9 +105,9 @@
       "round": 10,
       "name": "Spanish Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 9,
-      "rps_blend": 0.09328961752631577,
-      "rps_elo_puro": 0.10227390694736842,
+      "n_dnf": 0,
+      "rps_blend": 0.09118658984210526,
+      "rps_elo_puro": 0.099486783,
       "rps_grid": 0.0942735185263158,
       "rps_standings": 0.11074062236842105
     },
@@ -116,9 +116,9 @@
       "round": 11,
       "name": "Austrian Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 8,
-      "rps_blend": 0.14233332178947367,
-      "rps_elo_puro": 0.1622515405789474,
+      "n_dnf": 0,
+      "rps_blend": 0.13984744863157897,
+      "rps_elo_puro": 0.15709813642105264,
       "rps_grid": 0.1273005144736842,
       "rps_standings": 0.15322709268421053
     },
@@ -127,9 +127,9 @@
       "round": 12,
       "name": "British Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 8,
-      "rps_blend": 0.14039199010526313,
-      "rps_elo_puro": 0.17431851284210526,
+      "n_dnf": 2,
+      "rps_blend": 0.1424425482105263,
+      "rps_elo_puro": 0.17887603710526317,
       "rps_grid": 0.1231885717368421,
       "rps_standings": 0.15743526747368425
     },
@@ -138,9 +138,9 @@
       "round": 13,
       "name": "Hungarian Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 9,
-      "rps_blend": 0.10172109436842103,
-      "rps_elo_puro": 0.1129227712631579,
+      "n_dnf": 1,
+      "rps_blend": 0.098171195,
+      "rps_elo_puro": 0.10800670636842105,
       "rps_grid": 0.11011804063157896,
       "rps_standings": 0.09840098594736842
     },
@@ -150,8 +150,8 @@
       "name": "Belgian Grand Prix",
       "n_drivers": 20,
       "n_dnf": 2,
-      "rps_blend": 0.11288802389473682,
-      "rps_elo_puro": 0.11661162331578948,
+      "rps_blend": 0.11157629210526314,
+      "rps_elo_puro": 0.1146179167368421,
       "rps_grid": 0.11834404099999998,
       "rps_standings": 0.12097838478947369
     },
@@ -160,9 +160,9 @@
       "round": 15,
       "name": "Dutch Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 12,
-      "rps_blend": 0.09574674094736842,
-      "rps_elo_puro": 0.09491927357894737,
+      "n_dnf": 0,
+      "rps_blend": 0.09307564905263158,
+      "rps_elo_puro": 0.09007962189473685,
       "rps_grid": 0.10737484873684211,
       "rps_standings": 0.0965812317368421
     },
@@ -171,9 +171,9 @@
       "round": 16,
       "name": "Italian Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 7,
-      "rps_blend": 0.1003526379473684,
-      "rps_elo_puro": 0.10932793294736842,
+      "n_dnf": 1,
+      "rps_blend": 0.10062859105263158,
+      "rps_elo_puro": 0.10967385668421052,
       "rps_grid": 0.10308843842105264,
       "rps_standings": 0.12444327694736843
     },
@@ -182,9 +182,9 @@
       "round": 17,
       "name": "Azerbaijan Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 6,
-      "rps_blend": 0.15045006757894738,
-      "rps_elo_puro": 0.15165401900000003,
+      "n_dnf": 4,
+      "rps_blend": 0.15181374905263156,
+      "rps_elo_puro": 0.15529249831578945,
       "rps_grid": 0.16401334878947368,
       "rps_standings": 0.15994777942105262
     },
@@ -193,9 +193,9 @@
       "round": 18,
       "name": "Singapore Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 13,
-      "rps_blend": 0.09770960073684211,
-      "rps_elo_puro": 0.10086726742105263,
+      "n_dnf": 2,
+      "rps_blend": 0.09764919052631578,
+      "rps_elo_puro": 0.10104059973684212,
       "rps_grid": 0.11023938936842106,
       "rps_standings": 0.10964981084210527
     },
@@ -204,9 +204,9 @@
       "round": 19,
       "name": "United States Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 8,
-      "rps_blend": 0.12136696836842105,
-      "rps_elo_puro": 0.12584472594736842,
+      "n_dnf": 1,
+      "rps_blend": 0.1200558372105263,
+      "rps_elo_puro": 0.12391558321052629,
       "rps_grid": 0.13426739494736842,
       "rps_standings": 0.12813786473684213
     },
@@ -215,9 +215,9 @@
       "round": 20,
       "name": "Mexico City Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 12,
-      "rps_blend": 0.1261090055263158,
-      "rps_elo_puro": 0.14337508547368422,
+      "n_dnf": 3,
+      "rps_blend": 0.12639479126315792,
+      "rps_elo_puro": 0.14204776494736843,
       "rps_grid": 0.1288497320526316,
       "rps_standings": 0.13663209368421053
     },
@@ -227,8 +227,8 @@
       "name": "São Paulo Grand Prix",
       "n_drivers": 20,
       "n_dnf": 5,
-      "rps_blend": 0.13472194310526314,
-      "rps_elo_puro": 0.15306188863157894,
+      "rps_blend": 0.13674033536842103,
+      "rps_elo_puro": 0.16041543068421052,
       "rps_grid": 0.14685675610526314,
       "rps_standings": 0.16883598047368426
     },
@@ -237,9 +237,9 @@
       "round": 22,
       "name": "Las Vegas Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 4,
-      "rps_blend": 0.1174935342631579,
-      "rps_elo_puro": 0.12393584026315788,
+      "n_dnf": 2,
+      "rps_blend": 0.11315554210526316,
+      "rps_elo_puro": 0.11547119431578948,
       "rps_grid": 0.13101930236842105,
       "rps_standings": 0.11063124342105264
     },
@@ -248,9 +248,9 @@
       "round": 23,
       "name": "Qatar Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 6,
-      "rps_blend": 0.13150470631578945,
-      "rps_elo_puro": 0.1591838568421053,
+      "n_dnf": 5,
+      "rps_blend": 0.13101818931578946,
+      "rps_elo_puro": 0.15801206294736844,
       "rps_grid": 0.11279928715789474,
       "rps_standings": 0.14646955457894734
     },
@@ -259,9 +259,9 @@
       "round": 24,
       "name": "Abu Dhabi Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 10,
-      "rps_blend": 0.13711050889473686,
-      "rps_elo_puro": 0.14163919389473684,
+      "n_dnf": 4,
+      "rps_blend": 0.1317778847894737,
+      "rps_elo_puro": 0.13438429036842106,
       "rps_grid": 0.15233588968421052,
       "rps_standings": 0.11646330042105264
     },
@@ -271,8 +271,8 @@
       "name": "Australian Grand Prix",
       "n_drivers": 20,
       "n_dnf": 6,
-      "rps_blend": 0.15541548915789477,
-      "rps_elo_puro": 0.17510456273684208,
+      "rps_blend": 0.1559093847894737,
+      "rps_elo_puro": 0.17375058678947367,
       "rps_grid": 0.15266728684210523,
       "rps_standings": 0.14401349821052634
     },
@@ -281,9 +281,9 @@
       "round": 2,
       "name": "Chinese Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 7,
-      "rps_blend": 0.15782382436842107,
-      "rps_elo_puro": 0.16871897415789475,
+      "n_dnf": 4,
+      "rps_blend": 0.16329982989473685,
+      "rps_elo_puro": 0.17929484521052635,
       "rps_grid": 0.160384108,
       "rps_standings": 0.12877958973684211
     },
@@ -292,9 +292,9 @@
       "round": 3,
       "name": "Japanese Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 1,
-      "rps_blend": 0.10490093173684209,
-      "rps_elo_puro": 0.13015028821052627,
+      "n_dnf": 0,
+      "rps_blend": 0.10266311831578948,
+      "rps_elo_puro": 0.12556057336842108,
       "rps_grid": 0.0916605962631579,
       "rps_standings": 0.1348096262631579
     },
@@ -304,8 +304,8 @@
       "name": "Bahrain Grand Prix",
       "n_drivers": 20,
       "n_dnf": 2,
-      "rps_blend": 0.1267071185263158,
-      "rps_elo_puro": 0.14363414736842103,
+      "rps_blend": 0.12665859942105262,
+      "rps_elo_puro": 0.14286593926315788,
       "rps_grid": 0.12348617463157896,
       "rps_standings": 0.13207975494736843
     },
@@ -314,9 +314,9 @@
       "round": 5,
       "name": "Saudi Arabian Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 6,
-      "rps_blend": 0.10838049436842105,
-      "rps_elo_puro": 0.10550379731578947,
+      "n_dnf": 2,
+      "rps_blend": 0.10895074326315787,
+      "rps_elo_puro": 0.10504620684210526,
       "rps_grid": 0.120336508,
       "rps_standings": 0.11953063726315787
     },
@@ -325,9 +325,9 @@
       "round": 6,
       "name": "Miami Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 7,
-      "rps_blend": 0.11139960894736844,
-      "rps_elo_puro": 0.12819064215789475,
+      "n_dnf": 4,
+      "rps_blend": 0.10883778815789476,
+      "rps_elo_puro": 0.125513654,
       "rps_grid": 0.10600165415789471,
       "rps_standings": 0.10628047757894736
     },
@@ -337,8 +337,8 @@
       "name": "Emilia Romagna Grand Prix",
       "n_drivers": 20,
       "n_dnf": 2,
-      "rps_blend": 0.121113673,
-      "rps_elo_puro": 0.12886044078947367,
+      "rps_blend": 0.11761986052631579,
+      "rps_elo_puro": 0.12245131805263157,
       "rps_grid": 0.12670873852631578,
       "rps_standings": 0.1357327847368421
     },
@@ -347,9 +347,9 @@
       "round": 8,
       "name": "Monaco Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 15,
-      "rps_blend": 0.11856658694736844,
-      "rps_elo_puro": 0.12964277315789471,
+      "n_dnf": 2,
+      "rps_blend": 0.12019418784210527,
+      "rps_elo_puro": 0.13497167300000001,
       "rps_grid": 0.12227171078947367,
       "rps_standings": 0.13094168299999998
     },
@@ -359,8 +359,8 @@
       "name": "Spanish Grand Prix",
       "n_drivers": 19,
       "n_dnf": 2,
-      "rps_blend": 0.13963219701754384,
-      "rps_elo_puro": 0.1534118912865497,
+      "rps_blend": 0.1388260116374269,
+      "rps_elo_puro": 0.15208362415204676,
       "rps_grid": 0.13727930619883044,
       "rps_standings": 0.1556656619298246
     },
@@ -369,9 +369,9 @@
       "round": 10,
       "name": "Canadian Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 12,
-      "rps_blend": 0.13113832336842104,
-      "rps_elo_puro": 0.14174592021052632,
+      "n_dnf": 3,
+      "rps_blend": 0.1303438417894737,
+      "rps_elo_puro": 0.14177522336842105,
       "rps_grid": 0.1289931845263158,
       "rps_standings": 0.15568663084210527
     },
@@ -380,9 +380,9 @@
       "round": 11,
       "name": "Austrian Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 14,
-      "rps_blend": 0.14869091315789473,
-      "rps_elo_puro": 0.16947626026315793,
+      "n_dnf": 4,
+      "rps_blend": 0.14981103457894734,
+      "rps_elo_puro": 0.1710319167894737,
       "rps_grid": 0.1342318077894737,
       "rps_standings": 0.17090030999999997
     },
@@ -391,9 +391,9 @@
       "round": 12,
       "name": "British Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 6,
-      "rps_blend": 0.15219021684210526,
-      "rps_elo_puro": 0.16429811457894736,
+      "n_dnf": 5,
+      "rps_blend": 0.15188835031578948,
+      "rps_elo_puro": 0.1631436795789474,
       "rps_grid": 0.14683611263157897,
       "rps_standings": 0.1417759457368421
     },
@@ -402,9 +402,9 @@
       "round": 13,
       "name": "Belgian Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 1,
-      "rps_blend": 0.1225767194736842,
-      "rps_elo_puro": 0.1441280733157895,
+      "n_dnf": 0,
+      "rps_blend": 0.12003022252631579,
+      "rps_elo_puro": 0.14199129205263158,
       "rps_grid": 0.12257982110526318,
       "rps_standings": 0.1324707495789474
     },
@@ -413,9 +413,9 @@
       "round": 14,
       "name": "Hungarian Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 11,
-      "rps_blend": 0.11570972805263158,
-      "rps_elo_puro": 0.1367604704210526,
+      "n_dnf": 1,
+      "rps_blend": 0.11769773978947366,
+      "rps_elo_puro": 0.14283686694736847,
       "rps_grid": 0.10690160484210527,
       "rps_standings": 0.13909004652631582
     },
@@ -425,8 +425,8 @@
       "name": "Dutch Grand Prix",
       "n_drivers": 20,
       "n_dnf": 3,
-      "rps_blend": 0.20152038868421052,
-      "rps_elo_puro": 0.20811493021052635,
+      "rps_blend": 0.20369197757894741,
+      "rps_elo_puro": 0.21204003142105265,
       "rps_grid": 0.19815211810526315,
       "rps_standings": 0.20066966357894733
     },
@@ -435,9 +435,9 @@
       "round": 16,
       "name": "Italian Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 6,
-      "rps_blend": 0.11367265721052633,
-      "rps_elo_puro": 0.10969190626315788,
+      "n_dnf": 2,
+      "rps_blend": 0.11232242068421053,
+      "rps_elo_puro": 0.1087446032631579,
       "rps_grid": 0.125984133,
       "rps_standings": 0.1285950202631579
     },
@@ -446,9 +446,9 @@
       "round": 17,
       "name": "Azerbaijan Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 3,
-      "rps_blend": 0.12819287494736845,
-      "rps_elo_puro": 0.157775894,
+      "n_dnf": 1,
+      "rps_blend": 0.12576580699999998,
+      "rps_elo_puro": 0.15288797489473688,
       "rps_grid": 0.11387888084210526,
       "rps_standings": 0.17800814863157893
     },
@@ -457,9 +457,9 @@
       "round": 18,
       "name": "Singapore Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 11,
-      "rps_blend": 0.10254115794736844,
-      "rps_elo_puro": 0.10623225436842107,
+      "n_dnf": 0,
+      "rps_blend": 0.10045921131578947,
+      "rps_elo_puro": 0.10272972410526315,
       "rps_grid": 0.11005571452631577,
       "rps_standings": 0.1224596416842105
     },
@@ -468,9 +468,9 @@
       "round": 19,
       "name": "United States Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 4,
-      "rps_blend": 0.1221263007368421,
-      "rps_elo_puro": 0.13132921057894736,
+      "n_dnf": 1,
+      "rps_blend": 0.11869306615789474,
+      "rps_elo_puro": 0.12392538336842104,
       "rps_grid": 0.1196914175263158,
       "rps_standings": 0.13107829710526314
     },
@@ -479,9 +479,9 @@
       "round": 20,
       "name": "Mexico City Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 9,
-      "rps_blend": 0.1185474195263158,
-      "rps_elo_puro": 0.12678720542105265,
+      "n_dnf": 4,
+      "rps_blend": 0.12056928915789475,
+      "rps_elo_puro": 0.13027988305263158,
       "rps_grid": 0.1196130675263158,
       "rps_standings": 0.14808469905263158
     },
@@ -491,8 +491,8 @@
       "name": "São Paulo Grand Prix",
       "n_drivers": 20,
       "n_dnf": 3,
-      "rps_blend": 0.1431876706842105,
-      "rps_elo_puro": 0.16271140057894734,
+      "rps_blend": 0.14483376436842105,
+      "rps_elo_puro": 0.16627386447368422,
       "rps_grid": 0.1414325505263158,
       "rps_standings": 0.14265226526315788
     },
@@ -501,9 +501,9 @@
       "round": 22,
       "name": "Las Vegas Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 7,
-      "rps_blend": 0.1731107901578947,
-      "rps_elo_puro": 0.16893842947368418,
+      "n_dnf": 5,
+      "rps_blend": 0.16972555557894736,
+      "rps_elo_puro": 0.16497769999999998,
       "rps_grid": 0.18779157431578947,
       "rps_standings": 0.17270708542105268
     },
@@ -512,9 +512,9 @@
       "round": 23,
       "name": "Qatar Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 7,
-      "rps_blend": 0.12118329042105262,
-      "rps_elo_puro": 0.12059111952631578,
+      "n_dnf": 4,
+      "rps_blend": 0.11993068489473684,
+      "rps_elo_puro": 0.11966652573684211,
       "rps_grid": 0.1358684514736842,
       "rps_standings": 0.14158668668421054
     },
@@ -523,9 +523,9 @@
       "round": 24,
       "name": "Abu Dhabi Grand Prix",
       "n_drivers": 20,
-      "n_dnf": 4,
-      "rps_blend": 0.11275260821052631,
-      "rps_elo_puro": 0.12160422442105263,
+      "n_dnf": 0,
+      "rps_blend": 0.10981819147368421,
+      "rps_elo_puro": 0.11697670900000001,
       "rps_grid": 0.11711191347368419,
       "rps_standings": 0.1339014593157895
     },
@@ -534,9 +534,9 @@
       "round": 1,
       "name": "Australian Grand Prix",
       "n_drivers": 22,
-      "n_dnf": 16,
-      "rps_blend": 0.14738290779220778,
-      "rps_elo_puro": 0.16129517034632038,
+      "n_dnf": 5,
+      "rps_blend": 0.145359415974026,
+      "rps_elo_puro": 0.15950834359307356,
       "rps_grid": 0.15675253272727271,
       "rps_standings": 0.16227340558441558
     },
@@ -545,9 +545,9 @@
       "round": 2,
       "name": "Chinese Grand Prix",
       "n_drivers": 22,
-      "n_dnf": 14,
-      "rps_blend": 0.1679611647619048,
-      "rps_elo_puro": 0.2078744675324675,
+      "n_dnf": 7,
+      "rps_blend": 0.1697318072294372,
+      "rps_elo_puro": 0.21102329727272726,
       "rps_grid": 0.13977732034632037,
       "rps_standings": 0.13309434047619043
     },
@@ -556,9 +556,9 @@
       "round": 3,
       "name": "Japanese Grand Prix",
       "n_drivers": 22,
-      "n_dnf": 5,
-      "rps_blend": 0.1078587806060606,
-      "rps_elo_puro": 0.1383548454978355,
+      "n_dnf": 2,
+      "rps_blend": 0.10661443038961038,
+      "rps_elo_puro": 0.13762104740259737,
       "rps_grid": 0.0968054193939394,
       "rps_standings": 0.12162282155844156
     },
@@ -567,9 +567,9 @@
       "round": 4,
       "name": "Miami Grand Prix",
       "n_drivers": 22,
-      "n_dnf": 12,
-      "rps_blend": 0.11706965164502167,
-      "rps_elo_puro": 0.12197553770562773,
+      "n_dnf": 4,
+      "rps_blend": 0.11642973662337663,
+      "rps_elo_puro": 0.12125210073593075,
       "rps_grid": 0.12502157043290044,
       "rps_standings": 0.13421242424242424
     },
@@ -578,9 +578,9 @@
       "round": 5,
       "name": "Canadian Grand Prix",
       "n_drivers": 22,
-      "n_dnf": 18,
-      "rps_blend": 0.17309532904761904,
-      "rps_elo_puro": 0.19418829913419913,
+      "n_dnf": 6,
+      "rps_blend": 0.17264378865800867,
+      "rps_elo_puro": 0.1930323363203463,
       "rps_grid": 0.16248333982683985,
       "rps_standings": 0.14415205393939393
     },
@@ -590,8 +590,8 @@
       "name": "Monaco Grand Prix",
       "n_drivers": 22,
       "n_dnf": 7,
-      "rps_blend": 0.18851155116883114,
-      "rps_elo_puro": 0.22248018948051948,
+      "rps_blend": 0.190456335974026,
+      "rps_elo_puro": 0.224728006017316,
       "rps_grid": 0.16294973415584416,
       "rps_standings": 0.1821085502164502
     },
@@ -600,9 +600,9 @@
       "round": 7,
       "name": "Barcelona Grand Prix",
       "n_drivers": 22,
-      "n_dnf": 17,
-      "rps_blend": 0.1253069176190476,
-      "rps_elo_puro": 0.14244539497835496,
+      "n_dnf": 7,
+      "rps_blend": 0.124347195021645,
+      "rps_elo_puro": 0.14062805575757575,
       "rps_grid": 0.12175670471861472,
       "rps_standings": 0.12658165216450215
     },
@@ -611,9 +611,9 @@
       "round": 8,
       "name": "Austrian Grand Prix",
       "n_drivers": 22,
-      "n_dnf": 14,
-      "rps_blend": 0.10909013424242424,
-      "rps_elo_puro": 0.1330991955844156,
+      "n_dnf": 4,
+      "rps_blend": 0.10361568606060606,
+      "rps_elo_puro": 0.122442617012987,
       "rps_grid": 0.09436339865800868,
       "rps_standings": 0.10371769770562772
     },
@@ -622,171 +622,182 @@
       "round": 9,
       "name": "British Grand Prix",
       "n_drivers": 22,
-      "n_dnf": 6,
-      "rps_blend": 0.15286606809523814,
-      "rps_elo_puro": 0.17379438536796535,
+      "n_dnf": 3,
+      "rps_blend": 0.1529290849350649,
+      "rps_elo_puro": 0.17163170454545454,
       "rps_grid": 0.1416338180952381,
       "rps_standings": 0.14299589493506493
+    },
+    {
+      "season": 2026,
+      "round": 10,
+      "name": "Belgian Grand Prix",
+      "n_drivers": 22,
+      "n_dnf": 3,
+      "rps_blend": 0.12948658701298701,
+      "rps_elo_puro": 0.14810709406926406,
+      "rps_grid": 0.1281076363203463,
+      "rps_standings": 0.11828239095238095
     }
   ],
   "aggregate": {
-    "rps_blend": 0.12807320312006756,
-    "rps_elo_puro": 0.14156795409965506,
-    "rps_grid": 0.12716546353777586,
-    "rps_standings": 0.13530530374409042
+    "rps_blend": 0.12737010249317127,
+    "rps_elo_puro": 0.1407030810561972,
+    "rps_grid": 0.12718170789609606,
+    "rps_standings": 0.13501180524768164
   },
   "dm": {
     "blend_vs_elo_puro": {
-      "dm": -9.339742256901337,
-      "p": 5.118604453107774e-13,
+      "dm": -9.219130900763897,
+      "p": 6.785976287429129e-13,
       "blend_melhor": true
     },
     "blend_vs_grid": {
-      "dm": 0.5995976305182157,
-      "p": 0.5511928291438399,
+      "dm": 0.11979151379402075,
+      "p": 0.905069534795143,
       "blend_melhor": false
     },
     "blend_vs_standings": {
-      "dm": -3.3692098055386768,
-      "p": 0.001370017917635527,
+      "dm": -3.50567446739293,
+      "p": 0.0008948462379718958,
       "blend_melhor": true
     }
   },
   "nullref": {
-    "observed": 0.12807320312006756,
-    "null_mean": 0.20163639944900796,
-    "null_p5": 0.19647659255591124,
+    "observed": 0.12737010249317127,
+    "null_mean": 0.20402384472831764,
+    "null_p5": 0.19870656471913847,
     "tail_p": 0.0,
     "percentile": 0.0,
     "n_samples": 1000
   },
   "podium": {
-    "brier_raw": 0.09320082724913495,
-    "brier_calibrated": 0.07831258652126635,
+    "brier_raw": 0.0930107330220713,
+    "brier_calibrated": 0.07941519173508906,
     "calibration_raw": [
       {
         "bin_lo": 0.0,
         "bin_hi": 0.1,
-        "n": 561,
-        "mean_pred": 0.07154010695187166,
-        "obs_freq": 0.0071301247771836
+        "n": 576,
+        "mean_pred": 0.06817465277777777,
+        "obs_freq": 0.006944444444444444
       },
       {
         "bin_lo": 0.1,
         "bin_hi": 0.2,
-        "n": 263,
-        "mean_pred": 0.13666007604562738,
-        "obs_freq": 0.03802281368821293
+        "n": 251,
+        "mean_pred": 0.13467250996015936,
+        "obs_freq": 0.04780876494023904
       },
       {
         "bin_lo": 0.2,
         "bin_hi": 0.3,
-        "n": 221,
-        "mean_pred": 0.24842262443438914,
-        "obs_freq": 0.37104072398190047
+        "n": 235,
+        "mean_pred": 0.25227319148936167,
+        "obs_freq": 0.35319148936170214
       },
       {
         "bin_lo": 0.3,
         "bin_hi": 0.4,
-        "n": 80,
-        "mean_pred": 0.3328475,
-        "obs_freq": 0.6625
+        "n": 86,
+        "mean_pred": 0.3331872093023256,
+        "obs_freq": 0.6162790697674418
       },
       {
         "bin_lo": 0.4,
         "bin_hi": 0.5,
-        "n": 31,
-        "mean_pred": 0.4321032258064516,
-        "obs_freq": 0.7096774193548387
+        "n": 30,
+        "mean_pred": 0.43301,
+        "obs_freq": 0.7333333333333333
       }
     ],
     "calibration_calibrated": [
       {
         "bin_lo": 0.0,
         "bin_hi": 0.1,
-        "n": 783,
-        "mean_pred": 0.013121632152316555,
-        "obs_freq": 0.011494252873563218
+        "n": 791,
+        "mean_pred": 0.012898532684841799,
+        "obs_freq": 0.011378002528445006
       },
       {
         "bin_lo": 0.1,
         "bin_hi": 0.2,
-        "n": 53,
-        "mean_pred": 0.15102910935480762,
-        "obs_freq": 0.1509433962264151
+        "n": 49,
+        "mean_pred": 0.15272308540049281,
+        "obs_freq": 0.1836734693877551
       },
       {
         "bin_lo": 0.2,
         "bin_hi": 0.3,
-        "n": 64,
-        "mean_pred": 0.24743202724279123,
-        "obs_freq": 0.234375
+        "n": 57,
+        "mean_pred": 0.2484302146159371,
+        "obs_freq": 0.22807017543859648
       },
       {
         "bin_lo": 0.3,
         "bin_hi": 0.4,
-        "n": 47,
-        "mean_pred": 0.353694939218662,
-        "obs_freq": 0.44680851063829785
+        "n": 61,
+        "mean_pred": 0.3517052632223129,
+        "obs_freq": 0.3442622950819672
       },
       {
         "bin_lo": 0.4,
         "bin_hi": 0.5,
-        "n": 55,
-        "mean_pred": 0.4545915169367405,
-        "obs_freq": 0.36363636363636365
+        "n": 58,
+        "mean_pred": 0.4513281514810422,
+        "obs_freq": 0.3793103448275862
       },
       {
         "bin_lo": 0.5,
         "bin_hi": 0.6,
-        "n": 41,
-        "mean_pred": 0.5466242736144186,
-        "obs_freq": 0.5609756097560976
+        "n": 62,
+        "mean_pred": 0.5508975292195866,
+        "obs_freq": 0.5645161290322581
       },
       {
         "bin_lo": 0.6,
         "bin_hi": 0.7,
-        "n": 45,
-        "mean_pred": 0.6404859344852498,
-        "obs_freq": 0.6888888888888889
+        "n": 38,
+        "mean_pred": 0.6534280723492939,
+        "obs_freq": 0.6842105263157895
       },
       {
         "bin_lo": 0.7,
         "bin_hi": 0.8,
-        "n": 18,
-        "mean_pred": 0.7469547627821496,
-        "obs_freq": 0.6111111111111112
+        "n": 19,
+        "mean_pred": 0.7391517503854376,
+        "obs_freq": 0.5789473684210527
       },
       {
         "bin_lo": 0.8,
         "bin_hi": 0.9,
-        "n": 27,
-        "mean_pred": 0.8537361578116169,
-        "obs_freq": 0.5925925925925926
+        "n": 23,
+        "mean_pred": 0.8603559282989661,
+        "obs_freq": 0.5217391304347826
       },
       {
         "bin_lo": 0.9,
         "bin_hi": 1.0,
-        "n": 23,
-        "mean_pred": 0.9297981836868708,
-        "obs_freq": 0.7391304347826086
+        "n": 20,
+        "mean_pred": 0.9151073679095468,
+        "obs_freq": 0.8
       }
     ]
   },
   "h2h_teammates": {
-    "n": 286,
-    "hits": 201,
-    "acc": 0.7027972027972028,
+    "n": 442,
+    "hits": 322,
+    "acc": 0.7285067873303167,
     "wilson95": [
-      0.6474258246106123,
-      0.7527929724930885
+      0.685209627866233,
+      0.7678662267981471
     ]
   },
   "w_grid": 0.5,
-  "w_dev_rps": 0.13235619674880383,
+  "w_dev_rps": 0.13145532148564593,
   "platt": {
-    "a": 3.594254800237185,
-    "b": 3.4615454338661933
+    "a": 3.4242735185978903,
+    "b": 3.211435354435484
   },
   "params": {
     "n_sims": 10000,
@@ -802,16 +813,16 @@
     "H3-F1b": {
       "verdict": "COMPROVADA",
       "dm": {
-        "dm": -9.339742256901337,
-        "p": 5.118604453107774e-13,
+        "dm": -9.219130900763897,
+        "p": 6.785976287429129e-13,
         "blend_melhor": true
       },
       "w_grid": 0.5
     },
     "H4-F1b": {
       "verdict": "COMPROVADA",
-      "brier_raw": 0.09320082724913495,
-      "brier_calibrated": 0.07831258652126635
+      "brier_raw": 0.0930107330220713,
+      "brier_calibrated": 0.07941519173508906
     }
   }
 }

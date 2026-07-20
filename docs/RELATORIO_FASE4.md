@@ -6,6 +6,18 @@
 > fatores (NBA), purging/embargo (previsao-cripto) e intensidade
 > não-homogênea (wc-predictor-v2).
 
+> **Errata 2026-07-20** (não destrutiva — números originais preservados
+> abaixo): `is_dnf()` não reconhecia `"Lapped"` (Jolpica 2023+, o mesmo
+> conceito de `"+N Lap(s)"` de 2022) — 363 resultados reais viraram DNF
+> por engano, contaminando diretamente a feature de **Reliability
+> (H6-F1c)**, que é DNF rolling. Corrigido e reexecutado: **H0-F1-formal,
+> H5/H6/H7-F1c mantêm o MESMO veredito** (H0 COMPROVADA; H5/H6/H7
+> REFUTADAS). O achado mais informativo da correção: o peso ótimo de
+> Reliability no dev (2023) caiu de `w_rel=1.0` para `w_rel=0.0` — parte
+> do sinal aparente de Reliability antes da correção pode ter sido
+> artefato do próprio bug de DNF, não confiabilidade real. Ver
+> `../HANDOFF.md` para a tabela completa antes/depois.
+
 ## Levantamento — o que existia de verdade para copiar
 
 Antes de implementar, uma auditoria factual dos 6 projetos-irmãos (sem

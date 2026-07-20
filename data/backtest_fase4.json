@@ -1,621 +1,631 @@
 {
-  "n_eval": 57,
+  "n_eval": 58,
   "per_race": [
     {
       "season": 2024,
       "round": 1,
       "n_drivers": 20,
       "circuit_type": null,
-      "rps_elo_grid": 0.09927325931578948,
-      "rps_plus_ctx": 0.09927325931578948,
-      "rps_plus_ctx_rel": 0.09474638757894738,
-      "rps_full": 0.09474638757894738
+      "rps_elo_grid": 0.09862156242105263,
+      "rps_plus_ctx": 0.09862156242105263,
+      "rps_plus_ctx_rel": 0.09862156242105263,
+      "rps_full": 0.09862156242105263
     },
     {
       "season": 2024,
       "round": 2,
       "n_drivers": 20,
       "circuit_type": null,
-      "rps_elo_grid": 0.10638768084210529,
-      "rps_plus_ctx": 0.10638768084210529,
-      "rps_plus_ctx_rel": 0.10552347110526314,
-      "rps_full": 0.10552347110526314
+      "rps_elo_grid": 0.10941412478947368,
+      "rps_plus_ctx": 0.10941412478947368,
+      "rps_plus_ctx_rel": 0.10941412478947368,
+      "rps_full": 0.10941412478947368
     },
     {
       "season": 2024,
       "round": 3,
       "n_drivers": 19,
       "circuit_type": "balanced",
-      "rps_elo_grid": 0.17519496350877192,
-      "rps_plus_ctx": 0.19126810374269007,
-      "rps_plus_ctx_rel": 0.19703442052631576,
-      "rps_full": 0.19703442052631576
+      "rps_elo_grid": 0.17638380350877192,
+      "rps_plus_ctx": 0.19414015649122807,
+      "rps_plus_ctx_rel": 0.19414015649122807,
+      "rps_full": 0.19414015649122807
     },
     {
       "season": 2024,
       "round": 4,
       "n_drivers": 20,
       "circuit_type": "downforce",
-      "rps_elo_grid": 0.10086707610526316,
-      "rps_plus_ctx": 0.09163124389473684,
-      "rps_plus_ctx_rel": 0.08755839310526316,
-      "rps_full": 0.08755839310526316
+      "rps_elo_grid": 0.09947849789473684,
+      "rps_plus_ctx": 0.0909695394736842,
+      "rps_plus_ctx_rel": 0.0909695394736842,
+      "rps_full": 0.0909695394736842
     },
     {
       "season": 2024,
       "round": 5,
       "n_drivers": 20,
       "circuit_type": "balanced",
-      "rps_elo_grid": 0.1023781164736842,
-      "rps_plus_ctx": 0.08524733731578947,
-      "rps_plus_ctx_rel": 0.07557295563157894,
-      "rps_full": 0.07557295563157894
+      "rps_elo_grid": 0.09985197157894737,
+      "rps_plus_ctx": 0.08201204868421053,
+      "rps_plus_ctx_rel": 0.08201204868421053,
+      "rps_full": 0.08201204868421053
     },
     {
       "season": 2024,
       "round": 6,
       "n_drivers": 20,
       "circuit_type": "power",
-      "rps_elo_grid": 0.1057185057894737,
-      "rps_plus_ctx": 0.09241514631578947,
-      "rps_plus_ctx_rel": 0.09093342942105263,
-      "rps_full": 0.09093342942105263
+      "rps_elo_grid": 0.10389326531578949,
+      "rps_plus_ctx": 0.09186690794736843,
+      "rps_plus_ctx_rel": 0.09186690794736843,
+      "rps_full": 0.09186690794736843
     },
     {
       "season": 2024,
       "round": 7,
       "n_drivers": 20,
       "circuit_type": null,
-      "rps_elo_grid": 0.10526828015789473,
-      "rps_plus_ctx": 0.10526828015789473,
-      "rps_plus_ctx_rel": 0.10063737178947367,
-      "rps_full": 0.10063737178947367
+      "rps_elo_grid": 0.10496519263157893,
+      "rps_plus_ctx": 0.10496519263157893,
+      "rps_plus_ctx_rel": 0.10496519263157893,
+      "rps_full": 0.10496519263157893
     },
     {
       "season": 2024,
       "round": 8,
       "n_drivers": 20,
       "circuit_type": "downforce",
-      "rps_elo_grid": 0.11374238652631577,
-      "rps_plus_ctx": 0.12207687536842102,
-      "rps_plus_ctx_rel": 0.12086333536842106,
-      "rps_full": 0.12086333536842106
+      "rps_elo_grid": 0.11040786747368421,
+      "rps_plus_ctx": 0.11385838310526313,
+      "rps_plus_ctx_rel": 0.11385838310526313,
+      "rps_full": 0.11385838310526313
     },
     {
       "season": 2024,
       "round": 9,
       "n_drivers": 20,
       "circuit_type": "power",
-      "rps_elo_grid": 0.14784968936842108,
-      "rps_plus_ctx": 0.1688834946842105,
-      "rps_plus_ctx_rel": 0.17275126426315787,
-      "rps_full": 0.17275126426315787
+      "rps_elo_grid": 0.1479618822105263,
+      "rps_plus_ctx": 0.1703400262105263,
+      "rps_plus_ctx_rel": 0.1703400262105263,
+      "rps_full": 0.1703400262105263
     },
     {
       "season": 2024,
       "round": 10,
       "n_drivers": 20,
       "circuit_type": "downforce",
-      "rps_elo_grid": 0.09300867984210527,
-      "rps_plus_ctx": 0.08321284978947369,
-      "rps_plus_ctx_rel": 0.07552380157894738,
-      "rps_full": 0.07552380157894738
+      "rps_elo_grid": 0.09096465821052631,
+      "rps_plus_ctx": 0.0763521779473684,
+      "rps_plus_ctx_rel": 0.0763521779473684,
+      "rps_full": 0.0763521779473684
     },
     {
       "season": 2024,
       "round": 11,
       "n_drivers": 20,
       "circuit_type": "power",
-      "rps_elo_grid": 0.14125539115789476,
-      "rps_plus_ctx": 0.15371669715789477,
-      "rps_plus_ctx_rel": 0.15496897463157894,
-      "rps_full": 0.15496897463157894
+      "rps_elo_grid": 0.13886780105263158,
+      "rps_plus_ctx": 0.154069874,
+      "rps_plus_ctx_rel": 0.154069874,
+      "rps_full": 0.154069874
     },
     {
       "season": 2024,
       "round": 12,
       "n_drivers": 20,
       "circuit_type": "balanced",
-      "rps_elo_grid": 0.14064171600000003,
-      "rps_plus_ctx": 0.15310207457894737,
-      "rps_plus_ctx_rel": 0.15884111584210528,
-      "rps_full": 0.15884111584210528
+      "rps_elo_grid": 0.1427566285789474,
+      "rps_plus_ctx": 0.15564497784210524,
+      "rps_plus_ctx_rel": 0.15564497784210524,
+      "rps_full": 0.15564497784210524
     },
     {
       "season": 2024,
       "round": 13,
       "n_drivers": 20,
       "circuit_type": "downforce",
-      "rps_elo_grid": 0.10140541468421052,
-      "rps_plus_ctx": 0.09274644105263155,
-      "rps_plus_ctx_rel": 0.08203448084210525,
-      "rps_full": 0.08203448084210525
+      "rps_elo_grid": 0.09780572336842105,
+      "rps_plus_ctx": 0.08882491584210526,
+      "rps_plus_ctx_rel": 0.08882491584210526,
+      "rps_full": 0.08882491584210526
     },
     {
       "season": 2024,
       "round": 14,
       "n_drivers": 20,
       "circuit_type": "power",
-      "rps_elo_grid": 0.11349592926315791,
-      "rps_plus_ctx": 0.11110756057894737,
-      "rps_plus_ctx_rel": 0.10777472884210529,
-      "rps_full": 0.10777472884210529
+      "rps_elo_grid": 0.11212531247368421,
+      "rps_plus_ctx": 0.10783769642105263,
+      "rps_plus_ctx_rel": 0.10783769642105263,
+      "rps_full": 0.10783769642105263
     },
     {
       "season": 2024,
       "round": 15,
       "n_drivers": 20,
       "circuit_type": "downforce",
-      "rps_elo_grid": 0.09586066463157894,
-      "rps_plus_ctx": 0.08070594136842106,
-      "rps_plus_ctx_rel": 0.07031563821052632,
-      "rps_full": 0.07031563821052632
+      "rps_elo_grid": 0.09321173268421051,
+      "rps_plus_ctx": 0.07291164415789472,
+      "rps_plus_ctx_rel": 0.07291164415789472,
+      "rps_full": 0.07291164415789472
     },
     {
       "season": 2024,
       "round": 16,
       "n_drivers": 20,
       "circuit_type": "power",
-      "rps_elo_grid": 0.1006182910526316,
-      "rps_plus_ctx": 0.09443180405263159,
-      "rps_plus_ctx_rel": 0.09178966636842108,
-      "rps_full": 0.09178966636842108
+      "rps_elo_grid": 0.10096909642105263,
+      "rps_plus_ctx": 0.09661411326315791,
+      "rps_plus_ctx_rel": 0.09661411326315791,
+      "rps_full": 0.09661411326315791
     },
     {
       "season": 2024,
       "round": 17,
       "n_drivers": 20,
       "circuit_type": "power",
-      "rps_elo_grid": 0.15041661842105264,
-      "rps_plus_ctx": 0.15592531131578952,
-      "rps_plus_ctx_rel": 0.1565527222105263,
-      "rps_full": 0.1565527222105263
+      "rps_elo_grid": 0.15200969699999997,
+      "rps_plus_ctx": 0.1598356468947368,
+      "rps_plus_ctx_rel": 0.1598356468947368,
+      "rps_full": 0.1598356468947368
     },
     {
       "season": 2024,
       "round": 18,
       "n_drivers": 20,
       "circuit_type": "downforce",
-      "rps_elo_grid": 0.09818021721052633,
-      "rps_plus_ctx": 0.08606303284210529,
-      "rps_plus_ctx_rel": 0.08057486968421051,
-      "rps_full": 0.08057486968421051
+      "rps_elo_grid": 0.09813473926315788,
+      "rps_plus_ctx": 0.08221186721052631,
+      "rps_plus_ctx_rel": 0.08221186721052631,
+      "rps_full": 0.08221186721052631
     },
     {
       "season": 2024,
       "round": 19,
       "n_drivers": 20,
       "circuit_type": "balanced",
-      "rps_elo_grid": 0.12232478510526315,
-      "rps_plus_ctx": 0.11490848005263159,
-      "rps_plus_ctx_rel": 0.10829458436842106,
-      "rps_full": 0.10829458436842106
+      "rps_elo_grid": 0.12100044705263158,
+      "rps_plus_ctx": 0.11507731652631578,
+      "rps_plus_ctx_rel": 0.11507731652631578,
+      "rps_full": 0.11507731652631578
     },
     {
       "season": 2024,
       "round": 20,
       "n_drivers": 20,
       "circuit_type": "power",
-      "rps_elo_grid": 0.1265651195789474,
-      "rps_plus_ctx": 0.1331600852631579,
-      "rps_plus_ctx_rel": 0.13088946784210526,
-      "rps_full": 0.13088946784210526
+      "rps_elo_grid": 0.12687725584210527,
+      "rps_plus_ctx": 0.13884753026315788,
+      "rps_plus_ctx_rel": 0.13884753026315788,
+      "rps_full": 0.13884753026315788
     },
     {
       "season": 2024,
       "round": 21,
       "n_drivers": 20,
       "circuit_type": "balanced",
-      "rps_elo_grid": 0.13433214857894735,
-      "rps_plus_ctx": 0.1340945162631579,
-      "rps_plus_ctx_rel": 0.14115852089473685,
-      "rps_full": 0.14115852089473685
+      "rps_elo_grid": 0.13638151973684212,
+      "rps_plus_ctx": 0.1438087941052632,
+      "rps_plus_ctx_rel": 0.1438087941052632,
+      "rps_full": 0.1438087941052632
     },
     {
       "season": 2024,
       "round": 22,
       "n_drivers": 20,
       "circuit_type": "power",
-      "rps_elo_grid": 0.11835822584210527,
-      "rps_plus_ctx": 0.1061818157894737,
-      "rps_plus_ctx_rel": 0.1028787397368421,
-      "rps_full": 0.1028787397368421
+      "rps_elo_grid": 0.11388153147368421,
+      "rps_plus_ctx": 0.10557932584210525,
+      "rps_plus_ctx_rel": 0.10557932584210525,
+      "rps_full": 0.10557932584210525
     },
     {
       "season": 2024,
       "round": 23,
       "n_drivers": 20,
       "circuit_type": "balanced",
-      "rps_elo_grid": 0.13168538794736845,
-      "rps_plus_ctx": 0.14376752331578949,
-      "rps_plus_ctx_rel": 0.1461287817368421,
-      "rps_full": 0.1461287817368421
+      "rps_elo_grid": 0.13103850089473684,
+      "rps_plus_ctx": 0.1460543361578947,
+      "rps_plus_ctx_rel": 0.1460543361578947,
+      "rps_full": 0.1460543361578947
     },
     {
       "season": 2024,
       "round": 24,
       "n_drivers": 20,
       "circuit_type": "balanced",
-      "rps_elo_grid": 0.1368332475263158,
-      "rps_plus_ctx": 0.13593554426315785,
-      "rps_plus_ctx_rel": 0.13869713415789475,
-      "rps_full": 0.13869713415789475
+      "rps_elo_grid": 0.13164647889473685,
+      "rps_plus_ctx": 0.12997902084210528,
+      "rps_plus_ctx_rel": 0.12997902084210528,
+      "rps_full": 0.12997902084210528
     },
     {
       "season": 2025,
       "round": 1,
       "n_drivers": 20,
       "circuit_type": "balanced",
-      "rps_elo_grid": 0.1564263047368421,
-      "rps_plus_ctx": 0.16640759126315788,
-      "rps_plus_ctx_rel": 0.17893974389473682,
-      "rps_full": 0.17893974389473682
+      "rps_elo_grid": 0.15700894789473685,
+      "rps_plus_ctx": 0.16621804626315795,
+      "rps_plus_ctx_rel": 0.16621804626315795,
+      "rps_full": 0.16621804626315795
     },
     {
       "season": 2025,
       "round": 2,
       "n_drivers": 20,
       "circuit_type": "balanced",
-      "rps_elo_grid": 0.15725812163157896,
-      "rps_plus_ctx": 0.1611367113157895,
-      "rps_plus_ctx_rel": 0.1680929992631579,
-      "rps_full": 0.1680929992631579
+      "rps_elo_grid": 0.16287951668421055,
+      "rps_plus_ctx": 0.17235103910526314,
+      "rps_plus_ctx_rel": 0.17235103910526314,
+      "rps_full": 0.17235103910526314
     },
     {
       "season": 2025,
       "round": 3,
       "n_drivers": 20,
       "circuit_type": "downforce",
-      "rps_elo_grid": 0.10417342057894736,
-      "rps_plus_ctx": 0.09810768968421053,
-      "rps_plus_ctx_rel": 0.08508385447368422,
-      "rps_full": 0.08508385447368422
+      "rps_elo_grid": 0.10196959710526317,
+      "rps_plus_ctx": 0.09854681652631578,
+      "rps_plus_ctx_rel": 0.09854681652631578,
+      "rps_full": 0.09854681652631578
     },
     {
       "season": 2025,
       "round": 4,
       "n_drivers": 20,
       "circuit_type": null,
-      "rps_elo_grid": 0.1276480860526316,
-      "rps_plus_ctx": 0.1276480860526316,
-      "rps_plus_ctx_rel": 0.12005059215789474,
-      "rps_full": 0.12005059215789474
+      "rps_elo_grid": 0.12763518331578946,
+      "rps_plus_ctx": 0.12763518331578946,
+      "rps_plus_ctx_rel": 0.12763518331578946,
+      "rps_full": 0.12763518331578946
     },
     {
       "season": 2025,
       "round": 5,
       "n_drivers": 20,
       "circuit_type": null,
-      "rps_elo_grid": 0.10720664410526318,
-      "rps_plus_ctx": 0.10720664410526318,
-      "rps_plus_ctx_rel": 0.09649080047368422,
-      "rps_full": 0.09649080047368422
+      "rps_elo_grid": 0.1079168387368421,
+      "rps_plus_ctx": 0.1079168387368421,
+      "rps_plus_ctx_rel": 0.1079168387368421,
+      "rps_full": 0.1079168387368421
     },
     {
       "season": 2025,
       "round": 6,
       "n_drivers": 20,
       "circuit_type": "power",
-      "rps_elo_grid": 0.11188009015789475,
-      "rps_plus_ctx": 0.12072991215789472,
-      "rps_plus_ctx_rel": 0.11984463557894735,
-      "rps_full": 0.11984463557894735
+      "rps_elo_grid": 0.10924532099999999,
+      "rps_plus_ctx": 0.11900267994736843,
+      "rps_plus_ctx_rel": 0.11900267994736843,
+      "rps_full": 0.11900267994736843
     },
     {
       "season": 2025,
       "round": 7,
       "n_drivers": 20,
       "circuit_type": null,
-      "rps_elo_grid": 0.1215780643157895,
-      "rps_plus_ctx": 0.1215780643157895,
-      "rps_plus_ctx_rel": 0.11741597873684209,
-      "rps_full": 0.11741597873684209
+      "rps_elo_grid": 0.11810701831578947,
+      "rps_plus_ctx": 0.11810701831578947,
+      "rps_plus_ctx_rel": 0.11810701831578947,
+      "rps_full": 0.11810701831578947
     },
     {
       "season": 2025,
       "round": 8,
       "n_drivers": 20,
       "circuit_type": "downforce",
-      "rps_elo_grid": 0.11788995078947373,
-      "rps_plus_ctx": 0.1066695244736842,
-      "rps_plus_ctx_rel": 0.1069617363157895,
-      "rps_full": 0.1069617363157895
+      "rps_elo_grid": 0.11961126089473686,
+      "rps_plus_ctx": 0.11536816563157895,
+      "rps_plus_ctx_rel": 0.11536816563157895,
+      "rps_full": 0.11536816563157895
     },
     {
       "season": 2025,
       "round": 9,
       "n_drivers": 19,
       "circuit_type": "downforce",
-      "rps_elo_grid": 0.14048739795321635,
-      "rps_plus_ctx": 0.14748870959064328,
-      "rps_plus_ctx_rel": 0.14810635017543863,
-      "rps_full": 0.14810635017543863
+      "rps_elo_grid": 0.13954006298245614,
+      "rps_plus_ctx": 0.14473576748538014,
+      "rps_plus_ctx_rel": 0.14473576748538014,
+      "rps_full": 0.14473576748538014
     },
     {
       "season": 2025,
       "round": 10,
       "n_drivers": 20,
       "circuit_type": "power",
-      "rps_elo_grid": 0.13027784536842102,
-      "rps_plus_ctx": 0.12524784310526313,
-      "rps_plus_ctx_rel": 0.1265062722105263,
-      "rps_full": 0.1265062722105263
+      "rps_elo_grid": 0.12945994163157898,
+      "rps_plus_ctx": 0.12818319936842104,
+      "rps_plus_ctx_rel": 0.12818319936842104,
+      "rps_full": 0.12818319936842104
     },
     {
       "season": 2025,
       "round": 11,
       "n_drivers": 20,
       "circuit_type": "power",
-      "rps_elo_grid": 0.14906930436842106,
-      "rps_plus_ctx": 0.1639400755263158,
-      "rps_plus_ctx_rel": 0.1648992409473684,
-      "rps_full": 0.1648992409473684
+      "rps_elo_grid": 0.15019505831578947,
+      "rps_plus_ctx": 0.1681281096842105,
+      "rps_plus_ctx_rel": 0.1681281096842105,
+      "rps_full": 0.1681281096842105
     },
     {
       "season": 2025,
       "round": 12,
       "n_drivers": 20,
       "circuit_type": "balanced",
-      "rps_elo_grid": 0.15406161705263155,
-      "rps_plus_ctx": 0.17133864394736847,
-      "rps_plus_ctx_rel": 0.17127109126315787,
-      "rps_full": 0.17127109126315787
+      "rps_elo_grid": 0.15355219289473684,
+      "rps_plus_ctx": 0.16820318036842105,
+      "rps_plus_ctx_rel": 0.16820318036842105,
+      "rps_full": 0.16820318036842105
     },
     {
       "season": 2025,
       "round": 13,
       "n_drivers": 20,
       "circuit_type": "power",
-      "rps_elo_grid": 0.12276028115789472,
-      "rps_plus_ctx": 0.13027553342105264,
-      "rps_plus_ctx_rel": 0.12567362815789476,
-      "rps_full": 0.12567362815789476
+      "rps_elo_grid": 0.1202894636842105,
+      "rps_plus_ctx": 0.12694400210526316,
+      "rps_plus_ctx_rel": 0.12694400210526316,
+      "rps_full": 0.12694400210526316
     },
     {
       "season": 2025,
       "round": 14,
       "n_drivers": 20,
       "circuit_type": "downforce",
-      "rps_elo_grid": 0.11607251715789473,
-      "rps_plus_ctx": 0.11557276073684211,
-      "rps_plus_ctx_rel": 0.11692509773684212,
-      "rps_full": 0.11692509773684212
+      "rps_elo_grid": 0.11817231026315789,
+      "rps_plus_ctx": 0.12667781894736843,
+      "rps_plus_ctx_rel": 0.12667781894736843,
+      "rps_full": 0.12667781894736843
     },
     {
       "season": 2025,
       "round": 15,
       "n_drivers": 20,
       "circuit_type": "downforce",
-      "rps_elo_grid": 0.20160106157894736,
-      "rps_plus_ctx": 0.21907013131578945,
-      "rps_plus_ctx_rel": 0.2257751748421053,
-      "rps_full": 0.2257751748421053
+      "rps_elo_grid": 0.20385796347368418,
+      "rps_plus_ctx": 0.23174239852631584,
+      "rps_plus_ctx_rel": 0.23174239852631584,
+      "rps_full": 0.23174239852631584
     },
     {
       "season": 2025,
       "round": 16,
       "n_drivers": 20,
       "circuit_type": "power",
-      "rps_elo_grid": 0.11278529484210524,
-      "rps_plus_ctx": 0.09706116794736841,
-      "rps_plus_ctx_rel": 0.09500989515789472,
-      "rps_full": 0.09500989515789472
+      "rps_elo_grid": 0.11148134763157895,
+      "rps_plus_ctx": 0.09634839542105264,
+      "rps_plus_ctx_rel": 0.09634839542105264,
+      "rps_full": 0.09634839542105264
     },
     {
       "season": 2025,
       "round": 17,
       "n_drivers": 20,
       "circuit_type": "power",
-      "rps_elo_grid": 0.1285703437368421,
-      "rps_plus_ctx": 0.12944664868421055,
-      "rps_plus_ctx_rel": 0.1334889147368421,
-      "rps_full": 0.1334889147368421
+      "rps_elo_grid": 0.12612072778947367,
+      "rps_plus_ctx": 0.12720705352631578,
+      "rps_plus_ctx_rel": 0.12720705352631578,
+      "rps_full": 0.12720705352631578
     },
     {
       "season": 2025,
       "round": 18,
       "n_drivers": 20,
       "circuit_type": "downforce",
-      "rps_elo_grid": 0.10302873905263155,
-      "rps_plus_ctx": 0.08891570821052633,
-      "rps_plus_ctx_rel": 0.0851465534736842,
-      "rps_full": 0.0851465534736842
+      "rps_elo_grid": 0.10089750442105264,
+      "rps_plus_ctx": 0.08566715999999999,
+      "rps_plus_ctx_rel": 0.08566715999999999,
+      "rps_full": 0.08566715999999999
     },
     {
       "season": 2025,
       "round": 19,
       "n_drivers": 20,
       "circuit_type": "balanced",
-      "rps_elo_grid": 0.12238708021052629,
-      "rps_plus_ctx": 0.12203624736842104,
-      "rps_plus_ctx_rel": 0.11402872768421053,
-      "rps_full": 0.11402872768421053
+      "rps_elo_grid": 0.11906433405263157,
+      "rps_plus_ctx": 0.12010728478947368,
+      "rps_plus_ctx_rel": 0.12010728478947368,
+      "rps_full": 0.12010728478947368
     },
     {
       "season": 2025,
       "round": 20,
       "n_drivers": 20,
       "circuit_type": "power",
-      "rps_elo_grid": 0.11922215721052629,
-      "rps_plus_ctx": 0.12032978636842107,
-      "rps_plus_ctx_rel": 0.12306980068421056,
-      "rps_full": 0.12306980068421056
+      "rps_elo_grid": 0.1212247555263158,
+      "rps_plus_ctx": 0.12777597957894737,
+      "rps_plus_ctx_rel": 0.12777597957894737,
+      "rps_full": 0.12777597957894737
     },
     {
       "season": 2025,
       "round": 21,
       "n_drivers": 20,
       "circuit_type": "balanced",
-      "rps_elo_grid": 0.14308863094736843,
-      "rps_plus_ctx": 0.14926340557894738,
-      "rps_plus_ctx_rel": 0.1527305251578947,
-      "rps_full": 0.1527305251578947
+      "rps_elo_grid": 0.14465700042105262,
+      "rps_plus_ctx": 0.15082857184210527,
+      "rps_plus_ctx_rel": 0.15082857184210527,
+      "rps_full": 0.15082857184210527
     },
     {
       "season": 2025,
       "round": 22,
       "n_drivers": 20,
       "circuit_type": "power",
-      "rps_elo_grid": 0.17273254563157892,
-      "rps_plus_ctx": 0.16856359184210526,
-      "rps_plus_ctx_rel": 0.17029568247368423,
-      "rps_full": 0.17029568247368423
+      "rps_elo_grid": 0.16944260015789472,
+      "rps_plus_ctx": 0.16656530310526316,
+      "rps_plus_ctx_rel": 0.16656530310526316,
+      "rps_full": 0.16656530310526316
     },
     {
       "season": 2025,
       "round": 23,
       "n_drivers": 20,
       "circuit_type": "balanced",
-      "rps_elo_grid": 0.12178556542105264,
-      "rps_plus_ctx": 0.11586545973684212,
-      "rps_plus_ctx_rel": 0.11612736647368423,
-      "rps_full": 0.11612736647368423
+      "rps_elo_grid": 0.12038401021052629,
+      "rps_plus_ctx": 0.1166865905789474,
+      "rps_plus_ctx_rel": 0.1166865905789474,
+      "rps_full": 0.1166865905789474
     },
     {
       "season": 2025,
       "round": 24,
       "n_drivers": 20,
       "circuit_type": "balanced",
-      "rps_elo_grid": 0.11304719452631581,
-      "rps_plus_ctx": 0.10332242578947368,
-      "rps_plus_ctx_rel": 0.09639098,
-      "rps_full": 0.09639098
+      "rps_elo_grid": 0.11003192136842106,
+      "rps_plus_ctx": 0.10161628294736844,
+      "rps_plus_ctx_rel": 0.10161628294736844,
+      "rps_full": 0.10161628294736844
     },
     {
       "season": 2026,
       "round": 1,
       "n_drivers": 22,
       "circuit_type": "balanced",
-      "rps_elo_grid": 0.14687793515151515,
-      "rps_plus_ctx": 0.1494653481818182,
-      "rps_plus_ctx_rel": 0.1460082153679654,
-      "rps_full": 0.1460082153679654
+      "rps_elo_grid": 0.1450383974025974,
+      "rps_plus_ctx": 0.1523107719047619,
+      "rps_plus_ctx_rel": 0.1523107719047619,
+      "rps_full": 0.1523107719047619
     },
     {
       "season": 2026,
       "round": 2,
       "n_drivers": 22,
       "circuit_type": "balanced",
-      "rps_elo_grid": 0.16833154393939395,
-      "rps_plus_ctx": 0.19113842082251084,
-      "rps_plus_ctx_rel": 0.2004290213852814,
-      "rps_full": 0.2004290213852814
+      "rps_elo_grid": 0.17023000281385284,
+      "rps_plus_ctx": 0.19645488913419912,
+      "rps_plus_ctx_rel": 0.19645488913419912,
+      "rps_full": 0.19645488913419912
     },
     {
       "season": 2026,
       "round": 3,
       "n_drivers": 22,
       "circuit_type": "downforce",
-      "rps_elo_grid": 0.10852580506493509,
-      "rps_plus_ctx": 0.11409718199134197,
-      "rps_plus_ctx_rel": 0.11280229887445889,
-      "rps_full": 0.11280229887445889
+      "rps_elo_grid": 0.10722002974025972,
+      "rps_plus_ctx": 0.11690901341991343,
+      "rps_plus_ctx_rel": 0.11690901341991343,
+      "rps_full": 0.11690901341991343
     },
     {
       "season": 2026,
       "round": 4,
       "n_drivers": 22,
       "circuit_type": "power",
-      "rps_elo_grid": 0.11654193995670997,
-      "rps_plus_ctx": 0.10979624675324674,
-      "rps_plus_ctx_rel": 0.10887411272727272,
-      "rps_full": 0.10887411272727272
+      "rps_elo_grid": 0.11589392662337662,
+      "rps_plus_ctx": 0.11248075134199137,
+      "rps_plus_ctx_rel": 0.11248075134199137,
+      "rps_full": 0.11248075134199137
     },
     {
       "season": 2026,
       "round": 5,
       "n_drivers": 22,
       "circuit_type": "power",
-      "rps_elo_grid": 0.17307742363636364,
-      "rps_plus_ctx": 0.19449298532467532,
-      "rps_plus_ctx_rel": 0.19432796134199135,
-      "rps_full": 0.19432796134199135
+      "rps_elo_grid": 0.17272034207792208,
+      "rps_plus_ctx": 0.19968673584415592,
+      "rps_plus_ctx_rel": 0.19968673584415592,
+      "rps_full": 0.19968673584415592
     },
     {
       "season": 2026,
       "round": 6,
       "n_drivers": 22,
       "circuit_type": "downforce",
-      "rps_elo_grid": 0.1900321201298702,
-      "rps_plus_ctx": 0.22232774216450216,
-      "rps_plus_ctx_rel": 0.22962036316017317,
-      "rps_full": 0.22962036316017317
+      "rps_elo_grid": 0.19196046077922074,
+      "rps_plus_ctx": 0.23021531255411262,
+      "rps_plus_ctx_rel": 0.23021531255411262,
+      "rps_full": 0.23021531255411262
     },
     {
       "season": 2026,
       "round": 7,
       "n_drivers": 22,
       "circuit_type": "downforce",
-      "rps_elo_grid": 0.12489702329004332,
-      "rps_plus_ctx": 0.12562389770562768,
-      "rps_plus_ctx_rel": 0.128538256017316,
-      "rps_full": 0.128538256017316
+      "rps_elo_grid": 0.12383446688311688,
+      "rps_plus_ctx": 0.12222605904761905,
+      "rps_plus_ctx_rel": 0.12222605904761905,
+      "rps_full": 0.12222605904761905
     },
     {
       "season": 2026,
       "round": 8,
       "n_drivers": 22,
       "circuit_type": "power",
-      "rps_elo_grid": 0.10857936917748919,
-      "rps_plus_ctx": 0.1127701218181818,
-      "rps_plus_ctx_rel": 0.10765076826839827,
-      "rps_full": 0.10765076826839827
+      "rps_elo_grid": 0.10310810554112555,
+      "rps_plus_ctx": 0.10972087333333334,
+      "rps_plus_ctx_rel": 0.10972087333333334,
+      "rps_full": 0.10972087333333334
     },
     {
       "season": 2026,
       "round": 9,
       "n_drivers": 22,
       "circuit_type": "balanced",
-      "rps_elo_grid": 0.15378545004329006,
-      "rps_plus_ctx": 0.16480788731601728,
-      "rps_plus_ctx_rel": 0.17054131281385282,
-      "rps_full": 0.17054131281385282
+      "rps_elo_grid": 0.1537342930735931,
+      "rps_plus_ctx": 0.16974851562770563,
+      "rps_plus_ctx_rel": 0.16974851562770563,
+      "rps_full": 0.16974851562770563
+    },
+    {
+      "season": 2026,
+      "round": 10,
+      "n_drivers": 22,
+      "circuit_type": "power",
+      "rps_elo_grid": 0.1296527088744589,
+      "rps_plus_ctx": 0.14122909645021645,
+      "rps_plus_ctx_rel": 0.14122909645021645,
+      "rps_full": 0.14122909645021645
     }
   ],
   "aggregate": {
-    "elo_grid": 0.1281990993667409,
-    "plus_ctx": 0.12988163673574687,
-    "plus_ctx_rel": 0.12893267031164435,
-    "full": 0.12893267031164435
+    "elo_grid": 0.1274963259198859,
+    "plus_ctx": 0.13092038075595075,
+    "plus_ctx_rel": 0.13092038075595075,
+    "full": 0.13092038075595075
   },
   "dm": {
     "h5": {
-      "dm": 1.1630476767979938,
-      "p": 0.24974227033144425,
+      "dm": 2.130575888100984,
+      "p": 0.03745151752675308,
       "melhor": false,
-      "rps_a": 0.12988163673574687,
-      "rps_b": 0.1281990993667409
+      "rps_a": 0.13092038075595075,
+      "rps_b": 0.1274963259198859
     },
     "h6": {
-      "dm": -1.3123576633176466,
-      "p": 0.1947531787701292,
-      "melhor": true,
-      "rps_a": 0.12893267031164435,
-      "rps_b": 0.12988163673574687
+      "dm": NaN,
+      "p": NaN,
+      "melhor": false,
+      "rps_a": 0.13092038075595075,
+      "rps_b": 0.13092038075595075
     },
     "h7": {
       "dm": NaN,
       "p": NaN,
       "melhor": false,
-      "rps_a": 0.12893267031164435,
-      "rps_b": 0.12893267031164435
+      "rps_a": 0.13092038075595075,
+      "rps_b": 0.13092038075595075
     }
   },
   "nullref": {
-    "observed": 0.12893267031164435,
-    "null_p5": 0.2274732218646364,
+    "observed": 0.13092038075595075,
+    "null_p5": 0.2224577723645438,
     "tail_p": 0.0
   },
   "weights": {
     "w_grid": 0.5,
     "w_ctx": 1.5,
-    "w_rel": 1.0,
+    "w_rel": 0.0,
     "w_pit": 0.0
   },
   "dev_rps": {
-    "ctx": 0.1284713045526316,
-    "rel": 0.1268190217368421,
-    "pit": 0.1268190217368421
+    "ctx": 0.12698578817464112,
+    "rel": 0.12698578817464112,
+    "pit": 0.12698578817464112
   },
   "params": {
     "n_sims": 10000,
@@ -629,52 +639,52 @@
     "pit_window": 10
   },
   "h0_formal": {
-    "n_eval": 79,
-    "rps_grid_h0": 0.13036772934476767,
-    "rps_elo": 0.14100444009921115,
-    "delta_mean": -0.010636710754443529,
+    "n_eval": 80,
+    "rps_grid_h0": 0.13035014603203676,
+    "rps_elo": 0.1398637477918948,
+    "delta_mean": -0.009513601759858043,
     "bootstrap_ci95": [
-      -0.015264239898337762,
-      -0.006006258756415171
+      -0.01448324943829953,
+      -0.004655883752464179
     ],
     "dm": {
-      "dm": -4.393712522870682,
-      "p": 3.471172179534352e-05
+      "dm": -3.8215006235690683,
+      "p": 0.0002630190309354955
     }
   },
   "verdicts": {
     "H0-F1-formal": {
       "verdict": "COMPROVADA",
       "bootstrap_ci95": [
-        -0.015264239898337762,
-        -0.006006258756415171
+        -0.01448324943829953,
+        -0.004655883752464179
       ],
       "dm": {
-        "dm": -4.393712522870682,
-        "p": 3.471172179534352e-05
+        "dm": -3.8215006235690683,
+        "p": 0.0002630190309354955
       }
     },
     "H5-F1c": {
       "verdict": "REFUTADA",
       "dm": {
-        "dm": 1.1630476767979938,
-        "p": 0.24974227033144425,
+        "dm": 2.130575888100984,
+        "p": 0.03745151752675308,
         "melhor": false,
-        "rps_a": 0.12988163673574687,
-        "rps_b": 0.1281990993667409
+        "rps_a": 0.13092038075595075,
+        "rps_b": 0.1274963259198859
       },
       "w_ctx": 1.5
     },
     "H6-F1c": {
       "verdict": "REFUTADA",
       "dm": {
-        "dm": -1.3123576633176466,
-        "p": 0.1947531787701292,
-        "melhor": true,
-        "rps_a": 0.12893267031164435,
-        "rps_b": 0.12988163673574687
+        "dm": NaN,
+        "p": NaN,
+        "melhor": false,
+        "rps_a": 0.13092038075595075,
+        "rps_b": 0.13092038075595075
       },
-      "w_rel": 1.0
+      "w_rel": 0.0
     },
     "H7-F1c": {
       "verdict": "REFUTADA",
@@ -682,8 +692,8 @@
         "dm": NaN,
         "p": NaN,
         "melhor": false,
-        "rps_a": 0.12893267031164435,
-        "rps_b": 0.12893267031164435
+        "rps_a": 0.13092038075595075,
+        "rps_b": 0.13092038075595075
       },
       "w_pit": 0.0
     }

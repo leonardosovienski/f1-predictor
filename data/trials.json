@@ -17,7 +17,7 @@
       "alpha": 0.05
     },
     "sharpe": null,
-    "notes": "RESULTADO: REFUTADA — RPS modelo 0.1410 vs grid 0.1303 (DM 4.430, p=0.0000); nulo tail_p=0.0000 (79 corridas)",
+    "notes": "RESULTADO: REFUTADA — RPS modelo 0.1399 vs grid 0.1303 (DM 3.853, p=0.0002); nulo tail_p=0.0000 (80 corridas)",
     "test_period": [
       "2023-01-01",
       "2026-07-12"
@@ -35,7 +35,7 @@
       "selecao": "pares de mesma equipe com ambos classificados"
     },
     "sharpe": null,
-    "notes": "RESULTADO: COMPROVADA — acerto 0.6262 (253/404), Wilson95 [0.5781, 0.6720]",
+    "notes": "RESULTADO: COMPROVADA — acerto 0.6501 (392/603), Wilson95 [0.6112, 0.6871]",
     "test_period": [
       "2023-01-01",
       "2026-07-12"
@@ -57,7 +57,7 @@
       "alpha": 0.05
     },
     "sharpe": null,
-    "notes": "RESULTADO: COMPROVADA — w=0.5, RPS blend 0.1281 vs elo puro 0.1416 (DM -9.340, p=0.0000); 57 corridas",
+    "notes": "RESULTADO: COMPROVADA — w=0.5, RPS blend 0.1274 vs elo puro 0.1407 (DM -9.219, p=0.0000); 58 corridas",
     "test_period": [
       "2024-01-01",
       "2026-07-12"
@@ -74,7 +74,7 @@
       "avaliacao": "2024-2026"
     },
     "sharpe": null,
-    "notes": "RESULTADO: COMPROVADA — Brier cru 0.0932 vs calibrado 0.0783",
+    "notes": "RESULTADO: COMPROVADA — Brier cru 0.0930 vs calibrado 0.0794",
     "test_period": [
       "2024-01-01",
       "2026-07-12"
@@ -91,7 +91,7 @@
       "criterio": "bootstrap IC95 + DM"
     },
     "sharpe": null,
-    "notes": "RESULTADO: COMPROVADA — RPS grid 0.1304 vs elo 0.1410; bootstrap IC95 [-0.0153, -0.006]; DM p=0.00003 (79 corridas) — consistente com H1-F1 REFUTADA da Fase 1",
+    "notes": "RESULTADO: COMPROVADA — RPS grid 0.1304 vs elo 0.1399; bootstrap IC95 [-0.0145, -0.0047]; DM p=0.00026 (80 corridas) — consistente com H1-F1 REFUTADA da Fase 1",
     "test_period": [
       "2023-01-01",
       "2026-07-12"
@@ -108,7 +108,7 @@
       "w_grid_fixo": 0.5
     },
     "sharpe": null,
-    "notes": "RESULTADO: REFUTADA — w_ctx=1.5, RPS 0.1299 vs 0.1282 (p=0.2497)",
+    "notes": "RESULTADO: REFUTADA — w_ctx=1.5, RPS 0.1309 vs 0.1275 (p=0.0375)",
     "test_period": [
       "2023-01-01",
       "2026-07-12"
@@ -123,7 +123,7 @@
       "avaliacao": "2024-2026"
     },
     "sharpe": null,
-    "notes": "RESULTADO: REFUTADA — w_rel=1.0, RPS 0.1289 vs 0.1299 (p=0.1948)",
+    "notes": "RESULTADO: REFUTADA — w_rel=0.0, RPS 0.1309 vs 0.1309 (p=nan)",
     "test_period": [
       "2023-01-01",
       "2026-07-12"
@@ -138,7 +138,7 @@
       "avaliacao": "2024-2026"
     },
     "sharpe": null,
-    "notes": "RESULTADO: REFUTADA — w_pit=0.0, RPS 0.1289 vs 0.1289 (p=nan)",
+    "notes": "RESULTADO: REFUTADA — w_pit=0.0, RPS 0.1309 vs 0.1309 (p=nan)",
     "test_period": [
       "2023-01-01",
       "2026-07-12"
@@ -159,7 +159,7 @@
       "shrink_factor_calibrado": 0.8
     },
     "sharpe": null,
-    "notes": "RESULTADO: REFUTADA — fator=0.8, RPS 2026 com_choque=0.1651 vs sem_choque=0.1662 (DM -0.120, p=0.9072)",
+    "notes": "RESULTADO: REFUTADA — fator=0.8, RPS 2026 com_choque=0.1576 vs sem_choque=0.1631 (DM -0.697, p=0.5035)",
     "test_period": [
       "2023-01-01",
       "2026-07-12"

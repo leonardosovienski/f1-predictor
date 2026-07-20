@@ -1,5 +1,62 @@
 # HANDOFF.md — f1-predictor
 
+> ## 🐛 BUG CIENTÍFICO REAL — CONVENÇÃO DE STATUS "Lapped" (2026-07-20)
+>
+> Investigando um print de resultado real (GP da Bélgica, R10) contra o
+> banco local, achei que a Jolpica troca de convenção de status ENTRE
+> temporadas para o MESMO conceito (piloto classificado, voltas atrás do
+> líder): `"+N Lap(s)"` só em 2022 (87 linhas), `"Lapped"` a partir de
+> 2023 (363 linhas, 2023-2026 — quase toda a janela de avaliação cega dos
+> backtests). `is_dnf()` só reconhecia o formato antigo — **363
+> resultados reais estavam marcados DNF quando na verdade terminaram a
+> corrida**, contaminando `finish_order` em TODO backtest (Fases 1, 2, 4,
+> 5) e, mais diretamente, a feature de Reliability (H6-F1c), que é
+> literalmente DNF rolling.
+>
+> Corrigido: `is_dnf()` reconhece `"Lapped"` como classificado, igual a
+> `"+N Lap(s)"`. `"Did not start"` (DNS) e `"Disqualified"` (DSQ)
+> permanecem DNF — não são o mesmo caso (DNS não correu; DSQ foi excluído
+> da classificação por decisão de comissários, não é formatação
+> alternativa de "terminou voltas atrás") — semântica atual confirmada,
+> não alterada sem evidência de bug.
+>
+> **Rebuild offline do banco (cache local, sem rede) + reexecução
+> COMPLETA do pipeline científico na ordem oficial** (`run_backtest.py` →
+> `run_fase2.py` → `run_fase4.py` → `run_fase5.py` →
+> `validate_2026.py`), sem tocar em nenhum threshold/critério/hipótese —
+> só a correção do bug de ingestão. **Todos os 9 vereditos permaneceram
+> EXATAMENTE os mesmos** (nenhuma hipótese foi salva nem derrubada pela
+> correção); os números mudaram de forma consistente com mais dados
+> corretamente classificados:
+>
+> | Trial | Antes (com bug) | Depois (corrigido) |
+> |---|---|---|
+> | H1-F1 | REFUTADA — RPS 0.1410 vs grid 0.1303 (DM 4.430, p=0.0000, 79 corridas) | REFUTADA — RPS 0.1399 vs grid 0.1303 (DM 3.853, p=0.0002, 80 corridas) |
+> | H2-F1 | COMPROVADA — 62.6% (253/404), Wilson95 [0.578, 0.672] | COMPROVADA — 65.0% (392/603), Wilson95 [0.611, 0.687] |
+> | H3-F1b | COMPROVADA — w=0.5, RPS blend 0.1281 vs elo 0.1416 (57 corridas) | COMPROVADA — w=0.5, RPS blend 0.1274 vs elo 0.1407 (58 corridas) |
+> | H4-F1b | COMPROVADA — Brier 0.0932→0.0783 | COMPROVADA — Brier 0.0930→0.0794 |
+> | H0-F1-formal | COMPROVADA — RPS grid 0.1304 vs elo 0.1410, IC95 [-0.0153,-0.006] | COMPROVADA — RPS grid 0.1304 vs elo 0.1399, IC95 [-0.0145,-0.0047] |
+> | H5-F1c | REFUTADA — w_ctx=1.5, RPS 0.1299 vs 0.1282 (p=0.2497) | REFUTADA — w_ctx=1.5, RPS 0.1309 vs 0.1275 (p=0.0375) |
+> | H6-F1c | REFUTADA — w_rel=1.0, RPS 0.1289 vs 0.1299 (p=0.1948) | REFUTADA — w_rel=**0.0** (Reliability corrigida perdeu todo peso no dev), RPS 0.1309 vs 0.1309 (p=nan) |
+> | H7-F1c | REFUTADA — w_pit=0.0, RPS 0.1289 vs 0.1289 (p=nan) | REFUTADA — w_pit=0.0, RPS 0.1309 vs 0.1309 (p=nan) |
+> | H8-F1 | REFUTADA — RPS 2026 0.1662→0.1651 (DM p=0.907) | REFUTADA — RPS 2026 0.1631→0.1576 (DM p=0.5035) |
+>
+> H6-F1c é o resultado mais informativo: o peso ótimo de Reliability no
+> período de desenvolvimento caiu de 1.0 para **0.0** depois da correção
+> — ou seja, parte do "sinal" que a Fase 4 via em Reliability podia ser
+> artefato do próprio bug de DNF (o feature de confiabilidade calculado
+> sobre rótulos errados). O veredito já era REFUTADA antes e continua
+> REFUTADA depois — a correção não precisou salvar nem derrubar nada,
+> mas reforça que não havia sinal real ali.
+>
+> `data/ratings.json` (Elo vivido do serving) foi recalculado do zero a
+> partir do histórico corrigido — Verstappen segue no topo do serving
+> (favorito 18,4% no smoke do CI, era 14,5% antes). `data/f1.db` e
+> `data/ratings.json` são runtime/gitignored (não entram no commit);
+> `backtest_fase1/2/4/5.json`, `trials.json` e o atestado do harness SÃO
+> versionados e entram. Suíte: **136 verdes** (+1 teste de `is_dnf`); CI
+> 3/3.
+
 > ## 🔧 RESOLUÇÃO DE PENDÊNCIAS (2026-07-20)
 >
 > Continuação da rodada de evolução final:

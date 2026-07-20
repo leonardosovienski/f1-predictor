@@ -4,6 +4,12 @@
 > científico próprio dele: calibração cega em uma transição histórica,
 > aplicação cega em 2026. Adaptação necessária documentada abaixo.
 
+> **Errata 2026-07-20** (não destrutiva): `is_dnf()` corrigido (bug real
+> descrito em `../HANDOFF.md`); reexecutado — **H8-F1 mantém o MESMO
+> veredito** (REFUTADA, direção certa sem significância), fator=0.8
+> inalterado, RPS 2026 com_choque=0.1576 vs sem_choque=0.1631 (era
+> 0.1651 vs 0.1662; DM p=0.5035, era p=0.9072).
+
 ## O pedido original e o obstáculo real
 
 O protocolo pedido: calibrar um fator de choque na transição real

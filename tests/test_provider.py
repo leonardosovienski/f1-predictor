@@ -60,6 +60,16 @@ def test_is_dnf_convencao():
     assert is_dnf("Retired")
 
 
+def test_is_dnf_reconhece_lapped_como_classificado():
+    # Regressão real: a Jolpica troca de convenção entre temporadas para o
+    # MESMO conceito (classificado, voltas atrás do líder) — '+N Lap(s)'
+    # em 2022, 'Lapped' a partir de 2023. Tratar só o formato antigo como
+    # classificado marcava ~360 resultados reais (2023-2026) como DNF.
+    assert not is_dnf("Lapped")
+    assert is_dnf("Did not start")     # DNS continua fora (não correu)
+    assert is_dnf("Disqualified")      # DSQ continua fora (excluído da classificação)
+
+
 def test_fetch_results_parse_do_cache(provider, tmp_path):
     (tmp_path / "results_2022_01.json").write_text(
         json.dumps(_RESULTS_FIXTURE), encoding="utf-8")

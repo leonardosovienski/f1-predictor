@@ -39,9 +39,12 @@ def _parse_duration_s(raw: str) -> float | None:
 
 
 def is_dnf(status: str) -> bool:
-    """DNF = não classificado. Ergast/Jolpica: 'Finished' e '+N Lap(s)'
-    são classificados; todo o resto (Accident, Engine, Retired...) é DNF."""
-    return not (status == "Finished" or status.startswith("+"))
+    """DNF = não classificado. Ergast/Jolpica: 'Finished', '+N Lap(s)'
+    (convenção 2022) e 'Lapped' (convenção 2023+, MESMO conceito — piloto
+    classificado, voltas atrás do líder) são classificados; todo o resto
+    (Accident, Engine, Retired, Disqualified, Did not start...) é DNF."""
+    return not (status == "Finished" or status == "Lapped"
+               or status.startswith("+"))
 
 
 class F1Provider:

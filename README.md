@@ -1,5 +1,14 @@
 # f1-predictor
 
+> 🐛 **Bug de ingestão corrigido em 2026-07-20**: a Jolpica usa `"Lapped"`
+> (2023+) em vez de `"+N Lap(s)"` (só 2022) para o mesmo conceito
+> (classificado, voltas atrás do líder); `is_dnf()` só reconhecia o
+> formato antigo e marcava 363 resultados reais como DNF indevidamente.
+> Corrigido; banco reconstruído do cache local e **todo** o pipeline
+> científico (Fases 1,2,4,5) reexecutado — os 9 vereditos permaneceram
+> idênticos, só os números mudaram. Ver `HANDOFF.md` para a tabela
+> completa antes/depois.
+
 > 🔒 **Coleta científica forward iniciada em 2026-07-15** (commit de base
 > `19e3ec4`; `main` e branch atual reconciliadas). R1–R9 permanecem apenas
 > retropredições reproduzíveis: há **0 corridas temporalmente válidas para
@@ -126,7 +135,7 @@ scripts/ci_check.py         # 3 barreiras: pytest, .ps1 ASCII, parse+smoke
 docs/RELATORIO_FASE1.md     # RPS vs baselines, estratos, vereditos
 docs/RELATORIO_FASE2.md     # blend, calibração, sondagem de odds, gate
 docs/RELATORIO_FASE4.md     # H0-formal, contexto/reliability/pit, choque de patch, purge/embargo
-tests/                      # 135 testes
+tests/                      # 136 testes
 vendor/predictor_core/      # v1.3.1 via sync manual escopado a este worktree (NÃO editar à mão)
 ```
 
