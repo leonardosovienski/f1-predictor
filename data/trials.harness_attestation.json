@@ -1,5 +1,5 @@
 {
-  "passed_at": "2026-07-20T04:28:36+00:00",
+  "passed_at": "2026-07-21T00:21:42+00:00",
   "evaluate": "evaluate_h8_pipeline",
   "edge_verdict": "COMPROVADA",
   "note": "H8-F1 (choque estrutural de transicao): reembaralhamento real de campo -> choque ajuda (edge); forca estavel -> choque atrapalha ou neutro (noise)",
