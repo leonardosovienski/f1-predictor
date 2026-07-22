@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .config import ROOT
+from .manual_approval import bet_fingerprint, require_manual_approval
 
 KELLY_SHRINK = 0.25          # quarto de Kelly
 KELLY_CAP_FRACTION = 0.05    # nunca mais que 5% do bankroll numa aposta
@@ -73,7 +74,8 @@ def record_bet(*, market: str, selection: str, prob_model: float,
               decimal_odds: float, bankroll: float, real: bool = False,
               now: datetime | None = None,
               path: Path | str | None = None,
-              gate_path: Path | str | None = None, **extra) -> dict:
+              gate_path: Path | str | None = None,
+              approval_path: Path | str | None = None, **extra) -> dict:
     """Registra uma aposta (log append-only). `real=True` exige GO —
     levanta PermissionError caso contrário. `real=False` (default) é
     PAPER: útil para acompanhar o modelo sem apostar de verdade."""
@@ -83,6 +85,13 @@ def record_bet(*, market: str, selection: str, prob_model: float,
             raise PermissionError(
                 f"aposta REAL bloqueada pelo gate ({gate['decision']}): "
                 f"{gate['reason']}")
+        approval = require_manual_approval(
+            approval_path,
+            fingerprint=bet_fingerprint(market=market, selection=selection,
+                                        prob_model=prob_model,
+                                        decimal_odds=decimal_odds,
+                                        bankroll=bankroll), now=now)
+        extra = {**extra, "manual_approval": approval}
     edge = prob_model * decimal_odds - 1.0
     stake = kelly_stake(prob_model, decimal_odds, bankroll)
     now = now or datetime.now(timezone.utc)

@@ -28,6 +28,8 @@ def main(argv=None) -> int:
     ap.add_argument("--bankroll", type=float, default=1000.0)
     ap.add_argument("--real", action="store_true",
                     help="tenta registrar como aposta REAL (bloqueado sem GO)")
+    ap.add_argument("--approval-file",
+                    help="JSON de aprovação manual, obrigatório junto com --real")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
 
@@ -55,6 +57,7 @@ def main(argv=None) -> int:
                          prob_model=pred["prob_a_beats_b"],
                          decimal_odds=args.odds, bankroll=args.bankroll,
                          real=args.real,
+                         approval_path=args.approval_file,
                          circuit=pred["circuit"], driver_b=pred["driver_b"])
     except PermissionError as e:
         print(str(e), file=sys.stderr)

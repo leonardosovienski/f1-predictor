@@ -6,6 +6,7 @@ import pytest
 from src.betting import (KELLY_CAP_FRACTION, go_gate, kelly_fraction,
                          kelly_stake, record_bet, settle_bet)
 from src.data.odds_provider import OddsProvider
+from src.manual_approval import bet_fingerprint
 
 from predictor_core.data.contracts import DataUnavailableError
 
@@ -102,10 +103,32 @@ def test_record_bet_real_permitido_com_go(tmp_path):
     gate_path = tmp_path / "backtest_fase1.json"
     gate_path.write_text(json.dumps({"verdicts": {"H1-F1": {"verdict": "COMPROVADA"}}}),
                          encoding="utf-8")
+    approval_path = tmp_path / "approval.json"
+    approval_path.write_text(json.dumps({
+        "schema_version": 1, "status": "APPROVED", "approval_id": "manual-1",
+        "approved_by": "operator", "approved_at": "2020-01-01T00:00:00+00:00",
+        "expires_at": "2099-01-01T00:00:00+00:00",
+        "bet_fingerprint": bet_fingerprint(market="h2h", selection="Piloto A",
+            prob_model=.6, decimal_odds=2., bankroll=1000.)}), encoding="utf-8")
     bet = record_bet(market="h2h", selection="Piloto A", prob_model=0.6,
                      decimal_odds=2.0, bankroll=1000.0, real=True,
-                     path=tmp_path / "bets.jsonl", gate_path=gate_path)
+                     path=tmp_path / "bets.jsonl", gate_path=gate_path,
+                     approval_path=approval_path)
     assert bet["real"] is True
+    assert bet["manual_approval"]["approval_id"] == "manual-1"
+
+
+def test_record_bet_real_requires_matching_manual_approval(tmp_path):
+    gate = tmp_path / "gate.json"
+    gate.write_text(json.dumps({"verdicts": {"H1-F1": {"verdict": "COMPROVADA"}}}))
+    approval = tmp_path / "approval.json"
+    approval.write_text(json.dumps({"schema_version": 1, "status": "APPROVED",
+        "approval_id": "manual-1", "approved_by": "operator",
+        "approved_at": "2020-01-01T00:00:00+00:00", "expires_at": "2099-01-01T00:00:00+00:00",
+        "bet_fingerprint": "wrong"}))
+    with pytest.raises(PermissionError):
+        record_bet(market="h2h", selection="Piloto A", prob_model=.6, decimal_odds=2,
+                   bankroll=1000, real=True, gate_path=gate, approval_path=approval)
 
 
 def test_settle_bet_ganhou_e_perdeu(tmp_path):
