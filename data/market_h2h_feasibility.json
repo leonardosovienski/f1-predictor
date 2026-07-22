@@ -26,6 +26,11 @@
       "provider": "Betfair Historical Data",
       "status": "SOURCE_REQUIRES_HUMAN_DECISION",
       "evidence": "licensed historical feed exists, but public material did not establish Formula 1 race-H2H coverage or settlement compatibility"
+    },
+    {
+      "provider": "OddsPapi",
+      "status": "SOURCE_PARTIALLY_ACCEPTED",
+      "evidence": "public documentation describes timestamped historical odds and bookmaker metadata, but did not prove Formula 1 race-H2H coverage, licence, settlement or export terms"
     }
   ],
   "threshold_options": {
@@ -33,6 +38,12 @@
       "duels": 100,
       "race_coverage": 0.6,
       "timestamp_coverage": 0.95,
+      "bookmakers": 2
+    },
+    "intermediate_descriptive_only": {
+      "duels": 250,
+      "race_coverage": 0.7,
+      "timestamp_coverage": 0.97,
       "bookmakers": 2
     },
     "stage1_authorization_candidate": {

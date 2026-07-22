@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 SOURCE_ACCEPTED = "SOURCE_ACCEPTED"
+SOURCE_PARTIALLY_ACCEPTED = "SOURCE_PARTIALLY_ACCEPTED"
 SOURCE_QUARANTINED = "SOURCE_QUARANTINED"
 SOURCE_STALE = "SOURCE_STALE"
 SOURCE_SCHEMA_DRIFT = "SOURCE_SCHEMA_DRIFT"
@@ -79,19 +80,28 @@ def provenance_hash(record: dict[str, Any]) -> str:
 
 def validate_h2h_quote(record: dict[str, Any]) -> dict[str, Any]:
     """Normalize a two-runner race H2H quote and reject ambiguous economics."""
-    required = {"source_market_id", "provider", "canonical_event_id", "driver_a_id", "driver_b_id",
+    required = {"source_market_id", "provider", "canonical_event_id", "season", "race_id", "driver_a_id", "driver_b_id",
                 "market_type", "selection", "captured_at", "bookmaker", "opening_odds", "closing_odds",
                 "opponent_opening_odds", "opponent_closing_odds", "settlement_rule_version",
-                "ingestion_batch_id", "session", "provenance"}
+                "ingestion_batch_id", "session", "provenance", "opening_captured_at", "closing_captured_at", "decision_at"}
     missing = sorted(required - set(record))
     if missing:
         raise MarketContractError(f"missing fields: {missing}")
     if record["market_type"] != RACE_H2H or record["session"] != RACE_SESSION:
         raise MarketContractError("only race H2H is eligible; qualifying/sprint are distinct")
-    textual = required - {"opening_odds", "closing_odds", "opponent_opening_odds", "opponent_closing_odds"}
+    textual = required - {"season", "race_id", "opening_odds", "closing_odds", "opponent_opening_odds", "opponent_closing_odds"}
     if not all(isinstance(record[key], str) and record[key].strip() for key in textual):
         raise MarketContractError("invalid required textual field")
     captured = _utc(record["captured_at"], "captured_at")
+    opening_at = _utc(record["opening_captured_at"], "opening_captured_at")
+    closing_at = _utc(record["closing_captured_at"], "closing_captured_at")
+    decision_at = _utc(record["decision_at"], "decision_at")
+    if not isinstance(record["season"], int) or not isinstance(record["race_id"], int):
+        raise MarketContractError("season/race_id must be integers")
+    if record["canonical_event_id"] != canonical_event_id(record["season"], record["race_id"]):
+        raise MarketContractError("canonical_event_id does not match season/race_id")
+    if not opening_at <= closing_at <= decision_at:
+        raise MarketContractError("opening/closing timestamps violate decision cutoff")
     low, high = canonical_pair(record["driver_a_id"], record["driver_b_id"])
     if record["selection"] not in (record["driver_a_id"], record["driver_b_id"]):
         raise MarketContractError("selection must be one of the drivers")
@@ -100,7 +110,10 @@ def validate_h2h_quote(record: dict[str, Any]) -> dict[str, Any]:
     opponent_opening = _odds(record["opponent_opening_odds"], "opponent_opening_odds")
     raw_a, raw_b, overround = normalized_probabilities(closing, record["opponent_closing_odds"])
     raw = raw_a if record["selection"] == record["driver_a_id"] else raw_b
-    out = {**record, "captured_at": captured.isoformat(timespec="seconds"), "pair_driver_low_id": low,
+    out = {**record, "captured_at": captured.isoformat(timespec="seconds"),
+           "opening_captured_at": opening_at.isoformat(timespec="seconds"),
+           "closing_captured_at": closing_at.isoformat(timespec="seconds"),
+           "decision_at": decision_at.isoformat(timespec="seconds"), "pair_driver_low_id": low,
            "pair_driver_high_id": high, "opening_odds": opening, "closing_odds": closing,
            "opponent_opening_odds": opponent_opening, "implied_probability_raw": raw,
            "implied_probability_normalized": raw / overround, "market_margin": overround - 1.0,
@@ -132,9 +145,9 @@ def settlement_outcome(*, official_a: str, official_b: str, rule: dict[str, Any]
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS market_h2h_quotes (
- source_market_id TEXT NOT NULL, provider TEXT NOT NULL, canonical_event_id TEXT NOT NULL,
+ source_market_id TEXT NOT NULL, provider TEXT NOT NULL, canonical_event_id TEXT NOT NULL, season INTEGER NOT NULL, race_id INTEGER NOT NULL,
  driver_a_id TEXT NOT NULL, driver_b_id TEXT NOT NULL, market_type TEXT NOT NULL,
- selection TEXT NOT NULL, captured_at TEXT NOT NULL, opening_odds REAL NOT NULL,
+ selection TEXT NOT NULL, captured_at TEXT NOT NULL, opening_captured_at TEXT NOT NULL, closing_captured_at TEXT NOT NULL, decision_at TEXT NOT NULL, opening_odds REAL NOT NULL,
  closing_odds REAL NOT NULL, opponent_opening_odds REAL NOT NULL, opponent_closing_odds REAL NOT NULL,
  bookmaker TEXT NOT NULL, implied_probability_raw REAL NOT NULL, implied_probability_normalized REAL NOT NULL,
  settlement_rule_version TEXT NOT NULL, provenance_hash TEXT NOT NULL, ingestion_batch_id TEXT NOT NULL,
@@ -161,8 +174,8 @@ class MarketH2HDatabase:
         try:
             for row in normalized:
                 conn.execute("""INSERT INTO market_h2h_quotes VALUES
-                    (:source_market_id,:provider,:canonical_event_id,:driver_a_id,:driver_b_id,:market_type,
-                     :selection,:captured_at,:opening_odds,:closing_odds,:opponent_opening_odds,
+                    (:source_market_id,:provider,:canonical_event_id,:season,:race_id,:driver_a_id,:driver_b_id,:market_type,
+                     :selection,:captured_at,:opening_captured_at,:closing_captured_at,:decision_at,:opening_odds,:closing_odds,:opponent_opening_odds,
                      :opponent_closing_odds,:bookmaker,:implied_probability_raw,:implied_probability_normalized,
                      :settlement_rule_version,:provenance_hash,:ingestion_batch_id,:data_quality_status,:session,
                      :market_margin,:provenance)""", row)

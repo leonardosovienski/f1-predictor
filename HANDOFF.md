@@ -463,6 +463,13 @@ não foi integrado nem coletado; rating/modelo não mudaram. O gate não escolhe
 automaticamente uma opção de cobertura. Detalhe completo:
 `docs/RELATORIO_MARKET_H2H_FEASIBILITY.md`.
 
+Atualização 2026-07-22: criado `docs/PAST_ATTEMPT_LEDGER.md`, preservando H1,
+H8, ratings, DNF, FastF1, telemetria, treino/classificação/ritmo, H2H, datasets,
+fontes, cobertura e gates. O contrato H2H agora exige `season`, `race_id`,
+timestamps distintos de opening/closing e `decision_at`, bloqueando closing
+posterior. OddsPapi é somente `SOURCE_PARTIALLY_ACCEPTED` para diligência;
+continua inelegível para ingestão ou Stage 1.
+
 ## O que é o projeto
 
 Laboratório de previsão de corridas de F1 (vencedor, pódio, top6,

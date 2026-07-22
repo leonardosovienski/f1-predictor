@@ -7,19 +7,22 @@ from src.data.fastf1_contract import FastF1ContractError, validate_fastf1_snapsh
 from src.data.market_h2h import (MarketContractError, MarketH2HDatabase,
                                  QUALIFYING_H2H, QUALITY_ACCEPTED, RACE_H2H,
                                  RACE_SESSION, SOURCE_ACCEPTED,
-                                 SOURCE_QUARANTINED, canonical_event_id,
+                                 SOURCE_PARTIALLY_ACCEPTED, SOURCE_QUARANTINED, canonical_event_id,
                                  coverage_gate, settlement_outcome,
                                  validate_h2h_quote)
 
 
 def quote(**changes):
     base = {"source_market_id": "m-1", "provider": "licensed-fixture",
-            "canonical_event_id": canonical_event_id(2026, 11),
+            "canonical_event_id": canonical_event_id(2026, 11), "season": 2026, "race_id": 11,
             "driver_a_id": "norris", "driver_b_id": "verstappen",
             "market_type": RACE_H2H, "selection": "norris",
             "captured_at": "2026-07-25T10:00:00Z", "bookmaker": "book-a",
             "opening_odds": 1.80, "closing_odds": 1.85,
             "opponent_opening_odds": 2.10, "opponent_closing_odds": 2.05,
+            "opening_captured_at": "2026-07-24T10:00:00Z",
+            "closing_captured_at": "2026-07-25T10:00:00Z",
+            "decision_at": "2026-07-25T12:00:00Z",
             "settlement_rule_version": "official-classification/v1",
             "ingestion_batch_id": "b-1", "session": RACE_SESSION,
             "provenance": "licensed export sha256:fixture"}
@@ -37,6 +40,7 @@ def test_quote_normalizes_margin_and_is_deterministic():
     {"captured_at": ""}, {"market_type": QUALIFYING_H2H}, {"session": "sprint"},
     {"selection": "other"}, {"driver_b_id": "norris"}, {"closing_odds": 0},
     {"closing_odds": math.nan}, {"opponent_closing_odds": math.inf},
+    {"race_id": 12}, {"closing_captured_at": "2026-07-25T13:00:00Z"},
 ])
 def test_quote_rejects_missing_time_mixed_market_identity_and_bad_odds(changes):
     with pytest.raises(MarketContractError):
@@ -47,6 +51,8 @@ def test_ingestion_blocks_unaccepted_source_and_duplicate_is_atomic(tmp_path):
     db = MarketH2HDatabase(tmp_path / "market.db")
     with pytest.raises(MarketContractError, match="not accepted"):
         db.ingest([quote()], source_status=SOURCE_QUARANTINED)
+    with pytest.raises(MarketContractError, match="not accepted"):
+        db.ingest([quote()], source_status=SOURCE_PARTIALLY_ACCEPTED)
     assert db.ingest([quote()], source_status=SOURCE_ACCEPTED) == 1
     with pytest.raises(Exception):
         db.ingest([quote()], source_status=SOURCE_ACCEPTED)

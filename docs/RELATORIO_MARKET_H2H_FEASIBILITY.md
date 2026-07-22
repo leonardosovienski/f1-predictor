@@ -9,12 +9,13 @@ mercado, ROI, Sharpe ou hipótese de mercado aprovada.
 
 ## Evidência de fontes
 
-| Fonte | Estado | Decisão |
+| Fonte | Estado | Licença/export/cobertura e limitações |
 |---|---|---|
-| The Odds API | `SOURCE_REJECTED` | A sonda autenticada já registrada listou 57 esportes sem F1/motorsport; não há endpoint F1 a integrar. |
-| SportsDataIO | `SOURCE_REQUIRES_HUMAN_DECISION` | A documentação descreve F1 e warehouse histórico, porém preço, licença e H2H de corrida não foram confirmados. |
-| Sportradar/Betradar | `SOURCE_REQUIRES_HUMAN_DECISION` | Material empresarial menciona H2H de F1, sem exportação/contrato compatível no workspace. |
-| Betfair Historical Data | `SOURCE_REQUIRES_HUMAN_DECISION` | Feed histórico licenciado existe; cobertura F1 H2H e regra de liquidação não foram comprovadas. |
+| The Odds API | `SOURCE_REJECTED` | Sonda autenticada local: 57 esportes, sem F1/motorsport. Docs atuais também não listam F1 na cobertura histórica. Sem export elegível. |
+| SportsDataIO | `SOURCE_REQUIRES_HUMAN_DECISION` | Docs descrevem F1, GET e warehouse de odds >30 dias; preço/licença, H2H de corrida, número de duelos, casas, timestamps, settlement e export precisam de confirmação comercial. |
+| Sportradar/Betradar | `SOURCE_REQUIRES_HUMAN_DECISION` | Material empresarial menciona F1/H2H/histórico, sem contrato, custo ou amostra de export no workspace. Cobertura e viés de seleção desconhecidos. |
+| Betfair Historical Data | `SOURCE_REQUIRES_HUMAN_DECISION` | Especificação confirma feed histórico e campos de preço/runner; F1 H2H, cobertura, comissão/settlement e formato utilizável precisam de confirmação. |
+| OddsPapi | `SOURCE_PARTIALLY_ACCEPTED` | Docs declaram API, snapshots e histórico multi-bookmaker, mas não comprovam F1, H2H de corrida, período, custo, opening/closing, settlement ou termos para este uso. Diligência apenas. |
 
 Nenhuma fonte é `SOURCE_ACCEPTED`; consequentemente existem **0 quotes**,
 **0 duelos** e **0 corridas cobertas** no Market DB. Dados de OpenF1/FastF1
@@ -36,13 +37,24 @@ explicitamente latente. FastF1 não está instalado e não houve coleta.
 
 ## Opções de gate (não selecionadas automaticamente)
 
-| Opção | Duelos | Cobertura de corridas | Timestamps | Casas | Efeito |
+| Opção | Duelos | Cobertura de corridas | Timestamps | Casas | Impacto e limitação |
 |---|---:|---:|---:|---:|---|
-| Piloto diagnóstico | 100 | 60% | 95% | 2 | Não autoriza Stage 1. |
-| Candidata a autorização Stage 1 | 500 | 80% | 98% | 3 | Só pode ser escolhida por decisão humana após aceitação de fonte. |
+| Mínima exploratória | 100 | 60% | 95% | 2 | Diagnóstico de integridade somente; pouca potência e não autoriza Stage 1. |
+| Intermediária | 250 | 70% | 97% | 2 | Permite medir estabilidade descritiva; ainda vulnerável a concentração de pilotos/equipes. |
+| Conservadora (recomendada) | 500 | 80% | 98% | 3 | Melhor base para autorizar shadow prospectivo; ainda não libera capital nem escolhe hipótese. |
 
-Mesmo a opção piloto não passa: a cobertura observada é zero. Nenhum limite
-foi ajustado para produzir aprovação.
+Mesmo a opção mínima não passa: a cobertura observada é zero. Nenhum limite
+foi ajustado para produzir aprovação. A escolha entre as três opções é decisão
+humana obrigatória; só depois dela poderá ser registrada uma trial N+1.
+
+## Ledger e contrato detalhado
+
+O histórico completo de grid, posição final, H1, H8, ratings, DNF, FastF1,
+telemetria, treino, classificação, ritmo, H2H, datasets, fontes, cobertura,
+gates e backtests está em `docs/PAST_ATTEMPT_LEDGER.md`. O contrato de mercado
+exige provenance e tratamento explícito de DNF/DNS/DSQ, ambos DNF, corrida
+cancelada e resultado corrigido; nenhum desses casos é inferido da classificação
+esportiva para uma casa de aposta.
 
 ## Próxima janela legítima
 

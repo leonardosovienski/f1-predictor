@@ -202,6 +202,9 @@ vendor/predictor_core/      # v1.3.1 via sync manual escopado a este worktree (N
 > ou trial modelo-vs-mercado é autorizado. Consulte
 > `docs/RELATORIO_MARKET_H2H_FEASIBILITY.md`. H1-F1 segue refutada e não pode
 > ser reaproveitada como prova de edge de mercado.
+> O inventário não destrutivo das tentativas está em
+> `docs/PAST_ATTEMPT_LEDGER.md`; o gate apresenta opções mínima,
+> intermediária e conservadora, mas aguarda escolha humana.
 
 | Fase | Escopo | Status |
 |---|---|---|
