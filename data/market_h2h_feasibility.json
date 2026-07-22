@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "assessed_at": "2026-07-21T00:00:00Z",
+  "stage": "MARKET_H2H_FEASIBILITY_GATE",
+  "decision": "MARKET_H2H_NOT_FEASIBLE",
+  "accepted_market_quotes": 0,
+  "accepted_sources": 0,
+  "market_database": "data/market_h2h.db (isolated, not created without an accepted source)",
+  "provider_assessments": [
+    {
+      "provider": "The Odds API",
+      "status": "SOURCE_REJECTED",
+      "evidence": "local authenticated /v4/sports probe previously returned 57 sports and no Formula 1/motorsport market"
+    },
+    {
+      "provider": "SportsDataIO",
+      "status": "SOURCE_REQUIRES_HUMAN_DECISION",
+      "evidence": "official documentation describes F1 and historical odds warehouse access, but licence, price and race-H2H coverage were not verified"
+    },
+    {
+      "provider": "Sportradar/Betradar",
+      "status": "SOURCE_REQUIRES_HUMAN_DECISION",
+      "evidence": "enterprise material mentions F1 race/qualifying H2H and historical data, but no compatible export or contract is available locally"
+    },
+    {
+      "provider": "Betfair Historical Data",
+      "status": "SOURCE_REQUIRES_HUMAN_DECISION",
+      "evidence": "licensed historical feed exists, but public material did not establish Formula 1 race-H2H coverage or settlement compatibility"
+    }
+  ],
+  "threshold_options": {
+    "pilot_diagnostic_not_stage1": {
+      "duels": 100,
+      "race_coverage": 0.6,
+      "timestamp_coverage": 0.95,
+      "bookmakers": 2
+    },
+    "stage1_authorization_candidate": {
+      "duels": 500,
+      "race_coverage": 0.8,
+      "timestamp_coverage": 0.98,
+      "bookmakers": 3
+    }
+  },
+  "policy": "No threshold option is selected automatically. A human must select one after a compatible licensed source has passed contract validation.",
+  "prohibitions": [
+    "No scraping, protected-site automation or invented odds.",
+    "No model-versus-market trial, ROI, Sharpe or financial release.",
+    "No reuse of the refuted grid-to-final-position H1 as market evidence."
+  ]
+}

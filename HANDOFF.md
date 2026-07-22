@@ -449,6 +449,20 @@
 > "grid de largada" — e o fluxo de governança da plataforma (harness →
 > TrialRegistry → GO/NO-GO) antes de qualquer aposta.
 
+## Atualização Stage 0 — Gate de viabilidade Market H2H (2026-07-21)
+
+**Veredito: `MARKET_H2H_NOT_FEASIBLE`.** Há zero fontes aceitas e zero quotes;
+logo não há backtest econômico. The Odds API permanece rejeitada por ausência
+de F1 na sonda local. SportsDataIO, Sportradar/Betradar e Betfair exigem
+decisão humana sobre licença, cobertura `race_h2h`, timestamps e settlement.
+
+Foram adicionados os contratos isolados `src/data/market_h2h.py` e
+`src/data/fastf1_contract.py`, a evidência `data/market_h2h_feasibility.json`,
+a trial de governança `G0-F1-market-h2h-feasibility` e testes hostis. FastF1
+não foi integrado nem coletado; rating/modelo não mudaram. O gate não escolhe
+automaticamente uma opção de cobertura. Detalhe completo:
+`docs/RELATORIO_MARKET_H2H_FEASIBILITY.md`.
+
 ## O que é o projeto
 
 Laboratório de previsão de corridas de F1 (vencedor, pódio, top6,

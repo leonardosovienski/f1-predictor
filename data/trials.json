@@ -164,5 +164,21 @@
       "2023-01-01",
       "2026-07-12"
     ]
+  },
+  {
+    "name": "G0-F1-market-h2h-feasibility",
+    "registered_at": "2026-07-21T00:00:00Z",
+    "params": {
+      "stage": "MARKET_H2H_FEASIBILITY_GATE",
+      "scope": "licensed historical Formula 1 race H2H odds source, point-in-time provenance and settlement compatibility",
+      "success": "at least one source is SOURCE_ACCEPTED and passes a human-selected coverage option; this does not test model performance",
+      "forbidden": "no scraping, invented odds, ROI/Sharpe or financial release"
+    },
+    "sharpe": null,
+    "notes": "RESULTADO: MARKET_H2H_NOT_FEASIBLE — zero fontes aceitas e zero quotes. The Odds API rejeitada por ausência de F1; demais candidatas exigem decisão humana/licença/cobertura comprovada.",
+    "test_period": [
+      "2026-07-21",
+      "2026-07-21"
+    ]
   }
 ]

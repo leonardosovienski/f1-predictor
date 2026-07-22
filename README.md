@@ -193,6 +193,16 @@ vendor/predictor_core/      # v1.3.1 via sync manual escopado a este worktree (N
 
 ## Roadmap
 
+> ## Stage 0 — viabilidade de mercado H2H (2026-07-21)
+>
+> **MARKET_H2H_NOT_FEASIBLE.** O modelo H2H é capacidade técnica, não
+> evidência econômica: há 0 fontes aceitas e 0 odds históricas elegíveis. O
+> contrato fail-closed exige fonte licenciada, timestamp, preço bilateral,
+> margem, proveniência e regra de settlement. Nenhuma aposta real, ROI/Sharpe
+> ou trial modelo-vs-mercado é autorizado. Consulte
+> `docs/RELATORIO_MARKET_H2H_FEASIBILITY.md`. H1-F1 segue refutada e não pode
+> ser reaproveitada como prova de edge de mercado.
+
 | Fase | Escopo | Status |
 |---|---|---|
 | 0 | Esqueleto: Elo ordinal, serving (race/h2h), CI | ✅ |
