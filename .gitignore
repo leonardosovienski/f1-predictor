@@ -31,3 +31,4 @@ env/
 # SO
 .DS_Store
 Thumbs.db
+logs/
