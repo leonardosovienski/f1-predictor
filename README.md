@@ -206,6 +206,15 @@ vendor/predictor_core/      # v1.3.1 via sync manual escopado a este worktree (N
 > `docs/PAST_ATTEMPT_LEDGER.md`; o gate apresenta opções mínima,
 > intermediária e conservadora, mas aguarda escolha humana.
 
+> ## Fechamento autorizado — 2026-07-23
+>
+> O registro único `data/authorized_closure.json` encerra **H2H** e a
+> reavaliação **H8** como `CLOSED_BY_HUMAN_DECISION`. H1-F1 permanece
+> `HYPOTHESIS_REFUTED`; a operação original é `NO_GO_CONFIRMED`; operação com
+> dinheiro real é permanentemente bloqueada. H2H/H8 não foram aprovadas nem
+> refutadas por este encerramento. O job exclusivo `f1-forward-snapshot` foi
+> desabilitado; o monitor transversal de outros preditores não foi tocado.
+
 | Fase | Escopo | Status |
 |---|---|---|
 | 0 | Esqueleto: Elo ordinal, serving (race/h2h), CI | ✅ |

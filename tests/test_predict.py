@@ -39,9 +39,8 @@ def test_cli_race_json(capsys):
 def test_cli_h2h_json(capsys):
     rc = predict.main(["--head-to-head", "Verstappen", "Hamilton",
                        "--circuit", "Monaco", "--json"])
-    assert rc == 0
-    out = json.loads(capsys.readouterr().out)
-    assert abs(out["prob_a_beats_b"] + out["prob_b_beats_a"] - 1.0) < 1e-9
+    assert rc == 2
+    assert "CLOSED_BY_HUMAN_DECISION" in capsys.readouterr().err
 
 
 def test_cli_market_podium(capsys):

@@ -20,6 +20,7 @@ import sys
 from typing import Any
 
 from .config import ROOT, load_circuits, load_drivers
+from .closure import require_open
 from .context_factors import match_circuit_metadata
 from .data import db
 from .model import F1EloModel, _load_fase2_params
@@ -227,6 +228,7 @@ def _payload_hash(payload: dict[str, Any]) -> str:
 def create_pre_event_snapshot(*, season: int, round_: int, scheduled_start_utc: str,
                               grid_file: Path, snapshots_root: Path,
                               now: datetime | None = None, root: Path = ROOT) -> Path:
+    require_open("H8", root=root)
     start = _parse_utc(scheduled_start_utc, "scheduled_start_utc")
     generated = now or datetime.now(timezone.utc)
     generated = _parse_utc(_utc_text(generated), "generated_at_utc")
@@ -323,6 +325,7 @@ def _result_rows(root: Path, season: int, round_: int) -> list[dict[str, Any]]:
 
 def mature_snapshot(*, season: int, round_: int, snapshots_root: Path,
                     now: datetime | None = None, root: Path = ROOT) -> Path:
+    require_open("H8", root=root)
     conn = db.connect(root / "data" / "f1.db", readonly=True)
     try:
         event = _event(conn, season, round_)

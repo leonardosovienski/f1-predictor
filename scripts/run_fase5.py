@@ -19,6 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.config import ROOT                                     # noqa: E402
+from src.closure import require_open                            # noqa: E402
 from src.backtest import (calibrate_shrink_factor_sintetico,     # noqa: E402
                           evaluate_h8_pipeline, run_h8,
                           synthetic_races_transition, verdict_h8)
@@ -44,6 +45,7 @@ H8_PARAMS = {
 
 
 def main() -> int:
+    require_open("H8", root=ROOT)
     print("[1/4] controle positivo (harness do core, H8)...")
     att = attest_pipeline_power(
         evaluate_h8_pipeline,

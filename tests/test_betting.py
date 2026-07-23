@@ -110,12 +110,11 @@ def test_record_bet_real_permitido_com_go(tmp_path):
         "expires_at": "2099-01-01T00:00:00+00:00",
         "bet_fingerprint": bet_fingerprint(market="h2h", selection="Piloto A",
             prob_model=.6, decimal_odds=2., bankroll=1000.)}), encoding="utf-8")
-    bet = record_bet(market="h2h", selection="Piloto A", prob_model=0.6,
-                     decimal_odds=2.0, bankroll=1000.0, real=True,
-                     path=tmp_path / "bets.jsonl", gate_path=gate_path,
-                     approval_path=approval_path)
-    assert bet["real"] is True
-    assert bet["manual_approval"]["approval_id"] == "manual-1"
+    with pytest.raises(PermissionError, match="PERMANENTLY_BLOCKED"):
+        record_bet(market="h2h", selection="Piloto A", prob_model=0.6,
+                   decimal_odds=2.0, bankroll=1000.0, real=True,
+                   path=tmp_path / "bets.jsonl", gate_path=gate_path,
+                   approval_path=approval_path)
 
 
 def test_record_bet_real_requires_matching_manual_approval(tmp_path):

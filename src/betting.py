@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .config import ROOT
+from .closure import require_real_money_allowed
 from .manual_approval import bet_fingerprint, require_manual_approval
 
 KELLY_SHRINK = 0.25          # quarto de Kelly
@@ -80,6 +81,7 @@ def record_bet(*, market: str, selection: str, prob_model: float,
     levanta PermissionError caso contrário. `real=False` (default) é
     PAPER: útil para acompanhar o modelo sem apostar de verdade."""
     if real:
+        require_real_money_allowed()
         gate = go_gate(gate_path)
         if gate["decision"] != "GO":
             raise PermissionError(

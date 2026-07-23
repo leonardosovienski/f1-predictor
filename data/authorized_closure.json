@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "artifact_kind": "f1_authorized_research_closure",
+  "closed_at_utc": "2026-07-23T05:28:09Z",
+  "project_commit_at_closure": "ff68b5c8bbaeb0002ddd4c73f63d6d05b6d974a0",
+  "human_decision": "Authorized closure of H2H and H8 re-evaluation; no real-money operation.",
+  "operation_original": "NO_GO_CONFIRMED",
+  "h1_f1": "HYPOTHESIS_REFUTED",
+  "tracks": {
+    "H2H": "CLOSED_BY_HUMAN_DECISION",
+    "H8": "CLOSED_BY_HUMAN_DECISION"
+  },
+  "h2h_reason": "No historical, licensed and validatable Market DB exists.",
+  "h8_final_counter": {
+    "valid_for_h8": 0,
+    "required": 15,
+    "status": "0/15 VALID_FOR_H8"
+  },
+  "scientific_statement": "H2H and H8 were neither approved nor refuted by this closure. H8 does not reopen H1-F1 or establish economic edge.",
+  "real_money_operation": "PERMANENTLY_BLOCKED",
+  "reopening": "Requires a new explicit and auditable human decision; this record itself fails closed.",
+  "scheduler_actions": {
+    "disabled": [
+      "f1-forward-snapshot"
+    ],
+    "not_disabled": {
+      "predictor-gate-monitor": "transversal monitor for other predictors; not exclusively H8/H2H"
+    }
+  },
+  "preserved_artifact_sha256": {
+    "data/f1.db": "2CE1C30F78D5DD7ECC2B002D53DB28B2D28610CD9E3C59061E678365467A6DEB",
+    "data/f1_historical_expansion.db": "3FA8863CC32B8B1DB1648150183618B93732C67093064AA212489CFEA23D12CA",
+    "data/f1_historical_shadow.db": "201DDF62797822858FF72320A493DF4D9939C50DB9DE012ED0F49ED66C96B165",
+    "data/trials.json": "CCD7098540692FDFBC02BDB32228DBE338A25825E0736A272305B23E79044965",
+    "data/trials.harness_attestation.json": "640E9C09C1D670034A2B40BB86AA11E9BAE3119B279E4BA9BCB3FDC6177480A7",
+    "data/backtest_fase1.json": "88D909D43D4F26077A56CA0A041783CD88521F88E7E1850371F8DD2D27829A6E",
+    "data/backtest_fase5.json": "C30E6D30B505F18E8CB5EF4FE7AC0F12F9E37DE01290C55F86C75526C832D47F",
+    "data/backtest_h8_historical.json": "142C9F04E267B1F724A20CC316FD14531A8D0FB13714ED3653B763CD0FC8BF71",
+    "data/market_h2h_feasibility.json": "73F0567DEF0D4E67B7C0AF56BC8510F3B1D5F2862E2C4F3608E2D8AEF36F1157",
+    "docs/RELATORIO_FASE5.md": "486E2F3F4E502712D4E29C8005684AAF2A636D4487696D83057275E76359C020",
+    "docs/RELATORIO_MARKET_H2H_FEASIBILITY.md": "2F361ECB91C213CECAA29CEE98D4DE2E76A0C750805DE76AFF371683403F148E",
+    "docs/PAST_ATTEMPT_LEDGER.md": "633BCE4FB1ECAABE141087AAA812B25DF009B03361FFDBB60FEFBBD6B390342C",
+    "vendor/predictor_core/CORE_MANIFEST.json": "942F2076E2947595271C3E1B3EF956DA34C8B1BA2F35EAF9C3597A4F6DCC0EFC"
+  }
+}

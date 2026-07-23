@@ -10,6 +10,12 @@ from pathlib import Path
 import pytest
 
 from src import snapshots
+
+
+@pytest.fixture(autouse=True)
+def _snapshot_contract_unit_tests_do_not_use_project_closure(monkeypatch):
+    """Existing fixtures verify snapshot invariants; closure is tested separately."""
+    monkeypatch.setattr(snapshots, "require_open", lambda *args, **kwargs: None)
 from src.config import ROOT, load_drivers
 
 

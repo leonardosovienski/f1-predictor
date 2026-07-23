@@ -13,6 +13,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.data.f1_provider import F1Provider  # noqa: E402
+from src.closure import require_open  # noqa: E402
 from src.snapshots import SnapshotError, create_pre_event_snapshot, snapshot_status  # noqa: E402
 
 
@@ -56,6 +57,7 @@ def _atomic_json(path: Path, payload: dict) -> None:
 
 def capture(*, season: int, now: datetime | None = None,
             provider: F1Provider | None = None, root: Path = ROOT) -> dict:
+    require_open("H8", root=root)
     generated = now or datetime.now(timezone.utc)
     client = provider or F1Provider()
     schedule = client.fetch_schedule(season)

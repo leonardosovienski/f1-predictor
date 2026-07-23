@@ -13,6 +13,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from ..closure import require_open
+
 SOURCE_ACCEPTED = "SOURCE_ACCEPTED"
 SOURCE_PARTIALLY_ACCEPTED = "SOURCE_PARTIALLY_ACCEPTED"
 SOURCE_QUARANTINED = "SOURCE_QUARANTINED"
@@ -167,6 +169,7 @@ class MarketH2HDatabase:
         return conn
 
     def ingest(self, records: list[dict[str, Any]], *, source_status: str) -> int:
+        require_open("H2H")
         if source_status != SOURCE_ACCEPTED:
             raise MarketContractError("source not accepted: economic ingestion blocked")
         normalized = [validate_h2h_quote(record) for record in records]
@@ -191,6 +194,7 @@ class MarketH2HDatabase:
 def coverage_gate(records: list[dict[str, Any]], *, scheduled_races: int,
                   options: dict[str, dict[str, float]], selected_option: str | None = None) -> dict[str, Any]:
     """Evaluate declared thresholds without silently choosing a policy."""
+    require_open("H2H")
     if scheduled_races < 1:
         raise MarketContractError("scheduled_races must be positive")
     accepted = [record for record in records if record.get("data_quality_status") == QUALITY_ACCEPTED]

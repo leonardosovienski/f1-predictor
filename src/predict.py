@@ -25,6 +25,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from .config import ROOT, load_config           # injeta vendor/ no sys.path
+from .closure import require_open
 from .model import F1EloModel
 
 from predictor_core.data.contracts import PredictionPoint
@@ -109,6 +110,7 @@ def run_race_grid(circuit: str, grid_pairs: list, weather: str = "dry",
 
 def run_h2h(driver_a: str, driver_b: str, circuit: str,
             now: datetime | None = None) -> dict:
+    require_open("H2H")
     model = F1EloModel()
     r = model.predict_head_to_head(driver_a, driver_b, circuit)
     return _stamp_and_log(
@@ -146,7 +148,7 @@ def main(argv=None) -> int:
             r = run_race_grid(args.circuit, args.grid, args.weather)
         else:
             r = run_race(args.circuit, args.weather)
-    except ValueError as e:
+    except (ValueError, RuntimeError) as e:
         print(str(e), file=sys.stderr)
         return 2
 

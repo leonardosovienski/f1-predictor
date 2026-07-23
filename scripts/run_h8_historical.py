@@ -11,6 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.backtest import run_h8_historical_windows  # noqa: E402
+from src.closure import require_open                # noqa: E402
 from src.config import ROOT                          # noqa: E402
 from src.data.f1_provider import F1Provider          # noqa: E402
 
@@ -37,6 +38,7 @@ def collect_races(provider: F1Provider) -> list[dict]:
 
 
 def main() -> int:
+    require_open("H8", root=ROOT)
     provider = F1Provider()
     races = collect_races(provider)
     result = run_h8_historical_windows(

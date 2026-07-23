@@ -12,6 +12,12 @@ from src.data.market_h2h import (MarketContractError, MarketH2HDatabase,
                                  validate_h2h_quote)
 
 
+@pytest.fixture(autouse=True)
+def _contract_unit_tests_do_not_use_project_closure(monkeypatch):
+    """Unit fixtures exercise schema only; production closure is tested separately."""
+    monkeypatch.setattr("src.data.market_h2h.require_open", lambda *args, **kwargs: None)
+
+
 def quote(**changes):
     base = {"source_market_id": "m-1", "provider": "licensed-fixture",
             "canonical_event_id": canonical_event_id(2026, 11), "season": 2026, "race_id": 11,

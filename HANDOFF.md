@@ -470,6 +470,21 @@ timestamps distintos de opening/closing e `decision_at`, bloqueando closing
 posterior. OddsPapi é somente `SOURCE_PARTIALLY_ACCEPTED` para diligência;
 continua inelegível para ingestão ou Stage 1.
 
+## Fechamento humano autorizado (2026-07-23)
+
+`data/authorized_closure.json` é o único registro auditável de encerramento.
+Ele fixa H1-F1 como `HYPOTHESIS_REFUTED`, operação original como
+`NO_GO_CONFIRMED`, e H2H/H8 como `CLOSED_BY_HUMAN_DECISION`; o contador H8
+final é 0/15 `VALID_FOR_H8`. H2H e H8 não foram aprovadas nem refutadas pelo
+fechamento, e não demonstram edge econômico. O registro também contém hashes
+dos artefatos preservados e declara bloqueio permanente de operação real.
+
+O job exclusivamente H8 `f1-forward-snapshot` foi desabilitado. O
+`predictor-gate-monitor` foi preservado porque monitora outros consumidores,
+portanto não é job exclusivamente H8/H2H. Com o registro presente, scripts de
+H8, snapshots/maturação H8, Market DB e serving H2H falham fechados; reabertura
+exige nova decisão humana explícita e auditável.
+
 ## O que é o projeto
 
 Laboratório de previsão de corridas de F1 (vencedor, pódio, top6,
