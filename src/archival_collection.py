@@ -135,7 +135,9 @@ def collect(*, season: int, now: datetime | None = None, provider: F1Provider | 
             root: Path = ROOT, collection_run_id: str | None = None) -> dict[str, Any]:
     """Archive only the current/upcoming race weekend; never evaluate a model."""
     verify_closure_hashes(root)
-    observed = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    # CollectionArchive serializes UTC values to seconds; normalize before
+    # appending so immediate lifecycle transitions retain exact identity.
+    observed = (now or datetime.now(timezone.utc)).astimezone(timezone.utc).replace(microsecond=0)
     run_id = collection_run_id or f"f1-archival-{observed.strftime('%Y%m%dT%H%M%SZ')}"
     client = provider or F1Provider()
     try:
