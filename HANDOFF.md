@@ -485,6 +485,16 @@ portanto não é job exclusivamente H8/H2H. Com o registro presente, scripts de
 H8, snapshots/maturação H8, Market DB e serving H2H falham fechados; reabertura
 exige nova decisão humana explícita e auditável.
 
+## Coleta arquivística COLLECTION_ONLY (2026-07-23)
+
+Adicionado `src/archival_collection.py`, orientado pelo contrato canônico
+`predictor_core.contracts.collection`. O armazenamento runtime separado é
+`data/collection_only/`, com JSONL append-only, snapshots de fonte e lifecycle
+arquivístico. O job `f1-archival-collection` roda só sexta/domingo e retorna
+`NO_UPSTREAM_EVENTS` fora da janela de fim de semana. Não toca snapshots H8,
+Market DB, trials, ratings, gates ou operação real. Handoff para tools:
+`docs/COLLECTION_ONLY_HANDOFF.md`.
+
 ## O que é o projeto
 
 Laboratório de previsão de corridas de F1 (vencedor, pódio, top6,

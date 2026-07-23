@@ -215,6 +215,14 @@ vendor/predictor_core/      # v1.3.1 via sync manual escopado a este worktree (N
 > refutadas por este encerramento. O job exclusivo `f1-forward-snapshot` foi
 > desabilitado; o monitor transversal de outros preditores não foi tocado.
 
+> ## Coleta arquivística COLLECTION_ONLY (2026-07-23)
+>
+> `scripts/run_archival_collection.py` e o job semanal
+> `f1-archival-collection` arquivam somente calendário e resultados oficiais
+> em `data/collection_only/`. Não executam H1/H8/H2H, não criam pares, trials,
+> gates, avaliações, Market DB ou dados de apostas. Operação:
+> `docs/COLLECTION_ONLY_HANDOFF.md`.
+
 | Fase | Escopo | Status |
 |---|---|---|
 | 0 | Esqueleto: Elo ordinal, serving (race/h2h), CI | ✅ |

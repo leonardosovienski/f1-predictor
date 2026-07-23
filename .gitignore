@@ -10,6 +10,7 @@
 /data/fase5_params.json
 # cache imutável da Jolpica e o SQLite (rebuildáveis via scripts/build_db.py)
 /data/raw/
+/data/collection_only/
 /snapshots/
 *.db
 *.db-shm

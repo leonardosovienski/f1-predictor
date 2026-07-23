@@ -1,0 +1,76 @@
+"""COLLECTION_ONLY stays calendar-aware and outside closed scientific tracks."""
+import json
+from datetime import datetime, timezone
+
+import pytest
+
+from src.archival_collection import collect, verify_closure_hashes
+from src.data.f1_provider import DataUnavailableError
+
+
+class Provider:
+    def __init__(self, schedule, results=None):
+        self.schedule, self.results = schedule, results or []
+    def fetch_schedule(self, season): return self.schedule
+    def fetch_results(self, season, round_): return self.results
+
+
+def root_with_closure(tmp_path):
+    data = tmp_path / "data"
+    data.mkdir()
+    (data / "authorized_closure.json").write_text(json.dumps({"preserved_artifact_sha256": {}}), encoding="utf-8")
+    return tmp_path
+
+
+def event(start="2026-07-26T13:00:00Z"):
+    return {"season": 2026, "round": 12, "name": "Test GP", "circuit": "Test Circuit",
+            "scheduled_start_utc": start, "qualifying_start_utc": "2026-07-25T14:00:00Z"}
+
+
+def test_empty_calendar_is_no_upstream_events(tmp_path):
+    root = root_with_closure(tmp_path)
+    out = collect(season=2026, now=datetime(2026, 7, 24, tzinfo=timezone.utc),
+                  provider=Provider([]), root=root, collection_run_id="f1-archival-empty")
+    assert out["status"] == "NO_UPSTREAM_EVENTS"
+    assert not (root / "data" / "collection_only").exists()
+
+
+def test_weekend_archives_snapshot_and_missing_result_without_science(tmp_path, monkeypatch):
+    root = root_with_closure(tmp_path)
+    monkeypatch.setattr("src.archival_collection.load_drivers", lambda: [{"name": "Driver", "team": "Team"}])
+    out = collect(season=2026, now=datetime(2026, 7, 25, 18, tzinfo=timezone.utc),
+                  provider=Provider([event()]), root=root, collection_run_id="f1-archival-weekend")
+    assert out["states"] == {"f1-2026-r12-race": "SNAPSHOT_RECORDED"}
+    assert (root / "data" / "collection_only" / "snapshots" / "f1-archival-weekend" / "f1-2026-r12-race.json").is_file()
+    assert "trial" not in (root / "data" / "collection_only" / "archive.jsonl").read_text(encoding="utf-8").casefold()
+
+
+def test_result_completes_and_retry_is_idempotent(tmp_path, monkeypatch):
+    root = root_with_closure(tmp_path)
+    monkeypatch.setattr("src.archival_collection.load_drivers", lambda: [])
+    result = [{"driver_id": "a", "driver": "A", "constructor": "T", "position": 1}]
+    provider = Provider([event("2026-07-19T13:00:00Z")], result)
+    now = datetime(2026, 7, 20, tzinfo=timezone.utc)
+    first = collect(season=2026, now=now, provider=provider, root=root, collection_run_id="f1-archival-result")
+    second = collect(season=2026, now=now, provider=provider, root=root, collection_run_id="f1-archival-result")
+    assert first["states"]["f1-2026-r12-race"] == "COMPLETE"
+    assert second["states"]["f1-2026-r12-race"] == "COMPLETE"
+
+
+def test_closure_hash_drift_blocks_collection(tmp_path):
+    root = root_with_closure(tmp_path)
+    (root / "preserved.txt").write_text("original", encoding="utf-8")
+    (root / "data" / "authorized_closure.json").write_text(json.dumps({"preserved_artifact_sha256": {"preserved.txt": "0" * 64}}), encoding="utf-8")
+    with pytest.raises(RuntimeError, match="closure artifact drift"):
+        verify_closure_hashes(root)
+
+
+def test_source_unavailable_is_retryable_status(tmp_path):
+    root = root_with_closure(tmp_path)
+    class Unavailable:
+        def fetch_schedule(self, season):
+            raise DataUnavailableError("temporary upstream outage")
+    out = collect(season=2026, provider=Unavailable(), root=root,
+                  collection_run_id="f1-archival-retry")
+    assert out["status"] == "SOURCE_UNAVAILABLE"
+    assert out["events"] == 0
