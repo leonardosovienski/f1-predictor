@@ -487,6 +487,11 @@ exige nova decisão humana explícita e auditável.
 
 ## Coleta arquivística COLLECTION_ONLY (2026-07-23)
 
+**Estado final: `PRODUCTION_READY_COLLECTION_ONLY`.** A coleta é orientada
+por calendário e isolada das trilhas científicas encerradas: H1-F1 permanece
+`HYPOTHESIS_REFUTED`; H8 e H2H permanecem `CLOSED_BY_HUMAN_DECISION`. Ela não
+cria pares H8/H2H nem reabre gates, hipóteses ou operação real.
+
 Adicionado `src/archival_collection.py`, orientado pelo contrato canônico
 `predictor_core.contracts.collection`. O armazenamento runtime separado é
 `data/collection_only/`, com JSONL append-only, snapshots de fonte e lifecycle
