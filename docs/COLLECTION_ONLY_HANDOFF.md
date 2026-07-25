@@ -27,8 +27,13 @@ do not create storage. Provider retry remains the existing Jolpica backoff.
 
 `scripts/install_archival_collection_task.ps1` registers
 `f1-archival-collection` for Friday and Sunday at 18:00 local time: two
-weekend-oriented checks, not daily polling. The entrypoint itself performs the
-calendar window decision and returns `NO_UPSTREAM_EVENTS` outside it.
+weekend-oriented checks, not daily polling. It runs through the canonical
+`tools/operational_runner.py`, with a lock, 300-second timeout, external
+heartbeat/event log and an atomic consumer-status file under
+`%LOCALAPPDATA%\\predictor-tools\\runtime`. The entrypoint itself performs the
+calendar window decision; `NO_UPSTREAM_EVENTS` and `SOURCE_UNAVAILABLE` are
+preserved as explicit heartbeat statuses rather than being collapsed into a
+generic successful run.
 
 ## Closure protection
 

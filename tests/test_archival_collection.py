@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import pytest
 
 from src.archival_collection import collect, verify_closure_hashes
+from scripts import run_archival_collection
 from src.data.f1_provider import DataUnavailableError
 
 
@@ -74,3 +75,13 @@ def test_source_unavailable_is_retryable_status(tmp_path):
                   collection_run_id="f1-archival-retry")
     assert out["status"] == "SOURCE_UNAVAILABLE"
     assert out["events"] == 0
+
+
+def test_entrypoint_publishes_atomic_operational_status(tmp_path, monkeypatch):
+    expected = {"collection_only": True, "collection_run_id": "r1",
+                "status": "NO_UPSTREAM_EVENTS", "events": 0}
+    monkeypatch.setattr(run_archival_collection, "collect", lambda **_: expected)
+    status = tmp_path / "runtime" / "status.json"
+
+    assert run_archival_collection.main(["--status-output", str(status)]) == 0
+    assert json.loads(status.read_text(encoding="utf-8")) == expected

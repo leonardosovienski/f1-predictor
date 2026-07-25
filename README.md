@@ -60,10 +60,10 @@ inválidos continuam fail-closed. Instalação opcional no Task Scheduler:
 > oficial, reconfirmado via `PrequentialEvaluator` + bootstrap pareado
 > do core); **H5/H6/H7-F1c REFUTADAS** (contexto de circuito, DNF
 > rolling, pit efficiency — mecanismo validado em sintético, sem sinal
-> suficiente no dado real). Fase 5: **H8-F1 REFUTADA** (choque estrutural
-> de transição de regulamento, calibrado às cegas em sintético — direção
-> certa em 2026 real, mas sem poder estatístico com só 10 corridas
-> disputadas). Choque de volatilidade pós-patch (CS/LoL): mecanismo
+> suficiente no dado real). Fase 5: a reavaliação **H8-F1 está
+> `CLOSED_BY_HUMAN_DECISION`**, com contador final 0/15 `VALID_FOR_H8`; ela
+> não foi aprovada nem refutada e não reabre H1-F1. Choque de volatilidade
+> pós-patch (CS/LoL): mecanismo
 > implementado, só validado em sintético — sem calendário real de
 > upgrades. Também há um protocolo de validação viva
 > (`docs/PROMPT_VALIDACAO_2026.md` + `scripts/validate_2026.py`) que
@@ -230,5 +230,5 @@ vendor/predictor_core/      # v1.3.1 via sync manual escopado a este worktree (N
 | 2 | Grid de largada como feature (blend), calibração Platt | ✅ H3-F1b e H4-F1b comprovadas |
 | 3 | Operação: Kelly, bet_log, settle, odds | ✅ construída — 🔒 **NO-GO** (gate lê H1-F1, ainda refutada) |
 | 4 | H0 formal, contexto de circuito, reliability, pit efficiency, choque de patch, purge/embargo | ✅ H0-formal comprovada; H5/H6/H7-F1c refutadas (mecanismo validado, sem sinal real) |
-| 5 | Choque estrutural de transição de regulamento (H8-F1), calibrado às cegas em sintético | ❌ REFUTADA; auxiliar histórica 2014/2017/2022 também desfavorável (`p=0,0315`); mecanismo desativado |
+| 5 | Reavaliação de choque estrutural de transição de regulamento (H8-F1) | 🔒 `CLOSED_BY_HUMAN_DECISION`; 0/15 `VALID_FOR_H8`, sem aprovação, refutação ou edge econômico |
 | 6 | Intensidade não-homogênea de DNF/Safety Car (exige dado por volta — FastF1) | ⏳ (fonte não confirmada) |

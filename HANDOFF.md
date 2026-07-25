@@ -491,8 +491,10 @@ Adicionado `src/archival_collection.py`, orientado pelo contrato canônico
 `predictor_core.contracts.collection`. O armazenamento runtime separado é
 `data/collection_only/`, com JSONL append-only, snapshots de fonte e lifecycle
 arquivístico. O job `f1-archival-collection` roda só sexta/domingo e retorna
-`NO_UPSTREAM_EVENTS` fora da janela de fim de semana. Não toca snapshots H8,
-Market DB, trials, ratings, gates ou operação real. Handoff para tools:
+`NO_UPSTREAM_EVENTS` fora da janela de fim de semana. O instalador local usa
+`tools/operational_runner.py` com lock, timeout, heartbeat/event log e status
+atômico externo. Não toca snapshots H8, Market DB, trials, ratings, gates ou
+operação real. Handoff para tools:
 `docs/COLLECTION_ONLY_HANDOFF.md`.
 
 ## O que é o projeto
