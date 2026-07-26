@@ -1,5 +1,30 @@
 # HANDOFF.md — f1-predictor
 
+> ## PROJETO FECHADO — confirmado em 2026-07-26. Não reabrir.
+>
+> Nada abaixo mudou; esta nota só confirma que o fechamento continua válido
+> depois de reverificação por execução.
+>
+> - **10 de 10 hipóteses com veredito escrito**: 4 COMPROVADAS (H0, H2, H3,
+>   H4 — todas de qualidade de previsão), 5 REFUTADAS, 1
+>   `MARKET_H2H_NOT_FEASIBLE`. Ver `VEREDITOS_2026-07-26.md`.
+> - `operational_status` = **`NO_GO_CONFIRMED`** desde 2026-07-23; H8 e H2H
+>   `CLOSED_BY_HUMAN_DECISION`.
+> - **H8 é aritmeticamente impossível em 2026.** `H8_REQUIRED_RACES = 15`,
+>   contador 0/15, e o calendário 2026 tem 22 rodadas com a 11ª disputada em
+>   26/07 — restam 11. Nenhum pipeline, por melhor que seja, produz 15 pares
+>   forward em 11 corridas. Só 2027 pode fechar este gate.
+> - `f1-forward-snapshot` permanece `Disabled`. Correto: manter ligada uma
+>   coleta que não pode atingir o gate produziria a aparência de progresso.
+> - Suíte revalidada em 2026-07-26: **203 verdes**.
+>
+> **Nota de proveniência para quem rodar os testes:** 8 testes de
+> `tests/test_snapshots.py` falham com
+> `SnapshotError: tools working tree is dirty in strict provenance mode`
+> sempre que houver alteração não commitada em `../tools`. É o fail-closed
+> de `collect_tools_provenance(strict=True)` funcionando — não é regressão
+> deste projeto. Commite (ou reverta) o `tools/` e rode de novo.
+
 > **Sincronia Git (revalidada em 2026-07-20):** o HEAD local `030a5b7`
 > está um commit à frente de `origin/main` (`2bf2dad`). Nenhum push foi
 > feito nesta rodada.
