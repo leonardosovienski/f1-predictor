@@ -25,6 +25,11 @@ from .context_factors import match_circuit_metadata
 from .data import db
 from .model import F1EloModel, _load_fase2_params
 
+# `pythonw.exe` (executavel de toda tarefa agendada) nao tem console: um
+# processo de console filho ganharia janela VISIVEL na tela do dono.
+# Saida ja e capturada, entao a flag nao esconde nada.
+_NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
+
 SCHEMA_VERSION = "1.0"
 PRE_EVENT = "PRE_EVENT"
 MATURED = "MATURED"
@@ -72,7 +77,8 @@ def _utc_text(value: datetime) -> str:
 
 def _project_commit(root: Path) -> str:
     result = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"],
-                            text=True, capture_output=True, check=False)
+                            text=True, capture_output=True, check=False,
+                            creationflags=_NO_WINDOW)
     if result.returncode != 0 or not result.stdout.strip():
         raise SnapshotError("commit Git não pôde ser determinado")
     return result.stdout.strip()
@@ -80,7 +86,8 @@ def _project_commit(root: Path) -> str:
 
 def _git(root: Path, *args: str) -> str:
     result = subprocess.run(["git", "-C", str(root), *args], text=True,
-                            capture_output=True, check=False)
+                            capture_output=True, check=False,
+                            creationflags=_NO_WINDOW)
     if result.returncode != 0:
         raise SnapshotError("proveniência Git do projeto não pôde ser determinada")
     return result.stdout.strip()

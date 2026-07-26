@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import subprocess
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -12,6 +13,11 @@ from .config import ROOT, load_drivers
 from .data.f1_provider import F1Provider
 from predictor_core.contracts.collection import CollectionArchive, LifecycleState, ObservationEnvelope
 from predictor_core.data.contracts import DataUnavailableError
+
+# `pythonw.exe` (executavel de toda tarefa agendada) nao tem console: um
+# processo de console filho ganharia janela VISIVEL na tela do dono.
+# Saida ja e capturada, entao a flag nao esconde nada.
+_NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
 
 ARCHIVE_DIR = "collection_only"
 
@@ -35,7 +41,8 @@ def _hash(payload: Any) -> str:
 def _commit(root: Path) -> str:
     try:
         return subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], check=True,
-                              capture_output=True, text=True).stdout.strip()
+                              capture_output=True, text=True,
+                              creationflags=_NO_WINDOW).stdout.strip()
     except subprocess.CalledProcessError:
         return "test-collection-root"
 
