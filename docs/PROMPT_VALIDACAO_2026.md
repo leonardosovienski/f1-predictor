@@ -8,7 +8,8 @@
 > baselines com rigor estatístico; isto aqui é "o modelo, ao vivo,
 > continua se comportando como o backtest disse que se comportaria?".
 >
-> **Estado do projeto em 2026-07-12: laboratório SELADO** (commit
+> **Estado do projeto: laboratório SELADO** (fechamento humano registrado em
+> `data/authorized_closure.json`):
 > `9415c7b`, branch único `main`, árvore limpa) — nenhuma fase nova
 > corre sem gatilho de dado novo ou pedido explícito. Este prompt É o
 > gatilho de rotina enquanto a temporada 2026 avança.
@@ -38,7 +39,7 @@ EXATAMENTE como estava ANTES dela (prequential — reusar `BacktestElo` e
 `season == 2026`) e registrar:
 
 - **RPS** da corrida (comparar com o RPS médio da avaliação 2024-2026
-  já medido nas Fases 1/2 — 0.1410 Elo puro, 0.1281 Elo+grid);
+  já medido nas Fases 1/2 — 0.1407 Elo puro, 0.1274 Elo+grid);
 - **vencedor**: o modelo acertou o P1 previsto (maior P(win))?
 - **pódio**: quantos dos 3 do pódio real estavam nos 3 primeiros do
   ranking previsto?
@@ -73,9 +74,8 @@ os dois: a previsão pré-quali (Elo puro/vivido) e a pós-quali (blend).
 
 - **Determinismo**: rodar a mesma previsão 2x, confirmar ranking
   idêntico (mesma seed).
-- **H2H real**: rodar `--head-to-head` para os pares de companheiros de
-  equipe do grid 2026 (o único mercado com hipótese comprovada — H2-F1 e
-  H3-F1b elevaram a acurácia de 62.6%→70.3%).
+- **H2H**: não executar. A trilha está `CLOSED_BY_HUMAN_DECISION`; a
+  validação deve registrar o skip, sem contornar o gate.
 - **Erros esperados**: piloto/circuito inexistente devolve exit code 2;
   `--grid` com posições repetidas levanta erro.
 - **Gate de operação**: `python -m src.operate --status` — confirmar que
@@ -83,14 +83,10 @@ os dois: a previsão pré-quali (Elo puro/vivido) e a pós-quali (blend).
 - **CI completo**: `scripts\ci_check.py` — 3 barreiras verdes.
 - **Suíte completa**: `pytest tests/ -q` — todos os testes (116+) verdes.
 
-## PASSO 3.5 — Reavaliar H8-F1 (opcional, só quando 2026 tiver bem mais corridas)
+## PASSO 3.5 — H8-F1
 
-A Fase 5 (`scripts/run_fase5.py`) mediu o choque estrutural de
-transição de regulamento e REFUTOU por falta de poder estatístico (só 9
-corridas em 2026, RPS na direção certa mas p=0.907). É idempotente —
-rodar de novo a cada bloco relevante de corridas novas (ex.: a cada 5-6
-corridas) para checar se a significância aparece. Não rodar a cada
-atualização de rotina — só quando o calendário justificar.
+Não reavaliar. H8 está `CLOSED_BY_HUMAN_DECISION`, com contador final
+0/15 `VALID_FOR_H8`; a reabertura exige nova decisão humana auditável.
 
 ## PASSO 4 — Relatório
 

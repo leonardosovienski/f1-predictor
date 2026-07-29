@@ -37,9 +37,9 @@ qualquer coisa. A v1.3.0 trouxe `kernel/rating.py` (RatingBook genérico),
 
 | Hipótese | Veredito | Evidência |
 |---|---|---|
-| **H0-F1-formal** — grid (H0) bate Elo puro, via `PrequentialEvaluator` + bootstrap pareado (caminho INDEPENDENTE da Fase 1) | **COMPROVADA** | RPS grid 0.1304 vs Elo 0.1410; bootstrap IC95 **[-0.0153, -0.0061]** (inteiro negativo); DM p=0.00003 |
-| **H5-F1c** — bônus de contexto de circuito (`RatingBook` do core, power/downforce/balanced) bate Elo+grid | **REFUTADA** | RPS piorou: 0.1299 vs 0.1282 (p=0.25) |
-| **H6-F1c** — penalidade de Reliability (DNF rolling) bate o blend anterior | **REFUTADA** | RPS 0.1289 vs 0.1299 (melhora, mas p=0.19 — não significativo) |
+| **H0-F1-formal** — grid (H0) bate Elo puro, via `PrequentialEvaluator` + bootstrap pareado (caminho INDEPENDENTE da Fase 1) | **COMPROVADA** | bootstrap IC95 **[-0.0145, -0.0047]** (inteiro negativo); DM p=0.00026 |
+| **H5-F1c** — bônus de contexto de circuito (`RatingBook` do core, power/downforce/balanced) bate Elo+grid | **REFUTADA** | RPS 0.1309 vs 0.1275 (p=0.0375; contexto pior) |
+| **H6-F1c** — penalidade de Reliability (DNF rolling) bate o blend anterior | **REFUTADA** | `w_rel=0.0`; sem ganho no desenvolvimento após corrigir DNF |
 | **H7-F1c** — penalidade de Pit Efficiency bate o blend anterior | **REFUTADA** | w_pit=0 escolhido no dev — nenhum peso positivo ajudou |
 
 O item 1 (grid como H0 formal) **reconfirma** a Fase 1 por um instrumento

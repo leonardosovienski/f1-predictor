@@ -16,25 +16,31 @@ if str(_VENDOR) not in sys.path:
     sys.path.insert(0, str(_VENDOR))
 
 
-@lru_cache(maxsize=1)
-def load_config() -> dict:
-    with open(ROOT / "config.yaml", encoding="utf-8") as f:
+def _root(root: Path | str | None) -> Path:
+    return Path(root) if root is not None else ROOT
+
+
+@lru_cache(maxsize=None)
+def load_config(root: Path | str | None = None) -> dict:
+    with open(_root(root) / "config.yaml", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
-@lru_cache(maxsize=1)
-def load_drivers() -> list[dict]:
+@lru_cache(maxsize=None)
+def load_drivers(root: Path | str | None = None) -> list[dict]:
     """Grid 2026 real (22 pilotos / 11 equipes) de data/drivers_f1.json."""
-    cfg = load_config()
-    path = ROOT / cfg.get("drivers_file", "data/drivers_f1.json")
+    base = _root(root)
+    cfg = load_config(base)
+    path = base / cfg.get("drivers_file", "data/drivers_f1.json")
     return json.loads(path.read_text(encoding="utf-8"))["drivers"]
 
 
-@lru_cache(maxsize=1)
-def load_circuits() -> list[dict]:
+@lru_cache(maxsize=None)
+def load_circuits(root: Path | str | None = None) -> list[dict]:
     """Calendário 2026 real com características (metadados da Fase 1+)."""
-    cfg = load_config()
-    path = ROOT / cfg.get("circuits_file", "data/circuits_f1.json")
+    base = _root(root)
+    cfg = load_config(base)
+    path = base / cfg.get("circuits_file", "data/circuits_f1.json")
     return json.loads(path.read_text(encoding="utf-8"))["circuits"]
 
 

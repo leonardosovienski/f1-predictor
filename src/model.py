@@ -19,12 +19,13 @@ os metadados já vivem em data/circuits_f1.json).
 """
 import json
 import math
+import os
+import tempfile
 from pathlib import Path
 
 import numpy as np
 
-from .config import (ROOT, load_config, load_drivers, resolve_circuit,
-                     resolve_driver)
+from .config import ROOT, load_circuits, load_config, load_drivers
 
 _LN10_400 = math.log(10.0) / 400.0
 
@@ -65,17 +66,20 @@ def _load_fase2_params(path: Path | str | None = None) -> dict:
 class F1EloModel:
     """Ratings Elo dos pilotos do grid 2026 (semente = campeonato 2025)."""
 
-    def __init__(self, ratings_file: Path | str | None = None):
-        cfg = load_config()
-        self.drivers = {d["name"]: d for d in load_drivers()}
+    def __init__(self, ratings_file: Path | str | None = None,
+                 root: Path | str = ROOT):
+        self.root = Path(root)
+        cfg = load_config(self.root)
+        self.drivers = {d["name"]: d for d in load_drivers(self.root)}
+        self.circuits = {c["name"]: c for c in load_circuits(self.root)}
         self.ratings = {d["name"]: float(d["initial_elo"])
-                        for d in load_drivers()}
+                        for d in load_drivers(self.root)}
         self.n_sims = int(cfg["model"].get("n_sims", 20000))
         self.seed = int(cfg["model"].get("sim_seed", 13))
         self.k_base = float(cfg["k_factor_base"])
         self.k_rookie = float(cfg["k_factor_rookie"])
         self.path = Path(ratings_file) if ratings_file else (
-            ROOT / cfg.get("ratings_file", "data/ratings.json"))
+            self.root / cfg.get("ratings_file", "data/ratings.json"))
         if self.path.exists():
             vividos = json.loads(self.path.read_text(encoding="utf-8"))
             if not isinstance(vividos, dict):
@@ -95,11 +99,28 @@ class F1EloModel:
         return (self.k_rookie if self.drivers.get(name, {}).get("rookie")
                 else self.k_base)
 
+    @staticmethod
+    def _resolve(name: str, pool: dict[str, dict], label: str) -> dict:
+        low = name.strip().lower()
+        exact = [item for key, item in pool.items() if key.lower() == low]
+        hits = exact or [item for key, item in pool.items() if low in key.lower()]
+        if len(hits) != 1:
+            suggestion = [item["name"] for item in hits]
+            raise ValueError(f"{label} desconhecido: {name!r}"
+                             + (f" — você quis dizer {suggestion}?" if suggestion else ""))
+        return hits[0]
+
+    def _driver(self, name: str) -> dict:
+        return self._resolve(name, self.drivers, "piloto")
+
+    def _circuit(self, name: str) -> dict:
+        return self._resolve(name, self.circuits, "circuito")
+
     def predict_race(self, circuit: str, weather: str = "dry") -> dict:
         """Ranking dos 22 com P(win/podium/top6) — Plackett-Luce simulado.
 
         weather é validado ('dry'|'wet') mas NÃO ajusta na Fase 0 (declarado)."""
-        c = resolve_circuit(circuit)
+        c = self._circuit(circuit)
         if weather not in ("dry", "wet"):
             raise ValueError(f"weather desconhecido: {weather!r} (dry|wet)")
         names = list(self.ratings)
@@ -138,14 +159,14 @@ class F1EloModel:
         (nenhuma feature nova aplicada sem ter sido comprovada)."""
         from .backtest import apply_platt, blend_elos, ladder  # lazy: evita ciclo
 
-        c = resolve_circuit(circuit)
+        c = self._circuit(circuit)
         if weather not in ("dry", "wet"):
             raise ValueError(f"weather desconhecido: {weather!r} (dry|wet)")
-        entradas = [resolve_driver(n)["name"] for n in grid]
+        entradas = [self._driver(n)["name"] for n in grid]
         if len(set(entradas)) != len(entradas):
             raise ValueError("piloto duplicado no grid (aliases que "
                              "resolvem para a mesma identidade)")
-        pilotos = {resolve_driver(n)["name"]: int(p) for n, p in grid.items()}
+        pilotos = {self._driver(n)["name"]: int(p) for n, p in grid.items()}
         # position=0 ("saiu do pit lane") NÃO é única — múltiplos pilotos
         # podem largar do pit lane na mesma corrida (penalidades de grid);
         # o próprio blend abaixo já trata todo 0 como "última posição" (n+1),
@@ -206,11 +227,11 @@ class F1EloModel:
                              circuit: str) -> dict:
         """P(A termina à frente de B) — fórmula fechada; consistente com a
         marginal do Plackett-Luce usado no predict_race."""
-        a = resolve_driver(driver_a)["name"]
-        b = resolve_driver(driver_b)["name"]
+        a = self._driver(driver_a)["name"]
+        b = self._driver(driver_b)["name"]
         if a == b:
             raise ValueError("um piloto não disputa consigo mesmo")
-        c = resolve_circuit(circuit)
+        c = self._circuit(circuit)
         p = win_probability(self.ratings[a], self.ratings[b])
         return {"driver_a": a, "driver_b": b, "circuit": c["name"],
                 "prob_a_beats_b": round(p, 4),
@@ -224,11 +245,11 @@ class F1EloModel:
         para cada par (i,j), S=1 se i chegou à frente; K do par = média dos
         K individuais (novato anda mais rápido), dividido por (n-1).
         DNFs/ausentes: quem não está no dict não pontua nem perde."""
-        nomes = [resolve_driver(n)["name"] for n in race_results]
+        nomes = [self._driver(n)["name"] for n in race_results]
         if len(set(nomes)) != len(nomes):
             raise ValueError("piloto duplicado no resultado (aliases que "
                              "resolvem para a mesma identidade)")
-        pos = {resolve_driver(n)["name"]: int(p)
+        pos = {self._driver(n)["name"]: int(p)
                for n, p in race_results.items()}
         if any(p < 1 for p in pos.values()):
             raise ValueError("posição final inválida (< 1) no resultado")
@@ -250,7 +271,17 @@ class F1EloModel:
         for m in nomes:
             self.ratings[m] += delta[m]
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(
-            json.dumps({k: round(v, 2) for k, v in self.ratings.items()},
-                       ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        encoded = json.dumps({k: round(v, 2) for k, v in self.ratings.items()},
+                             ensure_ascii=False, indent=2) + "\n"
+        fd, raw = tempfile.mkstemp(prefix=f".{self.path.name}.", suffix=".tmp",
+                                  dir=self.path.parent)
+        temporary = Path(raw)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
+                handle.write(encoded)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary, self.path)
+        finally:
+            temporary.unlink(missing_ok=True)
         return {m: round(delta[m], 2) for m in sorted(nomes, key=pos.get)}

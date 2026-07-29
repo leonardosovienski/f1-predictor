@@ -173,6 +173,16 @@ data/backtest_h8_historical.json # robustez histórica auxiliar (24 corridas; n�
 data/fase2_params.json      # w do blend + Platt vividos (runtime, gitignored)
 data/fase5_params.json      # fator de choque calibrado — shrink_factor=0.0 no serving (runtime, gitignored)
 data/validacao_2026_ultima.json  # última rodada de validate_2026.py (runtime, gitignored)
+
+Para snapshots com proveniência estrita, o padrão é o checkout irmão
+`../tools`. Em instalações com outro layout, configure `TOOLS_PROVENANCE_ROOT`
+com o caminho absoluto desse checkout; a ausência ou sujeira dele continua
+falhando fechada.
+
+Cada captura também registra `snapshots/snapshot_ledger.jsonl`; o ledger
+impede recaptura de um evento após remoção acidental do arquivo PRE_EVENT.
+Para resistência contra um administrador hostil, o diretório ainda deve ser
+replicado em armazenamento imutável externo ao processo.
 scripts/build_db.py         # Jolpica → data/raw/ → data/f1.db (races+results+pitstops)
 scripts/run_backtest.py     # Fase 1: harness → pré-registro → backtest → trials
 scripts/run_fase2.py        # Fase 2: idem, para H3-F1b/H4-F1b

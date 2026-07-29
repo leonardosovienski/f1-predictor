@@ -102,13 +102,21 @@ def _core_identity(root: Path) -> dict[str, str]:
             "hash": _sha256_file(vendor / "CORE_MANIFEST.json")}
 
 
-def _tools_provenance() -> dict[str, Any]:
-    workspace = ROOT.parent
-    if str(workspace) not in sys.path:
-        sys.path.insert(0, str(workspace))
+def _tools_provenance(root: Path = ROOT) -> dict[str, Any]:
+    """Collect strict provenance from an explicit, deployable tools root.
+
+    The ecosystem default remains the sibling ``../tools`` checkout, but an
+    installation can set ``TOOLS_PROVENANCE_ROOT`` rather than depending on
+    its current working-directory layout.
+    """
+    workspace = root.parent
+    tools_root = Path(os.environ.get("TOOLS_PROVENANCE_ROOT", workspace / "tools"))
+    tools_parent = tools_root.parent
+    if str(tools_parent) not in sys.path:
+        sys.path.insert(0, str(tools_parent))
     try:
         from tools.tools_provenance import ToolsProvenanceError, collect_tools_provenance
-        return collect_tools_provenance(workspace / "tools", strict=True)
+        return collect_tools_provenance(tools_root, strict=True)
     except (ImportError, OSError, RuntimeError) as exc:
         raise SnapshotError(f"proveniência strict de tools indisponível: {exc}") from exc
 
@@ -158,6 +166,40 @@ def _matured_path(snapshots_root: Path, event: dict[str, Any]) -> Path:
     return snapshots_root / "matured" / str(event["season"]) / f"R{int(event['round']):02d}_{event_id(event)}.json"
 
 
+def _ledger_path(snapshots_root: Path) -> Path:
+    return snapshots_root / "snapshot_ledger.jsonl"
+
+
+def _ledger_contains(snapshots_root: Path, event: dict[str, Any]) -> bool:
+    """A ledger entry prevents accidental delete-and-recapture of an event."""
+    ledger = _ledger_path(snapshots_root)
+    if not ledger.is_file():
+        return False
+    try:
+        for line in ledger.read_text(encoding="utf-8").splitlines():
+            if line and json.loads(line).get("event_id") == event_id(event):
+                return True
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SnapshotError(f"ledger de snapshots ilegível: {exc}") from exc
+    return False
+
+
+def _append_ledger(snapshots_root: Path, payload: dict[str, Any]) -> None:
+    """Persist a durable, append-only local witness after publication."""
+    ledger = _ledger_path(snapshots_root)
+    ledger.parent.mkdir(parents=True, exist_ok=True)
+    entry = {"event_id": payload["event_id"], "status": payload["status"],
+             "payload_hash": payload["payload_hash"],
+             "recorded_at_utc": payload["generated_at_utc"]}
+    try:
+        with ledger.open("a", encoding="utf-8", newline="\n") as handle:
+            handle.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+    except OSError as exc:
+        raise SnapshotError(f"falha ao registrar ledger de snapshot: {exc}") from exc
+
+
 def _atomic_create(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
@@ -182,7 +224,7 @@ def _atomic_create(path: Path, payload: dict[str, Any]) -> None:
             temporary.unlink(missing_ok=True)
 
 
-def _load_grid(path: Path) -> tuple[list[dict[str, Any]], dict[str, Any], str]:
+def _load_grid(path: Path, *, root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any], str]:
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -192,7 +234,7 @@ def _load_grid(path: Path) -> tuple[list[dict[str, Any]], dict[str, Any], str]:
     if not isinstance(raw.get("source"), str) or not raw["source"].strip():
         raise SnapshotError("grid exige source")
     retrieved = _parse_utc(str(raw.get("source_retrieved_at_utc", "")), "source_retrieved_at_utc")
-    known = {driver["name"]: driver for driver in load_drivers()}
+    known = {driver["name"]: driver for driver in load_drivers(root)}
     rows: list[dict[str, Any]] = []
     positions: set[int] = set()
     ids: set[str] = set()
@@ -248,15 +290,17 @@ def create_pre_event_snapshot(*, season: int, round_: int, scheduled_start_utc: 
             raise SnapshotError("resultado já existe no banco; snapshot pré-evento proibido")
     finally:
         conn.close()
-    grid, grid_raw, retrieved_at = _load_grid(grid_file)
+    grid, grid_raw, retrieved_at = _load_grid(grid_file, root=root)
     if _parse_utc(retrieved_at, "source_retrieved_at_utc") > generated:
         raise SnapshotError("source_retrieved_at_utc não pode ser posterior à geração")
     destination = _snapshot_path(snapshots_root, event)
     if destination.exists():
         raise SnapshotError(f"snapshot já existe; overwrite proibido: {destination}")
-    model = F1EloModel(ratings_file=root / "data" / "ratings.json")
+    if _ledger_contains(snapshots_root, event):
+        raise SnapshotError("evento já consta no ledger; recaptura após remoção é proibida")
+    model = F1EloModel(ratings_file=root / "data" / "ratings.json", root=root)
     grid_map = {row["driver"]: row["position"] for row in grid}
-    circuit = match_circuit_metadata(event["circuit"], load_circuits())
+    circuit = match_circuit_metadata(event["circuit"], load_circuits(root))
     if circuit is None:
         raise SnapshotError(f"circuito do evento sem identidade canônica: {event['circuit']!r}")
     params_path = root / "data" / "fase2_params.json"
@@ -282,13 +326,14 @@ def create_pre_event_snapshot(*, season: int, round_: int, scheduled_start_utc: 
         "ratings": {name: output["ranking"][name]["elo"] for name in output["ranking"]},
         "frozen_parameters": _load_fase2_params(params_path), "model_output": output,
         "project_commit": _project_commit(root), "predictor_core_version": core["version"],
-        "predictor_core_hash": core["hash"], "tools_provenance": _tools_provenance(),
+        "predictor_core_hash": core["hash"], "tools_provenance": _tools_provenance(root),
         "consumer_provenance": consumer,
         "input_hashes": inputs, "audit_metadata": {"network_used": False, "database_write": False,
         "ratings_write": False, "model_training": False},
     }
     payload["payload_hash"] = _payload_hash(payload)
     _atomic_create(destination, payload)
+    _append_ledger(snapshots_root, payload)
     return destination
 
 
@@ -374,7 +419,7 @@ def mature_snapshot(*, season: int, round_: int, snapshots_root: Path,
         "metrics": {"actual_winner": winner["driver"], "actual_winner_probability": probability,
                     "winner_brier": round((1.0 - probability) ** 2, 8),
                     "winner_hit": top == winner["driver"]},
-        "tools_provenance": _tools_provenance(), "consumer_provenance": {
+        "tools_provenance": _tools_provenance(root), "consumer_provenance": {
             **consumer, "artifact_kind": "matured_snapshot",
             "generated_at_utc": _utc_text(matured)},
         "audit_metadata": {"model_reexecuted": False, "database_write": False,

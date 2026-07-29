@@ -14,8 +14,8 @@
 
 | Hipótese | Veredito | Evidência |
 |---|---|---|
-| **H3-F1b** — Elo+grid (peso escolhido no dev/2023) bate o Elo puro no RPS, avaliação CEGA 2024-2026 | **COMPROVADA** | RPS blend 0.1281 vs Elo puro **0.1416** (DM −9.34, p≈0) |
-| **H4-F1b** — Platt (ajustado no dev/2023) reduz o Brier do pódio na avaliação CEGA | **COMPROVADA** | Brier pódio: cru 0.0932 → calibrado **0.0783** |
+| **H3-F1b** — Elo+grid (peso escolhido no dev/2023) bate o Elo puro no RPS, avaliação CEGA 2024-2026 | **COMPROVADA** | RPS blend **0.1274** vs Elo puro **0.1407** (DM −9.22, p≈0) |
+| **H4-F1b** — Platt (ajustado no dev/2023) reduz o Brier do pódio na avaliação CEGA | **COMPROVADA** | Brier pódio: cru 0.0930 → calibrado **0.0794** |
 
 ## Protocolo (sem lookahead adicional)
 

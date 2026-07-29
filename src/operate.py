@@ -13,6 +13,7 @@ import json
 import sys
 
 from .betting import go_gate, record_bet
+from .closure import require_open
 from .model import F1EloModel
 
 
@@ -47,8 +48,12 @@ def main(argv=None) -> int:
 
     model = F1EloModel()
     try:
+        # H2H research is human-closed independently of the real-money gate.
+        # Keep the pure model reusable for offline analysis, but no operation
+        # (including paper logging) may execute a closed market.
+        require_open("H2H")
         pred = model.predict_head_to_head(args.h2h[0], args.h2h[1], args.circuit)
-    except ValueError as e:
+    except (ValueError, RuntimeError) as e:
         print(str(e), file=sys.stderr)
         return 2
 

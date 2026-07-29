@@ -62,7 +62,9 @@ real → choque ajuda) e especificidade (força estável → choque atrapalha,
 | 2025 | 0.1430 | 0.1430 | idêntico |
 | **2026** | **0.1651** | 0.1662 | **transição** |
 
-**H8-F1: REFUTADA** — DM = -0.120, p=0.907 (longe de p<0.05).
+**Resultado histórico da Fase 5: REFUTADA** — DM = -0.697, p=0.5035.
+O estado operacional posterior e canônico é `CLOSED_BY_HUMAN_DECISION`, com
+0/15 evidências forward válidas; este relatório não reabre H8.
 
 **Leitura honesta, não "não funcionou":** a direção é a CERTA (RPS caiu
 de 0.1662 para 0.1651 com o choque) — o mecanismo empurra na direção
@@ -84,10 +86,8 @@ efeito colateral fora do momento pretendido.
 1. **H8-F1 não entra no serving** (`fase5_params.json`: `shrink_factor=0.0`,
    `usar_choque_transicao=false`) — mesma disciplina de todas as fases:
    nenhuma feature sem comprovação estatística entra em produção.
-2. **Reavaliar com mais dado**: 2026 tem 13 corridas restantes. Rodar
-   `scripts/run_fase5.py` de novo ao final da temporada (ou em qualquer
-   ponto — é idempotente) para checar se o efeito ganha significância
-   com mais observações.
+2. **Não reavaliar automaticamente**: o encerramento humano posterior exige
+   uma nova decisão explícita e auditável antes de qualquer reabertura.
 3. **GO/NO-GO de aposta: inalterado, NO-GO** (gate lê H1-F1, que segue
    refutada — H8 não é uma hipótese de edge de mercado).
 

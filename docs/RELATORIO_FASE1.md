@@ -19,8 +19,8 @@
 
 | Hipótese | Veredito | Evidência |
 |---|---|---|
-| **H1-F1** — Elo/PL bate o grid de largada no RPS (DM p<0.05 + nulo) | **REFUTADA** | RPS modelo 0.1410 vs grid **0.1303**; DM +4.43, p=0.00003 — o grid é **significativamente melhor** |
-| **H2-F1** — H2H entre companheiros: acerto > 50% (Wilson 95% > 0.5) | **COMPROVADA** | 253/404 = **62.6%**, IC95 [0.578, 0.672] inteiro acima de 0.5 |
+| **H1-F1** — Elo/PL bate o grid de largada no RPS (DM p<0.05 + nulo) | **REFUTADA** | RPS modelo **0.1399** vs grid **0.1303**; DM +3.85, p=0.00024 — o grid é **significativamente melhor** |
+| **H2-F1** — H2H entre companheiros: acerto > 50% (Wilson 95% > 0.5) | **COMPROVADA** | 392/603 = **65.0%**, IC95 [0.611, 0.687] inteiro acima de 0.5 |
 
 O fluxo de governança rodou NA ORDEM: controle positivo do harness
 (atestado emitido) → pré-registro em `data/trials.json` → backtest →

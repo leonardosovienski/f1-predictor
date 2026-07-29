@@ -26,7 +26,7 @@ from src.config import ROOT, load_circuits, load_drivers         # noqa: E402
 from src.context_factors import match_circuit_metadata            # noqa: E402
 from src.data.db import load_races_with_results                  # noqa: E402
 from src.data.f1_provider import F1Provider                      # noqa: E402
-from src.model import F1EloModel                                 # noqa: E402
+from src.model import F1EloModel, _load_fase2_params              # noqa: E402
 from src import operate                                          # noqa: E402
 from src import predict                                          # noqa: E402
 
@@ -34,7 +34,10 @@ from predictor_core.measurement.metrics import rps                # noqa: E402
 
 N_SIMS = 10000
 SIM_SEED = 13
-W_GRID = 0.5   # comprovado na Fase 2 (H3-F1b)
+
+
+class ValidationFailed(RuntimeError):
+    """An operational sanity invariant failed; callers must not ignore it."""
 
 
 def _ordem_prevista(names: list, elos: list) -> list:
@@ -55,7 +58,7 @@ def _erro_medio_posicao(ordem_prevista: list, ordem_real: list) -> float:
     return sum(erros) / len(erros)
 
 
-def retrodicao_2026(races: list) -> list:
+def retrodicao_2026(races: list, *, fase2_params: dict) -> list:
     """Elo contínuo 2022→hoje; para cada corrida de 2026 JÁ disputada,
     previsão ANTES do update (sem lookahead), três candidatos: Elo puro,
     grid (H0), blend Elo+grid."""
@@ -75,7 +78,7 @@ def retrodicao_2026(races: list) -> list:
             elos_grid = _grid_elos(results, n).tolist()
             elos_blend = blend_elos(__import__("numpy").array(elos_model),
                                     __import__("numpy").array(elos_grid),
-                                    W_GRID).tolist()
+                                    float(fase2_params["w_grid"])).tolist()
             row = {"round": race["round"], "name": race["name"],
                   "circuit": race["circuit"], "date": race["date"],
                   "n_drivers": n, "ordem_real": ordem_real}
@@ -131,11 +134,13 @@ def proxima_corrida(schedule: list, now: datetime | None = None) -> dict | None:
 def testes_estresse() -> dict:
     out = {}
     # determinismo
-    r1 = predict.run_race("Monza", now=datetime(2026, 1, 1))
-    r2 = predict.run_race("Monza", now=datetime(2026, 1, 1))
+    # Call the pure model directly: validation must not append serving logs.
+    r1 = F1EloModel().predict_race("Monza")
+    r2 = F1EloModel().predict_race("Monza")
     out["determinismo_ok"] = (r1["ranking"] == r2["ranking"])
 
-    # H2H de companheiros (grid 2026 real)
+    # H2H is explicitly human-closed. Do not bypass its gate just to make a
+    # diagnostic report; record that this check was intentionally skipped.
     drivers = load_drivers()
     by_team = defaultdict(list)
     for d in drivers:
@@ -143,9 +148,8 @@ def testes_estresse() -> dict:
     h2h = []
     for team, names in by_team.items():
         if len(names) == 2:
-            r = predict.run_h2h(names[0], names[1], "Monza")
             h2h.append({"team": team, "a": names[0], "b": names[1],
-                       "prob_a": r["prob_a_beats_b"]})
+                        "status": "SKIPPED_CLOSED_BY_HUMAN_DECISION"})
     out["h2h_companheiros"] = h2h
 
     # erros esperados
@@ -156,6 +160,12 @@ def testes_estresse() -> dict:
 
     # gate de operação
     out["gate"] = operate_status()
+    out["invariants_ok"] = (
+        out["determinismo_ok"]
+        and out["erro_circuito_invalido_exit"] == 2
+        and out["erro_piloto_invalido_exit"] == 2
+        and out["gate"]["decision"] == "NO-GO"
+    )
     return out
 
 
@@ -166,8 +176,11 @@ def operate_status() -> dict:
 
 def main() -> int:
     print("[1/3] retrodição de 2026 (sem lookahead)...")
+    fase2_params = _load_fase2_params(ROOT / "data" / "fase2_params.json")
+    if not fase2_params["usar_blend"]:
+        raise ValidationFailed("Fase 2 sem blend comprovado; validação viva não representa o serving")
     races = load_races_with_results()
-    linhas = retrodicao_2026(races)
+    linhas = retrodicao_2026(races, fase2_params=fase2_params)
     if not linhas:
         print("      nenhuma corrida de 2026 com resultado ainda.")
     else:
@@ -232,16 +245,20 @@ def main() -> int:
     print(f"      determinismo: {'OK' if estresse['determinismo_ok'] else 'FALHOU'}")
     print(f"      H2H companheiros ({len(estresse['h2h_companheiros'])} pares):")
     for h in estresse["h2h_companheiros"]:
-        print(f"        {h['a']} vs {h['b']} ({h['team']}): {h['prob_a']:.1%}")
+        print(f"        {h['a']} vs {h['b']} ({h['team']}): {h['status']}")
     print(f"      erro circuito invalido -> exit {estresse['erro_circuito_invalido_exit']} "
          f"(esperado 2)")
     print(f"      erro piloto invalido -> exit {estresse['erro_piloto_invalido_exit']} "
          f"(esperado 2)")
     print(f"      gate de operacao: {estresse['gate']['decision']} — {estresse['gate']['reason']}")
 
+    if not estresse["invariants_ok"]:
+        raise ValidationFailed("sanity check falhou; relatório não foi publicado")
+
     out = ROOT / "data" / "validacao_2026_ultima.json"
     out.write_text(json.dumps({
-        "gerado_em": datetime.now().isoformat(timespec="seconds"),
+        "gerado_em_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "fase2_parameters": fase2_params,
         "retrodicao_2026": linhas, "proxima_corrida": prox_pred,
         "estresse": estresse,
     }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -250,4 +267,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except ValidationFailed as exc:
+        print(str(exc), file=sys.stderr)
+        sys.exit(3)
