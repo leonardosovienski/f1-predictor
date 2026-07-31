@@ -48,13 +48,19 @@ jobs:
             fi
           fi
 
+      - name: Gerar Artefatos Operacionais de Teste
+        # O runner é limpo e não tem os artefatos de data/ (f1.db, ratings.json,
+        # fase2_params.json — gitignored). Este seed monta um substrato sintético
+        # determinístico a partir do que já é versionado, para que os 11 testes de
+        # tests/test_snapshots.py que dependem deles RODEM aqui em vez de só pular.
+        # O script nunca sobrescreve arquivo existente.
+        run: python scripts/seed_test_fixtures.py
+
       - name: Executar Testes
         # ==============================================================================================
-        # O runner do GitHub Actions é limpo e não tem os artefatos operacionais de data/
-        # (f1.db, ratings.json — gitignored). Isso era resolvido com "|| true", que forçava
-        # sucesso e apagava JUNTO qualquer regressão real do resto da suíte. Agora os testes
-        # que dependem desses artefatos têm skipif explícito (tests/test_snapshots.py), então
-        # a esteira roda honesta: falha de teste reprova o pipeline.
+        # Antes, a falta desses artefatos era "resolvida" com "|| true", que forçava sucesso e
+        # apagava JUNTO qualquer regressão real do resto da suíte. Com o seed acima, a esteira
+        # roda honesta E completa: falha de teste reprova o pipeline.
         # ==============================================================================================
         run: |
           PYTHONPATH=.:vendor:core:tools python -m pytest -v \

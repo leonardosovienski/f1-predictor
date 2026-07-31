@@ -16,18 +16,41 @@ from src import snapshots
 def _snapshot_contract_unit_tests_do_not_use_project_closure(monkeypatch):
     """Existing fixtures verify snapshot invariants; closure is tested separately."""
     monkeypatch.setattr(snapshots, "require_open", lambda *args, **kwargs: None)
+
+
+@pytest.fixture(autouse=True)
+def _tools_provenance_root(monkeypatch):
+    """Aponta a proveniência do `tools` para o checkout real.
+
+    `create_pre_event_snapshot` exige proveniência strict do tools e a procura
+    em `root.parent / "tools"` — o layout de pastas irmãs do ecossistema. Vários
+    testes montam um `root` sintético dentro de tmp_path, onde esse irmão não
+    existe; o próprio código oferece `TOOLS_PROVENANCE_ROOT` exatamente para
+    esse caso. Cobre os dois layouts: irmão do projeto (máquina do operador) e
+    ./tools (o CI, que não consegue clonar fora do $GITHUB_WORKSPACE).
+    """
+    for candidate in (ROOT.parent / "tools", ROOT / "tools"):
+        if (candidate / "tools_provenance.py").is_file():
+            monkeypatch.setenv("TOOLS_PROVENANCE_ROOT", str(candidate))
+            return
+    pytest.skip("checkout do tools-predictor indisponível para proveniência strict")
 from src.config import ROOT, load_drivers
 
-# data/f1.db e data/ratings.json são artefatos OPERACIONAIS: nascem do pipeline
-# de ingestão local e estão no .gitignore (`*.db`), então nunca existem num
-# clone fresco. Os testes que dependem deles falhavam sempre em CI — o que o
-# `|| true` do workflow escondia. Skip explícito é honesto; forçar exit 0
-# apagava junto qualquer regressão REAL do resto da suíte.
-_OPERATIONAL_ARTIFACTS = (ROOT / "data" / "f1.db", ROOT / "data" / "ratings.json")
+# Estes artefatos são OPERACIONAIS: nascem do pipeline de ingestão local e estão
+# no .gitignore, então nunca existem num clone fresco. Os testes que dependem
+# deles falhavam sempre em CI — o que o `|| true` do workflow escondia.
+#
+# O CI agora roda `scripts/seed_test_fixtures.py` antes da suíte, que monta um
+# substrato sintético determinístico a partir do que JÁ é versionado; com ele
+# presente, estes testes RODAM de verdade em vez de pular. O skip continua aqui
+# para o caso de alguém rodar `pytest` num clone sem semear: melhor pular
+# explicando do que estourar FileNotFoundError.
+_OPERATIONAL_ARTIFACTS = (ROOT / "data" / "f1.db", ROOT / "data" / "ratings.json",
+                          ROOT / "data" / "fase2_params.json")
 requires_operational_data = pytest.mark.skipif(
     not all(path.is_file() for path in _OPERATIONAL_ARTIFACTS),
-    reason="data/f1.db e data/ratings.json são artefatos operacionais locais "
-           "(gitignored); ausentes num clone fresco de CI")
+    reason="artefatos operacionais ausentes (gitignored) — rode "
+           "scripts/seed_test_fixtures.py para gerar o substrato de teste")
 
 
 def _sha(path: Path) -> str:
@@ -315,7 +338,13 @@ def test_pre_event_uses_the_same_params_it_freezes(tmp_path):
     # payload congelava/hasheava os params do `root` passado — proveniência
     # divergia da previsão quando root != ROOT.
     root = _temp_root_with_db(tmp_path)
-    for name in ("ratings.json", "drivers_f1.json", "fase2_params.json"):
+    # circuits_f1.json entra aqui porque F1EloModel.__init__ chama
+    # load_circuits(self.root): sem ele o root alternativo fica incompleto e o
+    # teste morre em FileNotFoundError antes de chegar na asserção — inclusive
+    # numa máquina com data/ real. Faltava desde sempre; só não aparecia porque
+    # o `|| true` do CI e a ausência do f1.db mascaravam o resultado.
+    for name in ("ratings.json", "drivers_f1.json", "fase2_params.json",
+                 "circuits_f1.json"):
         shutil.copy2(ROOT / "data" / name, root / "data" / name)
     shutil.copy2(ROOT / "config.yaml", root / "config.yaml")
     (root / "vendor" / "predictor_core").mkdir(parents=True)
