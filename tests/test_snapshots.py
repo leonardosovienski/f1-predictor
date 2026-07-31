@@ -32,7 +32,7 @@ def _tools_provenance_root(monkeypatch):
     for candidate in (ROOT.parent / "tools", ROOT / "tools"):
         if (candidate / "tools_provenance.py").is_file():
             monkeypatch.setenv("TOOLS_PROVENANCE_ROOT", str(candidate))
-            return
+            return candidate
     pytest.skip("checkout do tools-predictor indisponível para proveniência strict")
 from src.config import ROOT, load_drivers
 
@@ -128,7 +128,8 @@ def _manual_pre(root: Path, snapshots_root: Path) -> Path:
 
 
 @requires_operational_data
-def test_valid_snapshot_is_deterministic_and_does_not_write_db_or_ratings(tmp_path, monkeypatch):
+def test_valid_snapshot_is_deterministic_and_does_not_write_db_or_ratings(
+        tmp_path, monkeypatch, _tools_provenance_root):
     db_path, ratings = ROOT / "data" / "f1.db", ROOT / "data" / "ratings.json"
     before = (_sha(db_path), _sha(ratings))
     monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: pytest.fail("rede não permitida"))
@@ -139,7 +140,9 @@ def test_valid_snapshot_is_deterministic_and_does_not_write_db_or_ratings(tmp_pa
     first_payload.pop("payload_hash"); second_payload.pop("payload_hash")
     assert first_payload == second_payload
     persisted = json.loads(first.read_text(encoding="utf-8"))
-    tools_version = (ROOT.parent / "tools" / "VERSION").read_text(encoding="utf-8").strip()
+    # Lê do MESMO checkout que o fixture resolveu — `ROOT.parent/"tools"` só
+    # existe no layout de pastas irmãs; no CI o clone fica em ./tools.
+    tools_version = (_tools_provenance_root / "VERSION").read_text(encoding="utf-8").strip()
     assert persisted["tools_provenance"]["version"] == tools_version
     assert persisted["consumer_provenance"]["project_name"] == "f1-predictor"
     assert persisted["consumer_provenance"]["input_hashes"] == persisted["input_hashes"]
