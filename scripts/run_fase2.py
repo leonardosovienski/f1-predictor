@@ -49,6 +49,13 @@ def main() -> int:
         lambda: synthetic_races_h3(informative=True),
         lambda: synthetic_races_h3(informative=False),
         attestation_path=attestation_path_for(TRIALS),
+        # `metric` virou obrigatória no predictor_core 2.0.0 e vai gravada no
+        # atestado: toda trial nova registrada contra ele tem que declarar a
+        # MESMA régua, senão o registry levanta MetricMismatchError. "rps" é o
+        # que este domínio de fato mede — todos os vereditos desta fase são
+        # comparações de RPS (ver src/backtest.py::verdict_*) — e é a string já
+        # usada no ecossistema (H4 do brasileirao).
+        metric="rps",
         note="H3-F1b (grid como feature): choque de forma do dia "
              "compartilhado quali/largada -> grid informativo detectado; "
              "grid embaralhado (mesma forma) -> nao confirmado",
