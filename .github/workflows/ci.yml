@@ -50,10 +50,12 @@ jobs:
 
       - name: Executar Testes
         # ==============================================================================================
-        # MOTIVO DO IGNORE E DO "|| true": O ambiente do GitHub Actions é limpo e não possui a pasta data/ 
-        # (banco de dados, ratings, etc.), pois eles estão no .gitignore. Para a esteira não quebrar
-        # por falta de dados locais e destravar o seu CI, estamos forçando o sucesso com "|| true".
+        # O runner do GitHub Actions é limpo e não tem os artefatos operacionais de data/
+        # (f1.db, ratings.json — gitignored). Isso era resolvido com "|| true", que forçava
+        # sucesso e apagava JUNTO qualquer regressão real do resto da suíte. Agora os testes
+        # que dependem desses artefatos têm skipif explícito (tests/test_snapshots.py), então
+        # a esteira roda honesta: falha de teste reprova o pipeline.
         # ==============================================================================================
         run: |
           PYTHONPATH=.:vendor:core:tools python -m pytest -v \
-            --ignore=tests/test_weekly_download.py || true
+            --ignore=tests/test_weekly_download.py
