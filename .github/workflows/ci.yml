@@ -48,12 +48,20 @@ jobs:
             fi
           fi
 
+      - name: Gerar Artefatos Operacionais de Teste
+        # O runner é limpo e não tem os artefatos de data/ (f1.db, ratings.json,
+        # fase2_params.json — gitignored). Este seed monta um substrato sintético
+        # determinístico a partir do que já é versionado, para que os 11 testes de
+        # tests/test_snapshots.py que dependem deles RODEM aqui em vez de só pular.
+        # O script nunca sobrescreve arquivo existente.
+        run: python scripts/seed_test_fixtures.py
+
       - name: Executar Testes
         # ==============================================================================================
-        # MOTIVO DO IGNORE E DO "|| true": O ambiente do GitHub Actions é limpo e não possui a pasta data/ 
-        # (banco de dados, ratings, etc.), pois eles estão no .gitignore. Para a esteira não quebrar
-        # por falta de dados locais e destravar o seu CI, estamos forçando o sucesso com "|| true".
+        # Antes, a falta desses artefatos era "resolvida" com "|| true", que forçava sucesso e
+        # apagava JUNTO qualquer regressão real do resto da suíte. Com o seed acima, a esteira
+        # roda honesta E completa: falha de teste reprova o pipeline.
         # ==============================================================================================
         run: |
           PYTHONPATH=.:vendor:core:tools python -m pytest -v \
-            --ignore=tests/test_weekly_download.py || true
+            --ignore=tests/test_weekly_download.py

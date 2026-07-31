@@ -16,7 +16,41 @@ from src import snapshots
 def _snapshot_contract_unit_tests_do_not_use_project_closure(monkeypatch):
     """Existing fixtures verify snapshot invariants; closure is tested separately."""
     monkeypatch.setattr(snapshots, "require_open", lambda *args, **kwargs: None)
+
+
+@pytest.fixture(autouse=True)
+def _tools_provenance_root(monkeypatch):
+    """Aponta a proveniência do `tools` para o checkout real.
+
+    `create_pre_event_snapshot` exige proveniência strict do tools e a procura
+    em `root.parent / "tools"` — o layout de pastas irmãs do ecossistema. Vários
+    testes montam um `root` sintético dentro de tmp_path, onde esse irmão não
+    existe; o próprio código oferece `TOOLS_PROVENANCE_ROOT` exatamente para
+    esse caso. Cobre os dois layouts: irmão do projeto (máquina do operador) e
+    ./tools (o CI, que não consegue clonar fora do $GITHUB_WORKSPACE).
+    """
+    for candidate in (ROOT.parent / "tools", ROOT / "tools"):
+        if (candidate / "tools_provenance.py").is_file():
+            monkeypatch.setenv("TOOLS_PROVENANCE_ROOT", str(candidate))
+            return candidate
+    pytest.skip("checkout do tools-predictor indisponível para proveniência strict")
 from src.config import ROOT, load_drivers
+
+# Estes artefatos são OPERACIONAIS: nascem do pipeline de ingestão local e estão
+# no .gitignore, então nunca existem num clone fresco. Os testes que dependem
+# deles falhavam sempre em CI — o que o `|| true` do workflow escondia.
+#
+# O CI agora roda `scripts/seed_test_fixtures.py` antes da suíte, que monta um
+# substrato sintético determinístico a partir do que JÁ é versionado; com ele
+# presente, estes testes RODAM de verdade em vez de pular. O skip continua aqui
+# para o caso de alguém rodar `pytest` num clone sem semear: melhor pular
+# explicando do que estourar FileNotFoundError.
+_OPERATIONAL_ARTIFACTS = (ROOT / "data" / "f1.db", ROOT / "data" / "ratings.json",
+                          ROOT / "data" / "fase2_params.json")
+requires_operational_data = pytest.mark.skipif(
+    not all(path.is_file() for path in _OPERATIONAL_ARTIFACTS),
+    reason="artefatos operacionais ausentes (gitignored) — rode "
+           "scripts/seed_test_fixtures.py para gerar o substrato de teste")
 
 
 def _sha(path: Path) -> str:
@@ -93,7 +127,9 @@ def _manual_pre(root: Path, snapshots_root: Path) -> Path:
     return path
 
 
-def test_valid_snapshot_is_deterministic_and_does_not_write_db_or_ratings(tmp_path, monkeypatch):
+@requires_operational_data
+def test_valid_snapshot_is_deterministic_and_does_not_write_db_or_ratings(
+        tmp_path, monkeypatch, _tools_provenance_root):
     db_path, ratings = ROOT / "data" / "f1.db", ROOT / "data" / "ratings.json"
     before = (_sha(db_path), _sha(ratings))
     monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: pytest.fail("rede não permitida"))
@@ -104,7 +140,9 @@ def test_valid_snapshot_is_deterministic_and_does_not_write_db_or_ratings(tmp_pa
     first_payload.pop("payload_hash"); second_payload.pop("payload_hash")
     assert first_payload == second_payload
     persisted = json.loads(first.read_text(encoding="utf-8"))
-    tools_version = (ROOT.parent / "tools" / "VERSION").read_text(encoding="utf-8").strip()
+    # Lê do MESMO checkout que o fixture resolveu — `ROOT.parent/"tools"` só
+    # existe no layout de pastas irmãs; no CI o clone fica em ./tools.
+    tools_version = (_tools_provenance_root / "VERSION").read_text(encoding="utf-8").strip()
     assert persisted["tools_provenance"]["version"] == tools_version
     assert persisted["consumer_provenance"]["project_name"] == "f1-predictor"
     assert persisted["consumer_provenance"]["input_hashes"] == persisted["input_hashes"]
@@ -112,6 +150,7 @@ def test_valid_snapshot_is_deterministic_and_does_not_write_db_or_ratings(tmp_pa
     assert before == (_sha(db_path), _sha(ratings))
 
 
+@requires_operational_data
 def test_rejects_naive_and_late_timestamp(tmp_path):
     with pytest.raises(snapshots.SnapshotError, match="timezone"):
         snapshots.create_pre_event_snapshot(season=2026, round_=10,
@@ -122,6 +161,7 @@ def test_rejects_naive_and_late_timestamp(tmp_path):
         _create_r10(tmp_path, now=snapshots._parse_utc(start, "start"))
 
 
+@requires_operational_data
 def test_accepts_multiple_pit_lane_starters_at_position_zero(tmp_path):
     # Regressão: position=0 ("saiu do pit lane", ver src/model.py) é
     # documentado como não-único, mas _load_grid rejeitava qualquer posição
@@ -138,12 +178,14 @@ def test_accepts_multiple_pit_lane_starters_at_position_zero(tmp_path):
     assert positions.count(0) == 2
 
 
+@requires_operational_data
 def test_still_rejects_duplicate_nonzero_position(tmp_path):
     duplicated = _grid_file(tmp_path, mutate=lambda rows: rows.__setitem__(1, {**rows[1], "position": rows[0]["position"]}))
     with pytest.raises(snapshots.SnapshotError, match="posição duplicada"):
         _create_r10(tmp_path, grid=duplicated)
 
 
+@requires_operational_data
 def test_rejects_existing_result_grid_absent_ambiguous_identity_and_overwrite(tmp_path):
     with pytest.raises(snapshots.SnapshotError, match="resultado já existe"):
         snapshots.create_pre_event_snapshot(season=2026, round_=1,
@@ -160,6 +202,7 @@ def test_rejects_existing_result_grid_absent_ambiguous_identity_and_overwrite(tm
         _create_r10(tmp_path / "overwrite")
 
 
+@requires_operational_data
 def test_detects_hash_tampering_and_maturity_contract(tmp_path):
     pre = _create_r10(tmp_path / "tamper")
     payload = json.loads(pre.read_text(encoding="utf-8")); payload["round"] = 99
@@ -184,6 +227,7 @@ def test_detects_hash_tampering_and_maturity_contract(tmp_path):
     assert status["valid_h8_races"] == 1
 
 
+@requires_operational_data
 def test_mature_rejects_duplicate_final_position(tmp_path):
     # Empate/corrupção: duas linhas do resultado com a MESMA posição final
     # não podem maturar (classificação oficial da F1 tem posições únicas).
@@ -201,6 +245,7 @@ def test_mature_rejects_duplicate_final_position(tmp_path):
                                   root=root, now=datetime(2026, 3, 8, 14, tzinfo=timezone.utc))
 
 
+@requires_operational_data
 def test_rejects_premature_maturation_and_revalidates_timestamp(tmp_path):
     root = _temp_root_with_db(tmp_path)
     snapshots_root = tmp_path / "snaps"
@@ -253,6 +298,7 @@ def test_atomic_create_has_exactly_one_concurrent_winner(tmp_path):
     assert json.loads(destination.read_text(encoding="utf-8"))["event"] in (1, 2)
 
 
+@requires_operational_data
 def test_corrected_result_invalidates_existing_maturity(tmp_path):
     import sqlite3
 
@@ -273,6 +319,7 @@ def test_corrected_result_invalidates_existing_maturity(tmp_path):
     assert "corrigido" in result["reason"]
 
 
+@requires_operational_data
 def test_truncated_snapshot_file_is_invalid_for_h8(tmp_path):
     pre = _create_r10(tmp_path / "trunc")
     raw = pre.read_text(encoding="utf-8")
@@ -288,12 +335,19 @@ def test_snapshot_status_empty_season_reports_full_gate(tmp_path):
     assert status["missing_to_gate"] == snapshots.H8_REQUIRED_RACES == 15
 
 
+@requires_operational_data
 def test_pre_event_uses_the_same_params_it_freezes(tmp_path):
     # Regressão: o modelo lia fase2_params do ROOT do processo enquanto o
     # payload congelava/hasheava os params do `root` passado — proveniência
     # divergia da previsão quando root != ROOT.
     root = _temp_root_with_db(tmp_path)
-    for name in ("ratings.json", "drivers_f1.json", "fase2_params.json"):
+    # circuits_f1.json entra aqui porque F1EloModel.__init__ chama
+    # load_circuits(self.root): sem ele o root alternativo fica incompleto e o
+    # teste morre em FileNotFoundError antes de chegar na asserção — inclusive
+    # numa máquina com data/ real. Faltava desde sempre; só não aparecia porque
+    # o `|| true` do CI e a ausência do f1.db mascaravam o resultado.
+    for name in ("ratings.json", "drivers_f1.json", "fase2_params.json",
+                 "circuits_f1.json"):
         shutil.copy2(ROOT / "data" / name, root / "data" / name)
     shutil.copy2(ROOT / "config.yaml", root / "config.yaml")
     (root / "vendor" / "predictor_core").mkdir(parents=True)
