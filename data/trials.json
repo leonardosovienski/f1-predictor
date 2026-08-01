@@ -180,5 +180,19 @@
       "2026-07-21",
       "2026-07-21"
     ]
+  },
+  {
+    "name": "G1-F1-market-h2h-sportsdataio-diligence",
+    "registered_at": "2026-08-01T05:40:16Z",
+    "params": {
+      "stage": "MARKET_H2H_SOURCE_DILIGENCE",
+      "scope": "verify whether SportsDataIO can pass docs/PAST_ATTEMPT_LEDGER.md's decision contract: licensed export, race_h2h market (not qualifying/sprint), bookmaker id, opening/closing odds with distinct timestamps, market margin, versioned settlement rule, DNF/DNS/DSQ/cancellation handling, batch/provenance hash",
+      "success": "SportsDataIO passes the decision contract and moves to SOURCE_ACCEPTED; frozen coverage criterion for any subsequent feasibility run is intermediate_descriptive_only (duels>=250, race_coverage>=0.7, timestamp_coverage>=0.97, bookmakers>=2), copied from data/market_h2h_feasibility.json threshold_options and frozen here before any diligence result is known",
+      "forbidden": "no scraping, invented odds/licence terms, ROI/Sharpe or financial release; H2H track (src/closure.require_open('H2H')) stays CLOSED_BY_HUMAN_DECISION for ingest()/coverage_gate() until a separate later decision reopens it once SportsDataIO is actually verified",
+      "authorized_by": "repository owner, session 2026-08-01",
+      "human_decision": "Authorized closure.py:reopening's required 'new explicit, auditable human decision' — scoped to opening SportsDataIO diligence only, not to reopening H2H execution or reversing H1-F1/NO_GO_CONFIRMED"
+    },
+    "sharpe": null,
+    "notes": "RESULTADO: pendente — diligência de licença/cobertura da SportsDataIO ainda não realizada (sem acesso a credenciais/API nesta sessão). Este registro só congela o critério de sucesso ANTES de qualquer diligência, conforme regra de honestidade do projeto."
   }
 ]

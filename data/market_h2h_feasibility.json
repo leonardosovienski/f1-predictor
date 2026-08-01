@@ -15,7 +15,15 @@
     {
       "provider": "SportsDataIO",
       "status": "SOURCE_REQUIRES_HUMAN_DECISION",
-      "evidence": "official documentation describes F1 and historical odds warehouse access, but licence, price and race-H2H coverage were not verified"
+      "evidence": "official documentation describes F1 and historical odds warehouse access, but licence, price and race-H2H coverage were not verified",
+      "diligence_authorized_2026-08-01": {
+        "human_decision": "Authorized to open a diligence phase (licence, race_h2h coverage, opening/closing timestamps, settlement rule, DNF/DSQ handling per docs/PAST_ATTEMPT_LEDGER.md's decision contract) targeting SportsDataIO specifically.",
+        "scope": "diligence_only; no scraping, no data ingestion, no odds quotes treated as real",
+        "frozen_criterion": "intermediate_descriptive_only",
+        "linked_trial": "G1-F1-market-h2h-sportsdataio-diligence",
+        "status_unchanged": "SOURCE_REQUIRES_HUMAN_DECISION stays until licence/coverage/export terms are actually verified; this entry does not assert SOURCE_ACCEPTED",
+        "h2h_track_gate": "src/closure.require_open('H2H') remains CLOSED_BY_HUMAN_DECISION; ingest()/coverage_gate() stay blocked until a separate, later human decision reopens the track once a source is verified"
+      }
     },
     {
       "provider": "Sportradar/Betradar",

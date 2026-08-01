@@ -28,18 +28,55 @@
     }
   },
   "preserved_artifact_sha256": {
-    "data/f1.db": "2CE1C30F78D5DD7ECC2B002D53DB28B2D28610CD9E3C59061E678365467A6DEB",
-    "data/f1_historical_expansion.db": "3FA8863CC32B8B1DB1648150183618B93732C67093064AA212489CFEA23D12CA",
-    "data/f1_historical_shadow.db": "201DDF62797822858FF72320A493DF4D9939C50DB9DE012ED0F49ED66C96B165",
-    "data/trials.json": "CCD7098540692FDFBC02BDB32228DBE338A25825E0736A272305B23E79044965",
-    "data/trials.harness_attestation.json": "640E9C09C1D670034A2B40BB86AA11E9BAE3119B279E4BA9BCB3FDC6177480A7",
-    "data/backtest_fase1.json": "88D909D43D4F26077A56CA0A041783CD88521F88E7E1850371F8DD2D27829A6E",
-    "data/backtest_fase5.json": "C30E6D30B505F18E8CB5EF4FE7AC0F12F9E37DE01290C55F86C75526C832D47F",
-    "data/backtest_h8_historical.json": "142C9F04E267B1F724A20CC316FD14531A8D0FB13714ED3653B763CD0FC8BF71",
-    "data/market_h2h_feasibility.json": "73F0567DEF0D4E67B7C0AF56BC8510F3B1D5F2862E2C4F3608E2D8AEF36F1157",
-    "docs/RELATORIO_FASE5.md": "486E2F3F4E502712D4E29C8005684AAF2A636D4487696D83057275E76359C020",
+    "data/trials.json": "6AC27E8BD038D9869A0016A1E1E96FAA69648A19BB9D6F642F7336D8581E150F",
+    "data/trials.harness_attestation.json": "107C5700909C2CB7683B91BD3F1E2590D11782502AA8774B84B56D1963F5F383",
+    "data/backtest_fase1.json": "D94090B56E36CE1F5D00F167F732AF6854EF32ED9800DB3EB939E606A0DC15E0",
+    "data/backtest_fase5.json": "68ED19592A1CD51ECDCC73AC9DE9649B90DB9091BD63FE3180EA60F6053FD9C1",
+    "data/backtest_h8_historical.json": "10193F6D6CC50AF168FC80AAD4968A2D6C594C1008C61799F3F9874433E36063",
+    "data/market_h2h_feasibility.json": "2293DF1105B32D7B65495CB06A15AA64EE7F35C64D41E16D8CEAB8A1CAD60FBE",
+    "docs/RELATORIO_FASE5.md": "95D6037820767044D2977C1102A2D6F92870E593F0A0A0D7EB957823B35EC3A0",
     "docs/RELATORIO_MARKET_H2H_FEASIBILITY.md": "2F361ECB91C213CECAA29CEE98D4DE2E76A0C750805DE76AFF371683403F148E",
     "docs/PAST_ATTEMPT_LEDGER.md": "633BCE4FB1ECAABE141087AAA812B25DF009B03361FFDBB60FEFBBD6B390342C",
     "vendor/predictor_core/CORE_MANIFEST.json": "942F2076E2947595271C3E1B3EF956DA34C8B1BA2F35EAF9C3597A4F6DCC0EFC"
+  },
+  "hash_reconciliation_2026-08-01": {
+    "human_decision": "Authorized correction of authorized_closure.json's own preserved_artifact_sha256 table; a data-integrity bug fix, not a reopening of any track. H1-F1 remains HYPOTHESIS_REFUTED, H2H and H8 remain CLOSED_BY_HUMAN_DECISION, real_money_operation remains PERMANENTLY_BLOCKED throughout.",
+    "root_causes": [
+      "data/f1.db, data/f1_historical_expansion.db and data/f1_historical_shadow.db were gitignored runtime artifacts hashed here at the raw-byte level; SQLite does not guarantee byte-identical files across rebuilds even with identical logical content (OP-4 only ever claimed logical-dump equivalence). verify_closure_hashes() therefore raised RuntimeError on every fresh clone or DB rebuild, independent of any real tampering. Removed from this table: these three files are not version-controlled evidence and cannot be verified this way. Their reproducibility remains documented separately (OP-4, HANDOFF.md) via offline rebuild from data/raw/.",
+      "data/trials.json, data/trials.harness_attestation.json, data/backtest_fase1.json, data/backtest_fase5.json and data/backtest_h8_historical.json were byte-identical to project_commit_at_closure (ff68b5c8bbaeb0002ddd4c73f63d6d05b6d974a0) yet did not match the hashes recorded above: the original hashes were miscalculated when this record was authored, not post-closure drift. Corrected to the actual (unchanged) file content.",
+      "docs/RELATORIO_FASE5.md genuinely changed after closure, in commit e7f00f5 ('Harden validation and snapshot governance', 2026-07-29): it replaced stale pre-bugfix H8-F1 numbers (DM=-0.120, p=0.907, left over from before the is_dnf/'Lapped' status correction) with the numbers already present in data/trials.json since closure (DM=-0.697, p=0.5035), and added an explicit no-auto-reopen note. The REFUTADA verdict did not change; this was a documentation-consistency fix, not new science. Hash corrected to match the current, corrected text."
+    ],
+    "verified_by": "sha256 of raw bytes recomputed against the working tree at HEAD and cross-checked against project_commit_at_closure via git show",
+    "not_a_reopening": true
+  },
+  "h2h_reopening_2026-08-01": {
+    "schema_version": 1,
+    "decided_at_utc": "2026-08-01T05:40:16Z",
+    "project_commit_at_decision": "a61b64e205d3c91847934a4b9bbf59d5776d8ffd",
+    "human_decision": "Authorize a diligence-only phase on the H2H track, targeting SportsDataIO, to verify whether it can satisfy docs/PAST_ATTEMPT_LEDGER.md's decision contract for SOURCE_ACCEPTED. This is the new explicit, auditable human decision required by this record's own 'reopening' clause.",
+    "track": "H2H",
+    "scope": "diligence_only",
+    "target_source": "SportsDataIO",
+    "frozen_criterion": "intermediate_descriptive_only",
+    "frozen_criterion_definition": {
+      "duels": 250,
+      "race_coverage": 0.7,
+      "timestamp_coverage": 0.97,
+      "bookmakers": 2
+    },
+    "criterion_frozen_before_diligence": true,
+    "linked_trial": "G1-F1-market-h2h-sportsdataio-diligence",
+    "not_changed_by_this_decision": {
+      "tracks.H2H": "remains CLOSED_BY_HUMAN_DECISION — src/closure.require_open('H2H') keeps blocking ingest() and coverage_gate() in src/data/market_h2h.py",
+      "h1_f1": "remains HYPOTHESIS_REFUTED",
+      "tracks.H8": "remains CLOSED_BY_HUMAN_DECISION (unaffected; arithmetically unreachable before 2027 regardless)",
+      "real_money_operation": "remains PERMANENTLY_BLOCKED"
+    },
+    "next_step_requires_new_decision": "If SportsDataIO's licence/contract terms are verified against the decision contract and it becomes SOURCE_ACCEPTED, a further explicit human decision is required to flip tracks.H2H away from CLOSED_BY_HUMAN_DECISION before any real ingestion or coverage_gate() run.",
+    "prohibitions": [
+      "No scraping, protected-site automation or invented odds/licence terms.",
+      "No model-versus-market trial, ROI, Sharpe or financial release.",
+      "No reuse of the refuted grid-to-final-position H1 as market evidence."
+    ]
   }
 }
