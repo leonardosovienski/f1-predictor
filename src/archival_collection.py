@@ -67,7 +67,7 @@ def verify_closure_hashes(root: Path = ROOT) -> None:
                         continue
                     if path.suffix == ".py" or path.name == "VERSION":
                         files[rel.as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
-                aggregate = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()[:16]
+                aggregate = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()
                 if vendor_manifest.get("aggregate") == aggregate:
                     continue
             raise RuntimeError(f"authorized closure artifact drift: {relative}")

@@ -1,5 +1,31 @@
 # HANDOFF.md — f1-predictor
 
+> ## 🔄 SINCRONIA COM O CORE 2.1.0 + BUG NO BYPASS DO MANIFEST (2026-08-01)
+>
+> `core-predictor` publicou **2.1.0-ga-20260801** (agregado `ce49ac8a...`);
+> o vendor deste projeto ainda estava em 2.0.1-ga-20260731 (`542e0e32...`).
+> `sync_core.py --check` e `vendor_byte_audit.py` confirmaram drift real em 2
+> arquivos: `VERSION` e `measurement/trials.py` (o core novo passou a aceitar
+> `test_period`/`train_period` com um lado `None` — coorte aberta). Rodado
+> `sync_core.py --write --target f1-predictor` a partir de
+> `/workspace/core-predictor`; revalidado: `vendor_byte_audit.py` →
+> `IDENTICAL 48/48`, `sync_core.py --check` → `OK (em sincronia)`.
+>
+> Isso expôs um segundo bug real, independente do primeiro (ver seção
+> abaixo): o bypass de `verify_closure_hashes()` para
+> `vendor/predictor_core/CORE_MANIFEST.json` truncava o agregado recém
+> computado para 16 caracteres (`hexdigest()[:16]`) mas comparava contra o
+> agregado de 64 caracteres gravado no manifesto — os dois nunca podiam bater,
+> então o bypass nunca funcionava, mesmo com o vendor perfeitamente
+> sincronizado com o canônico. Corrigido em `src/archival_collection.py`
+> (removida a truncagem); cobertura de regressão adicionada em
+> `tests/test_archival_collection.py` (caso positivo: agregados batendo de
+> verdade passam; caso negativo: agregados diferentes continuam falhando
+> fechado). `verify_closure_hashes(ROOT)` agora passa limpo, sem exceção
+> nenhuma, com os três repositórios do ecossistema (`core-predictor`,
+> `tools-predictor`, `f1-predictor`) lado a lado. Suíte: **205 passed** (203
+> + 2 testes novos de regressão).
+
 > ## 🔓 REABERTURA PARCIAL — diligência H2H/SportsDataIO (2026-08-01)
 >
 > **Decisão humana explícita e auditável, registrada em
