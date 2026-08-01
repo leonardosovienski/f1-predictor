@@ -1,5 +1,71 @@
 # HANDOFF.md — f1-predictor
 
+> ## 🔓 REABERTURA PARCIAL — diligência H2H/SportsDataIO (2026-08-01)
+>
+> **Decisão humana explícita e auditável, registrada em
+> `data/authorized_closure.json#h2h_reopening_2026-08-01`** (schema da
+> própria `authorized_closure.json`, sem formato novo inventado): autoriza
+> só uma fase de **diligência** sobre a SportsDataIO — verificar se ela
+> passa o contrato de decisão do `docs/PAST_ATTEMPT_LEDGER.md` (licença,
+> mercado `race_h2h`, timestamps de opening/closing, regra de liquidação
+> versionada, tratamento DNF/DNS/DSQ/cancelamento). Critério de sucesso
+> **congelado ANTES de qualquer diligência** — `intermediate_descriptive_only`
+> (250 duelos, 70% cobertura de corrida, 97% cobertura de timestamp, 2
+> bookmakers), copiado dos `threshold_options` já existentes em
+> `data/market_h2h_feasibility.json`. Trial pré-registrada:
+> `G1-F1-market-h2h-sportsdataio-diligence` (`sharpe: null`, resultado
+> `pendente` — nenhuma diligência real foi executada nesta sessão, sem
+> credenciais/API da SportsDataIO disponíveis).
+>
+> **O que NÃO mudou**: `tracks.H2H` continua `CLOSED_BY_HUMAN_DECISION` —
+> `src/closure.require_open("H2H")` segue bloqueando `ingest()` e
+> `coverage_gate()` em `src/data/market_h2h.py`. `H1-F1` continua
+> `HYPOTHESIS_REFUTED`, `H8` continua fechado (inalcançável antes de 2027
+> de qualquer forma), `real_money_operation` continua
+> `PERMANENTLY_BLOCKED`. Se a SportsDataIO for verificada e virar
+> `SOURCE_ACCEPTED`, **uma nova decisão humana separada** é exigida antes
+> de destravar `tracks.H2H` para ingestão/avaliação real. Suíte revalidada
+> após as duas edições (reconciliação de hash + esta reabertura): **189
+> passed, 14 skipped**.
+
+> ## 🔧 CORREÇÃO DE INTEGRIDADE — preserved_artifact_sha256 (2026-08-01)
+>
+> Auditoria (a pedido do usuário, antes de qualquer reabertura) rodou
+> `verify_closure_hashes(ROOT)` — a mesma checagem que `f1-archival-collection`
+> executa incondicionalmente no início de todo `collect()` — contra o
+> checkout real. Ela levantava `RuntimeError: authorized closure artifact
+> drift` já no primeiro item, **antes de qualquer decisão de reabertura**.
+> Duas causas raiz, ambas em `data/authorized_closure.json`, nenhuma delas
+> uma mudança científica:
+>
+> 1. `data/f1.db`, `f1_historical_expansion.db` e `f1_historical_shadow.db`
+>    são gitignored e estavam com hash de bytes crus num check fail-closed.
+>    SQLite não garante bytes idênticos entre rebuilds mesmo com conteúdo
+>    lógico idêntico (OP-4 só reivindica equivalência de dump lógico) — o
+>    check falhava estruturalmente em qualquer clone/rebuild novo. Removidos
+>    de `preserved_artifact_sha256`: não são evidência versionada e não dá
+>    para verificá-los assim.
+> 2. `data/trials.json`, o atestado do harness, `backtest_fase1/fase5/
+>    h8_historical.json` estavam byte-idênticos ao `project_commit_at_closure`
+>    (`ff68b5c8bb`) mas com hash gravado ERRADO desde a criação do registro
+>    (confirmado via `git show` no commit exato) — corrigido para o hash
+>    real. `docs/RELATORIO_FASE5.md` mudou de verdade depois do fechamento
+>    (commit `e7f00f5`, 2026-07-29): trocou números de H8-F1 obsoletos
+>    (pré-correção do bug `is_dnf`/"Lapped", DM=-0.120 p=0.907) pelos que
+>    `trials.json` já tinha desde o fechamento (DM=-0.697 p=0.5035) — o
+>    veredito REFUTADA não mudou, foi só o relatório alcançando o dado
+>    correto. Hash corrigido para o texto atual.
+>
+> `vendor/predictor_core/CORE_MANIFEST.json` continua "drift" **só neste
+> ambiente**, porque falta o checkout irmão `../predictor_core` que o
+> bypass de `verify_closure_hashes` exige para validar o agregado — isso é
+> comportamento correto (fail-closed sem o core canônico disponível), não
+> foi tocado. Suíte revalidada: **189 passed, 14 skipped** (mesmo total de
+> antes — os skips são o fail-closed de proveniência esperado sem
+> `tools-predictor` irmão). Nenhuma trilha foi reaberta por esta correção;
+> ver `hash_reconciliation_2026-08-01` em `data/authorized_closure.json`
+> para o registro completo.
+
 > ## PROJETO FECHADO — confirmado em 2026-07-26. Não reabrir.
 >
 > Nada abaixo mudou; esta nota só confirma que o fechamento continua válido
