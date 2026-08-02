@@ -170,8 +170,8 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.3,<3" },
     { name = "pandas", specifier = ">=2.3,<4" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.3,<5" },
-    { name = "predictor-core", specifier = ">=2.1,<3" },
-    { name = "predictor-ops", specifier = ">=2.0.1,<3" },
+    { name = "predictor-core", url = "https://github.com/leonardosovienski/core-predictor/releases/download/v2.1.0/predictor_core-2.1.0-py3-none-any.whl" },
+    { name = "predictor-ops", url = "https://github.com/leonardosovienski/tools-predictor/releases/download/v2.0.1/predictor_ops-2.0.1-py3-none-any.whl" },
     { name = "pydantic", specifier = ">=2.11,<3" },
     { name = "pydantic-settings", specifier = ">=2.10,<3" },
     { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.403,<2" },
@@ -388,22 +388,64 @@ wheels = [
 [[package]]
 name = "predictor-core"
 version = "2.1.0"
-source = { registry = "wheels" }
+source = { url = "https://github.com/leonardosovienski/core-predictor/releases/download/v2.1.0/predictor_core-2.1.0-py3-none-any.whl" }
 wheels = [
-    { path = "predictor_core-2.1.0-py3-none-any.whl" },
+    { url = "https://github.com/leonardosovienski/core-predictor/releases/download/v2.1.0/predictor_core-2.1.0-py3-none-any.whl", hash = "sha256:83de1d4415700dedaf387bc46dd9685e046de1fa47f37367bf2167462b09761b" },
 ]
+
+[package.metadata]
+requires-dist = [
+    { name = "build", marker = "extra == 'dev'", specifier = ">=1.3,<2" },
+    { name = "coverage", extras = ["toml"], marker = "extra == 'dev'", specifier = ">=7.10,<8" },
+    { name = "coverage", extras = ["toml"], marker = "extra == 'test'", specifier = ">=7.10,<8" },
+    { name = "curl-cffi", marker = "extra == 'dev'", specifier = ">=0.13.0,<1" },
+    { name = "curl-cffi", marker = "extra == 'scraping'", specifier = ">=0.13.0,<1" },
+    { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.28.1,<1" },
+    { name = "httpx", marker = "extra == 'http'", specifier = ">=0.28.1,<1" },
+    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.3,<5" },
+    { name = "pydantic", marker = "extra == 'dev'", specifier = ">=2.11,<3" },
+    { name = "pydantic", marker = "extra == 'test'", specifier = ">=2.11,<3" },
+    { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.403,<2" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.4,<9" },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.4,<9" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6.2,<7" },
+    { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=6.2,<7" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12.7,<1" },
+]
+provides-extras = ["dev", "http", "science", "scraping", "test"]
 
 [[package]]
 name = "predictor-ops"
 version = "2.0.1"
-source = { registry = "wheels" }
+source = { url = "https://github.com/leonardosovienski/tools-predictor/releases/download/v2.0.1/predictor_ops-2.0.1-py3-none-any.whl" }
 dependencies = [
     { name = "pydantic" },
     { name = "pydantic-settings" },
 ]
 wheels = [
-    { path = "predictor_ops-2.0.1-py3-none-any.whl" },
+    { url = "https://github.com/leonardosovienski/tools-predictor/releases/download/v2.0.1/predictor_ops-2.0.1-py3-none-any.whl", hash = "sha256:77ca2eb3f1090226dfef23b84d7fb2f9a61bd858c970d433d28303e637a8903e" },
 ]
+
+[package.metadata]
+requires-dist = [
+    { name = "build", marker = "extra == 'dev'", specifier = ">=1.3" },
+    { name = "coverage", extras = ["toml"], marker = "extra == 'dev'", specifier = ">=7.10" },
+    { name = "fakeredis", marker = "extra == 'dev'", specifier = ">=2.31" },
+    { name = "hatchling", marker = "extra == 'dev'", specifier = ">=1.27" },
+    { name = "opentelemetry-api", marker = "extra == 'otel'", specifier = ">=1.36,<2" },
+    { name = "opentelemetry-exporter-otlp-proto-http", marker = "extra == 'otel'", specifier = ">=1.36,<2" },
+    { name = "opentelemetry-sdk", marker = "extra == 'otel'", specifier = ">=1.36,<2" },
+    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.3" },
+    { name = "pydantic", specifier = ">=2.11,<3" },
+    { name = "pydantic-settings", specifier = ">=2.10,<3" },
+    { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.403" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.4" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6.2" },
+    { name = "pytest-timeout", marker = "extra == 'dev'", specifier = ">=2.4" },
+    { name = "redis", marker = "extra == 'redis'", specifier = ">=6,<8" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12" },
+]
+provides-extras = ["dev", "otel", "redis"]
 
 [[package]]
 name = "pydantic"
