@@ -38,7 +38,7 @@ from collections import defaultdict
 
 import numpy as np
 
-from .model import win_probability            # injeta vendor/ no sys.path
+from .model import win_probability
 from .context_factors import (CIRCUIT_TYPES, ContextRatingBook,
                               PitEfficiencyTracker, ReliabilityTracker,
                               VolatilityShock, circuit_type,

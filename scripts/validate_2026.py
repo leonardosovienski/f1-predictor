@@ -18,7 +18,6 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.backtest import (BacktestElo, _grid_elos, _race_seed,   # noqa: E402
                           blend_elos, position_probs)

@@ -17,8 +17,9 @@ def test_closed_track_requires_new_auditable_human_decision(tmp_path):
         require_open("H2H", root=tmp_path)
 
 
-def test_unclosed_track_remains_unaffected(tmp_path):
-    require_open("H8", root=tmp_path)
+def test_missing_closure_artifact_fails_closed(tmp_path):
+    with pytest.raises(ResearchClosedError, match="fail-closed"):
+        require_open("H8", root=tmp_path)
 
 
 def test_human_closure_blocks_real_money(tmp_path):

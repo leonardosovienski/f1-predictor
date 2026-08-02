@@ -10,15 +10,18 @@ position, status, points) — o formato que o db.py ingere. `is_dnf` é a
 convenção declarada: status "Finished" ou "+N Lap(s)" = classificado;
 qualquer outro (Accident, Engine, ...) = DNF.
 """
+
+import hashlib
 import json
 import os
 import time
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from ..config import ROOT  # injeta vendor/ no sys.path antes do core
 from predictor_core.data.contracts import DataUnavailableError
+
+from ..config import ROOT
 
 _USER_AGENT = "f1-predictor/0.1 (research; github: pessoal)"
 _RATE_LIMIT_S = 1.0
@@ -43,28 +46,35 @@ def is_dnf(status: str) -> bool:
     (convenção 2022) e 'Lapped' (convenção 2023+, MESMO conceito — piloto
     classificado, voltas atrás do líder) são classificados; todo o resto
     (Accident, Engine, Retired, Disqualified, Did not start...) é DNF."""
-    return not (status == "Finished" or status == "Lapped"
-               or status.startswith("+"))
+    return not (status == "Finished" or status == "Lapped" or status.startswith("+"))
 
 
 class F1Provider:
     """Cliente Jolpica com cache local imutável por corrida."""
 
     BASE_URL = "https://api.jolpi.ca/ergast/f1"
+    CACHE_SCHEMA_VERSION = "jolpica-cache/1"
 
-    def __init__(self, timeout: float = 30.0, cache_dir: Path | str | None = None,
-                 offline: bool = False):
+    def __init__(
+        self,
+        timeout: float = 30.0,
+        cache_dir: Path | str | None = None,
+        offline: bool = False,
+        max_cache_age_seconds: float | None = None,
+    ):
         self.timeout = timeout
-        self.cache_dir = Path(cache_dir if cache_dir is not None
-                              else os.environ.get("F1_RAW_CACHE_DIR",
-                                                  ROOT / "data" / "raw"))
+        self.cache_dir = Path(
+            cache_dir if cache_dir is not None else os.environ.get("F1_RAW_CACHE_DIR", ROOT / "data" / "raw")
+        )
         self.offline = offline
+        if max_cache_age_seconds is not None and max_cache_age_seconds <= 0:
+            raise ValueError("max_cache_age_seconds must be positive")
+        self.max_cache_age_seconds = max_cache_age_seconds
         self._last_call = 0.0
 
     # ---------- rede + cache ----------
 
-    def _get(self, path: str, cache_name: str, *,
-             cacheable=lambda data: True) -> dict:
+    def _get(self, path: str, cache_name: str, *, cacheable=lambda data: True) -> dict:
         """Busca `path` na API com cache em `data/raw/<cache_name>.json`.
         Cache hit não toca a rede; miss respeita o rate limit de 1s e faz
         retry com backoff em 429/5xx (a Jolpica tem teto por hora além do
@@ -72,10 +82,30 @@ class F1Provider:
         (resultado vazio) não pode virar cache imutável."""
         cached = self.cache_dir / f"{cache_name}.json"
         if cached.exists():
-            return json.loads(cached.read_text(encoding="utf-8"))
+            try:
+                envelope = json.loads(cached.read_text(encoding="utf-8"))
+                if envelope.get("schema_version") != self.CACHE_SCHEMA_VERSION:
+                    raise ValueError("unsupported cache schema")
+                payload = envelope["payload"]
+                canonical = json.dumps(
+                    payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+                ).encode("utf-8")
+                if hashlib.sha256(canonical).hexdigest() != envelope.get("payload_hash"):
+                    raise ValueError("cache hash mismatch")
+                available_at = datetime.fromisoformat(str(envelope["available_at"]).replace("Z", "+00:00"))
+                if available_at.tzinfo is None or available_at.utcoffset() is None:
+                    raise ValueError("cache available_at must be timezone-aware")
+                stale = self.max_cache_age_seconds is not None and datetime.now(
+                    UTC
+                ) - available_at.astimezone(UTC) > timedelta(seconds=self.max_cache_age_seconds)
+                if not stale:
+                    return payload
+                if self.offline:
+                    raise DataUnavailableError(f"cache Jolpica stale para {cache_name}")
+            except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+                raise DataUnavailableError(f"cache Jolpica inválido para {cache_name}") from exc
         if self.offline:
-            raise DataUnavailableError(
-                f"offline e sem cache para {cache_name} ({cached})")
+            raise DataUnavailableError(f"offline e sem cache para {cache_name} ({cached})")
         url = f"{self.BASE_URL}/{path}"
         data = None
         for attempt in range(1, 5):
@@ -91,19 +121,26 @@ class F1Provider:
                 self._last_call = time.monotonic()
                 if e.code in (429, 500, 502, 503, 504) and attempt < 4:
                     retry_after = e.headers.get("Retry-After")
-                    time.sleep(float(retry_after) if retry_after
-                               else 15.0 * attempt)
+                    time.sleep(float(retry_after) if retry_after else 15.0 * attempt)
                     continue
-                raise DataUnavailableError(
-                    f"Jolpica indisponível ({url}): {e}") from e
+                raise DataUnavailableError(f"Jolpica indisponível ({url}): {e}") from e
             except (OSError, ValueError) as e:
-                raise DataUnavailableError(
-                    f"Jolpica indisponível ({url}): {e}") from e
+                raise DataUnavailableError(f"Jolpica indisponível ({url}): {e}") from e
         self._last_call = time.monotonic()
         if cacheable(data):
             self.cache_dir.mkdir(parents=True, exist_ok=True)
-            cached.write_text(json.dumps(data, ensure_ascii=False),
-                              encoding="utf-8")
+            canonical = json.dumps(data, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode(
+                "utf-8"
+            )
+            envelope = {
+                "schema_version": self.CACHE_SCHEMA_VERSION,
+                "source": "Jolpica/Ergast",
+                "source_path": path,
+                "available_at": datetime.now(UTC).isoformat(),
+                "payload_hash": hashlib.sha256(canonical).hexdigest(),
+                "payload": data,
+            }
+            cached.write_text(json.dumps(envelope, ensure_ascii=False, sort_keys=True), encoding="utf-8")
         return data
 
     def health_check(self) -> bool:
@@ -111,6 +148,19 @@ class F1Provider:
             return bool(self.fetch_schedule(2026))
         except DataUnavailableError:
             return False
+
+    def capabilities(self) -> dict:
+        return {
+            "provider": "Jolpica/Ergast",
+            "schedule": True,
+            "qualifying": True,
+            "official_results": True,
+            "result_corrections": True,
+            "pitstops": True,
+            "odds": False,
+            "odds_reason": "ODDS_UNAVAILABLE_FOR_F1",
+            "cache_schema_version": self.CACHE_SCHEMA_VERSION,
+        }
 
     # ---------- endpoints ----------
 
@@ -122,31 +172,31 @@ class F1Provider:
         for race in races:
             scheduled = None
             if race.get("time"):
-                parsed = datetime.fromisoformat(
-                    f"{race['date']}T{race['time']}".replace("Z", "+00:00"))
+                parsed = datetime.fromisoformat(f"{race['date']}T{race['time']}".replace("Z", "+00:00"))
                 if parsed.tzinfo is None or parsed.utcoffset() is None:
                     raise DataUnavailableError("Jolpica publicou largada sem timezone")
-                scheduled = parsed.astimezone(timezone.utc).isoformat(
-                    timespec="seconds").replace("+00:00", "Z")
-            out.append({"season": int(race["season"]),
-                        "round": int(race["round"]),
-                        "name": race["raceName"],
-                        "circuit": race["Circuit"]["circuitName"],
-                        "date": race["date"],
-                        "scheduled_start_utc": scheduled,
-                        "qualifying_start_utc": self._session_start(race.get("Qualifying"))})
+                scheduled = parsed.astimezone(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
+            out.append(
+                {
+                    "season": int(race["season"]),
+                    "round": int(race["round"]),
+                    "name": race["raceName"],
+                    "circuit": race["Circuit"]["circuitName"],
+                    "date": race["date"],
+                    "scheduled_start_utc": scheduled,
+                    "qualifying_start_utc": self._session_start(race.get("Qualifying")),
+                }
+            )
         return out
 
     @staticmethod
     def _session_start(session: dict | None) -> str | None:
         if not session or not session.get("date") or not session.get("time"):
             return None
-        parsed = datetime.fromisoformat(
-            f"{session['date']}T{session['time']}".replace("Z", "+00:00"))
+        parsed = datetime.fromisoformat(f"{session['date']}T{session['time']}".replace("Z", "+00:00"))
         if parsed.tzinfo is None or parsed.utcoffset() is None:
             raise DataUnavailableError("Jolpica publicou sessão sem timezone")
-        return parsed.astimezone(timezone.utc).isoformat(
-            timespec="seconds").replace("+00:00", "Z")
+        return parsed.astimezone(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
 
     def fetch_results(self, season: int, round_: int) -> list[dict]:
         """Resultado de UMA corrida: lista por piloto com posição final
@@ -156,24 +206,28 @@ class F1Provider:
         data = self._get(
             f"{season}/{round_}/results.json?limit=100",
             f"results_{season}_{round_:02d}",
-            cacheable=lambda d: bool(d["MRData"]["RaceTable"]["Races"]))
+            cacheable=lambda d: bool(d["MRData"]["RaceTable"]["Races"]),
+        )
         races = data["MRData"]["RaceTable"]["Races"]
         if not races:
             return []
         out = []
         for res in races[0]["Results"]:
             drv = res["Driver"]
-            out.append({
-                "season": season, "round": round_,
-                "driver_id": drv["driverId"],
-                "driver": f"{drv['givenName']} {drv['familyName']}",
-                "constructor": res["Constructor"]["name"],
-                "grid": int(res["grid"]),
-                "position": int(res["position"]),
-                "status": res["status"],
-                "dnf": is_dnf(res["status"]),
-                "points": float(res.get("points", 0.0)),
-            })
+            out.append(
+                {
+                    "season": season,
+                    "round": round_,
+                    "driver_id": drv["driverId"],
+                    "driver": f"{drv['givenName']} {drv['familyName']}",
+                    "constructor": res["Constructor"]["name"],
+                    "grid": int(res["grid"]),
+                    "position": int(res["position"]),
+                    "status": res["status"],
+                    "dnf": is_dnf(res["status"]),
+                    "points": float(res.get("points", 0.0)),
+                }
+            )
         return out
 
     def fetch_qualifying(self, season: int, round_: int) -> list[dict]:
@@ -185,18 +239,24 @@ class F1Provider:
         data = self._get(
             f"{season}/{round_}/qualifying.json?limit=100",
             f"qualifying_{season}_{round_:02d}",
-            cacheable=lambda d: bool(d["MRData"]["RaceTable"]["Races"]))
+            cacheable=lambda d: bool(d["MRData"]["RaceTable"]["Races"]),
+        )
         races = data["MRData"]["RaceTable"]["Races"]
         if not races:
             return []
         out = []
         for q in races[0]["QualifyingResults"]:
             drv = q["Driver"]
-            out.append({"season": season, "round": round_,
-                       "driver_id": drv["driverId"],
-                       "driver": f"{drv['givenName']} {drv['familyName']}",
-                       "constructor": q["Constructor"]["name"],
-                       "position": int(q["position"])})
+            out.append(
+                {
+                    "season": season,
+                    "round": round_,
+                    "driver_id": drv["driverId"],
+                    "driver": f"{drv['givenName']} {drv['familyName']}",
+                    "constructor": q["Constructor"]["name"],
+                    "position": int(q["position"]),
+                }
+            )
         return out
 
     def fetch_pitstops(self, season: int, round_: int) -> list[dict]:
@@ -207,7 +267,8 @@ class F1Provider:
         data = self._get(
             f"{season}/{round_}/pitstops.json?limit=100",
             f"pitstops_{season}_{round_:02d}",
-            cacheable=lambda d: bool(d["MRData"]["RaceTable"]["Races"]))
+            cacheable=lambda d: bool(d["MRData"]["RaceTable"]["Races"]),
+        )
         races = data["MRData"]["RaceTable"]["Races"]
         if not races:
             return []
@@ -215,8 +276,15 @@ class F1Provider:
         for p in races[0].get("PitStops", []):
             dur = _parse_duration_s(p.get("duration", ""))
             if dur is None:
-                continue          # duração não capturada pela fonte — descarta o registro
-            out.append({"season": season, "round": round_,
-                       "driver_id": p["driverId"], "lap": int(p["lap"]),
-                       "stop": int(p["stop"]), "duration_s": dur})
+                continue  # duração não capturada pela fonte — descarta o registro
+            out.append(
+                {
+                    "season": season,
+                    "round": round_,
+                    "driver_id": p["driverId"],
+                    "lap": int(p["lap"]),
+                    "stop": int(p["stop"]),
+                    "duration_s": dur,
+                }
+            )
         return out

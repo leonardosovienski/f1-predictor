@@ -1,5 +1,6 @@
 """Provider Jolpica — parsing, cache imutável, offline e corrida futura."""
 import json
+import hashlib
 
 import pytest
 
@@ -52,6 +53,16 @@ def provider(tmp_path):
     return F1Provider(cache_dir=tmp_path, offline=True)
 
 
+def _write_cache(path, payload):
+    canonical = json.dumps(payload, ensure_ascii=False, sort_keys=True,
+                           separators=(",", ":")).encode("utf-8")
+    envelope = {"schema_version": F1Provider.CACHE_SCHEMA_VERSION,
+                "source": "fixture", "source_path": "fixture",
+                "available_at": "2026-08-01T00:00:00+00:00",
+                "payload_hash": hashlib.sha256(canonical).hexdigest(), "payload": payload}
+    path.write_text(json.dumps(envelope), encoding="utf-8")
+
+
 def test_is_dnf_convencao():
     assert not is_dnf("Finished")
     assert not is_dnf("+1 Lap")
@@ -72,8 +83,7 @@ def test_is_dnf_reconhece_lapped_como_classificado():
 
 
 def test_fetch_results_parse_do_cache(provider, tmp_path):
-    (tmp_path / "results_2022_01.json").write_text(
-        json.dumps(_RESULTS_FIXTURE), encoding="utf-8")
+    _write_cache(tmp_path / "results_2022_01.json", _RESULTS_FIXTURE)
     rows = provider.fetch_results(2022, 1)
     assert len(rows) == 3
     r1 = rows[0]
@@ -87,8 +97,7 @@ def test_fetch_results_parse_do_cache(provider, tmp_path):
 
 
 def test_fetch_schedule_parse_do_cache(provider, tmp_path):
-    (tmp_path / "schedule_2022.json").write_text(
-        json.dumps(_SCHEDULE_FIXTURE), encoding="utf-8")
+    _write_cache(tmp_path / "schedule_2022.json", _SCHEDULE_FIXTURE)
     sched = provider.fetch_schedule(2022)
     assert [r["round"] for r in sched] == [1, 2]
     assert sched[0]["circuit"] == "Bahrain International Circuit"
@@ -98,8 +107,7 @@ def test_fetch_schedule_parse_do_cache(provider, tmp_path):
 
 
 def test_fetch_qualifying_parse_do_cache(provider, tmp_path):
-    (tmp_path / "qualifying_2026_10.json").write_text(
-        json.dumps(_QUALIFYING_FIXTURE), encoding="utf-8")
+    _write_cache(tmp_path / "qualifying_2026_10.json", _QUALIFYING_FIXTURE)
     grid = provider.fetch_qualifying(2026, 10)
     assert len(grid) == 2
     assert grid[0]["driver"] == "Andrea Kimi Antonelli"
@@ -109,8 +117,8 @@ def test_fetch_qualifying_parse_do_cache(provider, tmp_path):
 
 
 def test_fetch_qualifying_vazia_antes_do_quali(provider, tmp_path):
-    (tmp_path / "qualifying_2026_11.json").write_text(
-        json.dumps({"MRData": {"RaceTable": {"Races": []}}}), encoding="utf-8")
+    _write_cache(tmp_path / "qualifying_2026_11.json",
+                 {"MRData": {"RaceTable": {"Races": []}}})
     assert provider.fetch_qualifying(2026, 11) == []
 
 

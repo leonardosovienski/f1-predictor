@@ -32,3 +32,9 @@ env/
 .DS_Store
 Thumbs.db
 logs/
+.ruff_cache/
+.coverage
+coverage.json
+dist/
+build-*/
+wheels/

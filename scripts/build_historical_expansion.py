@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse, json, sys
 from pathlib import Path
 
-ROOT=Path(__file__).resolve().parents[1]; sys.path.insert(0,str(ROOT))
+ROOT = Path(__file__).resolve().parents[1]
 from src.data.f1_provider import F1Provider  # noqa: E402
 from src.data.historical_expansion import connect_shadow,coverage_report,ingest_season  # noqa: E402
 

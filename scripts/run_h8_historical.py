@@ -8,7 +8,6 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.backtest import run_h8_historical_windows  # noqa: E402
 from src.closure import require_open                # noqa: E402

@@ -1,67 +1,32 @@
-name: CI Pipeline
-
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
+name: CI
+on: [push, pull_request]
 jobs:
-  validate:
-    name: Lint & Test
+  quality:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.13", "3.14"]
     steps:
-      - name: Checkout Code (Projeto Atual)
-        uses: actions/checkout@v4
-
-      - name: Clonar Tools Predictor (Dependência)
-        uses: actions/checkout@v4
-        with:
-          repository: leonardosovienski/tools-predictor
-          path: tools
-
-      - name: Clonar Core Predictor (Dependência)
-        uses: actions/checkout@v4
-        with:
-          repository: leonardosovienski/core-predictor
-          path: core
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          # Cache removido propositalmente para evitar erro de arquivo inexistente
-
-      - name: Instalar Dependências
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with: { version: "0.8.15" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "${{ matrix.python }}" }
+      - name: Install released shared wheels
+        run: uv sync --frozen --all-extras
+      - run: uv run ruff check
+      - run: uv run ruff format --check
+      - run: uv run pyright
+      - run: uv run pytest -W error::ResourceWarning --cov=src --cov-branch --cov-report=term-missing --cov-report=json
+      - run: uv run python scripts/coverage_scopes.py
+      - run: uv build
+      - name: Wheel smoke outside checkout
         run: |
-          python -m pip install --upgrade pip
-          pip install pytest 
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
-
-      - name: Simular Workspace Local (sys.path)
-        run: |
-          if [ -f pyproject.toml ]; then
-            PACKAGE_NAME=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb')).get('project', {}).get('name', ''))")
-            if [ -n "$PACKAGE_NAME" ]; then
-              ln -sfn $(pwd) ../$PACKAGE_NAME
-            fi
-          fi
-
-      - name: Gerar Artefatos Operacionais de Teste
-        # O runner é limpo e não tem os artefatos de data/ (f1.db, ratings.json,
-        # fase2_params.json — gitignored). Este seed monta um substrato sintético
-        # determinístico a partir do que já é versionado, para que os 11 testes de
-        # tests/test_snapshots.py que dependem deles RODEM aqui em vez de só pular.
-        # O script nunca sobrescreve arquivo existente.
-        run: python scripts/seed_test_fixtures.py
-
-      - name: Executar Testes
-        # ==============================================================================================
-        # Antes, a falta desses artefatos era "resolvida" com "|| true", que forçava sucesso e
-        # apagava JUNTO qualquer regressão real do resto da suíte. Com o seed acima, a esteira
-        # roda honesta E completa: falha de teste reprova o pipeline.
-        # ==============================================================================================
-        run: |
-          PYTHONPATH=.:vendor:core:tools python -m pytest -v \
-            --ignore=tests/test_weekly_download.py
+          venv=$(mktemp -d)
+          python -m venv "$venv"
+          "$venv/bin/pip" install dist/*.whl
+          cd /tmp
+          "$venv/bin/f1-predictor" --help
+      - run: docker build -t f1-predictor:test .
+      - run: docker run --rm --read-only f1-predictor:test health --offline

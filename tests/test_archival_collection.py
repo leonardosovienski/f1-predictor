@@ -67,47 +67,24 @@ def test_closure_hash_drift_blocks_collection(tmp_path):
         verify_closure_hashes(root)
 
 
-def _canonical_and_vendor_manifest(tmp_path, *, version="9.9.9"):
-    """Builds a sibling canonical predictor_core/ plus a vendor CORE_MANIFEST.json
-    whose full-length aggregate matches it — the shape verify_closure_hashes'
-    manifest bypass is meant to accept."""
+def test_installed_core_replaces_historical_vendor_evidence(tmp_path):
     root = tmp_path / "f1-predictor"
-    canonical = tmp_path / "predictor_core"
-    canonical.mkdir()
-    (canonical / "VERSION").write_text(version, encoding="utf-8")
-    files = {"VERSION": hashlib.sha256(version.encode()).hexdigest()}
-    aggregate = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()
-    vendor_dir = root / "vendor" / "predictor_core"
-    vendor_dir.mkdir(parents=True)
-    (vendor_dir / "CORE_MANIFEST.json").write_text(
-        json.dumps({"aggregate": aggregate, "files": files}), encoding="utf-8")
-    return root
-
-
-def test_core_manifest_bypass_accepts_matching_full_length_aggregate(tmp_path):
-    """Regression: the bypass used to truncate its recomputed aggregate to 16
-    chars before comparing it against the manifest's full 64-char aggregate,
-    so it could never match — verify_closure_hashes always raised for
-    CORE_MANIFEST.json even when the vendor was byte-identical to canonical."""
-    root = _canonical_and_vendor_manifest(tmp_path)
-    data = root / "data"
-    data.mkdir()
+    data = root / "data"; data.mkdir(parents=True)
     (data / "authorized_closure.json").write_text(json.dumps({
         "preserved_artifact_sha256": {"vendor/predictor_core/CORE_MANIFEST.json": "0" * 64}}),
         encoding="utf-8")
     verify_closure_hashes(root)
 
 
-def test_core_manifest_bypass_still_rejects_real_aggregate_mismatch(tmp_path):
-    root = _canonical_and_vendor_manifest(tmp_path)
-    # Drift the canonical after the vendor manifest was written.
-    (tmp_path / "predictor_core" / "VERSION").write_text("10.0.0", encoding="utf-8")
-    data = root / "data"
-    data.mkdir()
+def test_vendor_reappearance_is_rejected(tmp_path):
+    root = tmp_path / "f1-predictor"
+    vendor = root / "vendor" / "predictor_core"; vendor.mkdir(parents=True)
+    (vendor / "CORE_MANIFEST.json").write_text("{}", encoding="utf-8")
+    data = root / "data"; data.mkdir()
     (data / "authorized_closure.json").write_text(json.dumps({
         "preserved_artifact_sha256": {"vendor/predictor_core/CORE_MANIFEST.json": "0" * 64}}),
         encoding="utf-8")
-    with pytest.raises(RuntimeError, match="closure artifact drift"):
+    with pytest.raises(RuntimeError, match="vendored predictor-core is forbidden"):
         verify_closure_hashes(root)
 
 

@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from collections import defaultdict, deque
 
-from . import config  # noqa: F401  (injeta vendor/ no sys.path)
+from . import config  # noqa: F401
 
 from predictor_core.kernel.rating import RatingBook
 
