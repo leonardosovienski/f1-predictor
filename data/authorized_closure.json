@@ -28,12 +28,12 @@
     }
   },
   "preserved_artifact_sha256": {
-    "data/trials.json": "FAE8BD81E0B7105A830D0078E1F039E0FEB8DF76985864035D11C05EAE72666F",
-    "data/trials.harness_attestation.json": "640E9C09C1D670034A2B40BB86AA11E9BAE3119B279E4BA9BCB3FDC6177480A7",
-    "data/backtest_fase1.json": "88D909D43D4F26077A56CA0A041783CD88521F88E7E1850371F8DD2D27829A6E",
-    "data/backtest_fase5.json": "C30E6D30B505F18E8CB5EF4FE7AC0F12F9E37DE01290C55F86C75526C832D47F",
-    "data/backtest_h8_historical.json": "142C9F04E267B1F724A20CC316FD14531A8D0FB13714ED3653B763CD0FC8BF71",
-    "data/market_h2h_feasibility.json": "05074D0444368803AFF817030B93C8BF6AA59A829A5ABB5E4D347352F83DB226",
+    "data/trials.json": "6AC27E8BD038D9869A0016A1E1E96FAA69648A19BB9D6F642F7336D8581E150F",
+    "data/trials.harness_attestation.json": "107C5700909C2CB7683B91BD3F1E2590D11782502AA8774B84B56D1963F5F383",
+    "data/backtest_fase1.json": "D94090B56E36CE1F5D00F167F732AF6854EF32ED9800DB3EB939E606A0DC15E0",
+    "data/backtest_fase5.json": "68ED19592A1CD51ECDCC73AC9DE9649B90DB9091BD63FE3180EA60F6053FD9C1",
+    "data/backtest_h8_historical.json": "10193F6D6CC50AF168FC80AAD4968A2D6C594C1008C61799F3F9874433E36063",
+    "data/market_h2h_feasibility.json": "2293DF1105B32D7B65495CB06A15AA64EE7F35C64D41E16D8CEAB8A1CAD60FBE",
     "docs/RELATORIO_FASE5.md": "95D6037820767044D2977C1102A2D6F92870E593F0A0A0D7EB957823B35EC3A0",
     "docs/RELATORIO_MARKET_H2H_FEASIBILITY.md": "2F361ECB91C213CECAA29CEE98D4DE2E76A0C750805DE76AFF371683403F148E",
     "docs/PAST_ATTEMPT_LEDGER.md": "633BCE4FB1ECAABE141087AAA812B25DF009B03361FFDBB60FEFBBD6B390342C",
@@ -47,6 +47,12 @@
       "docs/RELATORIO_FASE5.md genuinely changed after closure, in commit e7f00f5 ('Harden validation and snapshot governance', 2026-07-29): it replaced stale pre-bugfix H8-F1 numbers (DM=-0.120, p=0.907, left over from before the is_dnf/'Lapped' status correction) with the numbers already present in data/trials.json since closure (DM=-0.697, p=0.5035), and added an explicit no-auto-reopen note. The REFUTADA verdict did not change; this was a documentation-consistency fix, not new science. Hash corrected to match the current, corrected text."
     ],
     "verified_by": "sha256 of raw bytes recomputed against the working tree at HEAD and cross-checked against project_commit_at_closure via git show",
+    "not_a_reopening": true
+  },
+  "hash_reconciliation_2026-08-02": {
+    "human_decision": "Restoration of the 2026-08-01 reconciliation's own correct values; a data-integrity bug fix, not a reopening of any track. H1-F1 remains HYPOTHESIS_REFUTED, H2H and H8 remain CLOSED_BY_HUMAN_DECISION, real_money_operation remains PERMANENTLY_BLOCKED throughout.",
+    "root_cause": "Commit 9d9d06eec1ac929eafaf240e086bf5d54548c94e ('modernize f1 predictor runtime', PR #6) silently reverted the six hashes fixed in hash_reconciliation_2026-08-01 (data/trials.json, data/trials.harness_attestation.json, data/backtest_fase1.json, data/backtest_fase5.json, data/backtest_h8_historical.json, data/market_h2h_feasibility.json) back to their earlier incorrect values, even though none of those six files changed a single byte between commit 850917f and 9d9d06e (confirmed via `git show <rev>:<path> | sha256sum` at both commits). This PR's own CI never ran the test suite to completion — it was blocked earlier by an unrelated missing-wheel resolution failure (the same class of 'CI broken enough to mask the wrong thing' pattern seen in core-predictor's Python 3.14 job and tools-predictor's container job during ecosystem audit) — so the regression shipped unnoticed. Restored to the exact values verified in hash_reconciliation_2026-08-01, recomputed and cross-checked again against the current working tree.",
+    "verified_by": "sha256 of raw bytes at commit 9d9d06e (current main) recomputed and compared byte-for-byte against commit 850917f's copies of the same six files; all six identical, confirming this is a bookkeeping restoration and not a science change",
     "not_a_reopening": true
   },
   "h2h_reopening_2026-08-01": {
