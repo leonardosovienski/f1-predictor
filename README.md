@@ -38,9 +38,11 @@ inválidos continuam fail-closed. Instalação opcional no Task Scheduler:
 > (NaN/Inf) também passam a falhar fechados. A ingestão valida o lote
 > completo antes de substituir uma corrida (identidade, posições, grid,
 > DNF, pontos e pitstops); payload inválido não apaga o resultado anterior.
-> Suíte: **152 testes verdes**;
+> Suíte na época: **152 testes verdes**;
 > `scripts/ci_check.py`: 3/3 barreiras verdes. Veredito: **PASS LOCAL COM
-> GATE CIENTÍFICO FECHADO**.
+> GATE CIENTÍFICO FECHADO**. (Suíte atual, reconciliada em CI: **217 testes
+> verdes** — ver `docs/RELATORIO_FASE5.md` e commits posteriores para o que
+> mudou desde esta auditoria.)
 
 > 🐛 **Bug de ingestão corrigido em 2026-07-20**: a Jolpica usa `"Lapped"`
 > (2023+) em vez de `"+N Lap(s)"` (só 2022) para o mesmo conceito
@@ -209,8 +211,7 @@ docs/RELATORIO_FASE4.md     # H0-formal, contexto/reliability/pit, choque de pat
 docs/RELATORIO_FASE5.md     # H8-F1, protocolo sintético, leitura honesta sem poder estatístico
 docs/PROTOCOLO_H8_HISTORICO.md / RELATORIO_H8_HISTORICO.md # pré-registro e resultado auxiliar
 docs/PROMPT_VALIDACAO_2026.md  # protocolo da validação viva
-tests/                      # 155 testes
-vendor/predictor_core/      # v1.3.1 via sync manual escopado a este worktree (NÃO editar à mão)
+tests/                      # 217 testes (suíte atual, verificada em CI)
 ```
 
 ## Roadmap
