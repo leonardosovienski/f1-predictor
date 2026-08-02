@@ -24,7 +24,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from .config import ROOT, load_config           # injeta vendor/ no sys.path
+from .config import ROOT, load_config
 from .closure import require_open
 from .model import F1EloModel
 

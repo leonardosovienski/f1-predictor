@@ -5,6 +5,7 @@ import hashlib
 import json
 import shutil
 from datetime import datetime, timezone
+from importlib.metadata import version
 from pathlib import Path
 
 import pytest
@@ -19,21 +20,9 @@ def _snapshot_contract_unit_tests_do_not_use_project_closure(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def _tools_provenance_root(monkeypatch):
-    """Aponta a proveniência do `tools` para o checkout real.
-
-    `create_pre_event_snapshot` exige proveniência strict do tools e a procura
-    em `root.parent / "tools"` — o layout de pastas irmãs do ecossistema. Vários
-    testes montam um `root` sintético dentro de tmp_path, onde esse irmão não
-    existe; o próprio código oferece `TOOLS_PROVENANCE_ROOT` exatamente para
-    esse caso. Cobre os dois layouts: irmão do projeto (máquina do operador) e
-    ./tools (o CI, que não consegue clonar fora do $GITHUB_WORKSPACE).
-    """
-    for candidate in (ROOT.parent / "tools", ROOT / "tools"):
-        if (candidate / "tools_provenance.py").is_file():
-            monkeypatch.setenv("TOOLS_PROVENANCE_ROOT", str(candidate))
-            return candidate
-    pytest.skip("checkout do tools-predictor indisponível para proveniência strict")
+def _installed_ops_provenance():
+    """Provenance is supplied by the installed release wheel, not a checkout."""
+    assert version("predictor-ops") == "2.0.1"
 from src.config import ROOT, load_drivers
 
 # Estes artefatos são OPERACIONAIS: nascem do pipeline de ingestão local e estão
@@ -129,7 +118,7 @@ def _manual_pre(root: Path, snapshots_root: Path) -> Path:
 
 @requires_operational_data
 def test_valid_snapshot_is_deterministic_and_does_not_write_db_or_ratings(
-        tmp_path, monkeypatch, _tools_provenance_root):
+        tmp_path, monkeypatch):
     db_path, ratings = ROOT / "data" / "f1.db", ROOT / "data" / "ratings.json"
     before = (_sha(db_path), _sha(ratings))
     monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: pytest.fail("rede não permitida"))
@@ -142,8 +131,7 @@ def test_valid_snapshot_is_deterministic_and_does_not_write_db_or_ratings(
     persisted = json.loads(first.read_text(encoding="utf-8"))
     # Lê do MESMO checkout que o fixture resolveu — `ROOT.parent/"tools"` só
     # existe no layout de pastas irmãs; no CI o clone fica em ./tools.
-    tools_version = (_tools_provenance_root / "VERSION").read_text(encoding="utf-8").strip()
-    assert persisted["tools_provenance"]["version"] == tools_version
+    assert persisted["tools_provenance"]["version"] == version("predictor-ops")
     assert persisted["consumer_provenance"]["project_name"] == "f1-predictor"
     assert persisted["consumer_provenance"]["input_hashes"] == persisted["input_hashes"]
     assert snapshots.load_and_verify_snapshot(first)["status"] == snapshots.PRE_EVENT
@@ -350,10 +338,6 @@ def test_pre_event_uses_the_same_params_it_freezes(tmp_path):
                  "circuits_f1.json"):
         shutil.copy2(ROOT / "data" / name, root / "data" / name)
     shutil.copy2(ROOT / "config.yaml", root / "config.yaml")
-    (root / "vendor" / "predictor_core").mkdir(parents=True)
-    for name in ("VERSION", "CORE_MANIFEST.json"):
-        shutil.copy2(ROOT / "vendor" / "predictor_core" / name,
-                     root / "vendor" / "predictor_core" / name)
     # muda o w_grid SÓ no root alternativo — a previsão tem que refletir isso
     params = json.loads((root / "data" / "fase2_params.json").read_text(encoding="utf-8"))
     params["w_grid"] = 0.99

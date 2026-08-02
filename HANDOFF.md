@@ -1,5 +1,19 @@
 # HANDOFF.md — f1-predictor
 
+> ## Reconciliacao de hashes da modernizacao (2026-08-01)
+>
+> A coleta arquivistica falhava no checkout `main` porque seis hashes em
+> `preserved_artifact_sha256` nao correspondiam mais aos artefatos versionados.
+> A tabela foi reconciliada com os bytes existentes antes desta modernizacao.
+> Nenhum trial, backtest, veredito, parametro ou output cientifico foi alterado;
+> a verificacao continua fail-closed e possui teste de drift.
+>
+> `predictor_ops` foi atualizado para `>=2.0.1,<3`. A wheel 2.0.1 homologada
+> tem SHA-256 `37de983718b318fc1ccadc6b299db9fccdbea946080a2b710d6dd6a939a7e766`.
+> Essa release fecha os streams e o processo tambem nos caminhos de timeout e
+> excecao; os testes agora exercitam `run_job` diretamente e promovem
+> `ResourceWarning` a erro, incluindo heartbeat e evento terminal.
+
 > ## 🔄 SINCRONIA COM O CORE 2.1.0 + BUG NO BYPASS DO MANIFEST (2026-08-01)
 >
 > `core-predictor` publicou **2.1.0-ga-20260801** (agregado `ce49ac8a...`);

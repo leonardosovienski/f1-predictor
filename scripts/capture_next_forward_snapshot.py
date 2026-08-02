@@ -5,16 +5,12 @@ import json
 import os
 import tempfile
 from datetime import datetime, timezone
-from pathlib import Path
 import sys
 
-ROOT = Path(__file__).resolve().parent.parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-from src.data.f1_provider import F1Provider  # noqa: E402
-from src.closure import require_open  # noqa: E402
-from src.snapshots import SnapshotError, create_pre_event_snapshot, snapshot_status  # noqa: E402
+from src.closure import ResearchClosedError, require_open
+from src.config import ROOT
+from src.data.f1_provider import F1Provider
+from src.snapshots import SnapshotError, create_pre_event_snapshot, snapshot_status
 
 
 def _parse_utc(value: str) -> datetime:
@@ -88,7 +84,7 @@ def main() -> int:
     season = datetime.now(timezone.utc).year
     try:
         result = capture(season=season)
-    except (OSError, ValueError, SnapshotError) as exc:
+    except (OSError, ValueError, SnapshotError, ResearchClosedError) as exc:
         print(str(exc), file=sys.stderr)
         return 2
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))

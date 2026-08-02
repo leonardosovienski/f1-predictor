@@ -1,5 +1,17 @@
 # f1-predictor
 
+## Runtime modernizado (Python 3.13)
+
+O projeto é um pacote instalável e consome `predictor-core>=2.1,<3` e
+`predictor-ops>=2.0.1,<3` como wheels. Não usa vendor, `PYTHONPATH`, imports de
+workspace ou checkout irmão. `f1-predictor health --offline` expõe capabilities;
+odds são explicitamente `ODDS_UNAVAILABLE_FOR_F1`. H8 e H2H permanecem
+`CLOSED_BY_HUMAN_DECISION` e nenhuma configuração operacional os reabre.
+
+O scheduler portátil é definido em `scheduler.example.yaml` e executado pelo
+`predictor-ops`; integrações de PostgreSQL e Object Storage devem implementar
+as interfaces pequenas em `src/contracts.py`.
+
 ## Coleta forward automática
 
 `scripts/capture_next_forward_snapshot.py` consulta a agenda/classificação da

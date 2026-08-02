@@ -1,0 +1,8 @@
+schema_version: "1"
+jobs:
+  - id: f1-archival-collection
+    command: ["f1-archival-collection"]
+    timeout_seconds: 900
+    heartbeat_interval_seconds: 30
+    provenance_mode: strict
+    consumer_status: COLLECTION_ONLY

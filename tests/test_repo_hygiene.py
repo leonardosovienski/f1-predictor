@@ -68,22 +68,5 @@ def test_no_code_file_is_gitignored():
         f"{ignored} — ancore a regra (ex.: '/data/' em vez de 'data/')")
 
 
-def test_vendor_manifest_files_are_tracked():
-    """Todo arquivo do CORE_MANIFEST está rastreado pelo git (não só presente).
-
-    Presente-mas-untracked foi exatamente o modo de falha do incidente: a
-    suíte local passa e o clone quebra. `git ls-files` é a verdade do índice.
-    """
-    manifest = ROOT / "vendor" / "predictor_core" / "CORE_MANIFEST.json"
-    if not manifest.exists():
-        pytest.skip("sem manifesto do vendor")
-    declared = json.loads(manifest.read_text(encoding="utf-8"))["files"]
-    proc = subprocess.run(
-        [_git, "-C", str(ROOT), "ls-files", "vendor/predictor_core"],
-        capture_output=True, text=True, check=True)
-    tracked = set(proc.stdout.splitlines())
-    missing = [f"vendor/predictor_core/{rel}" for rel in declared
-               if f"vendor/predictor_core/{rel}" not in tracked]
-    assert not missing, (
-        f"arquivos do manifesto NÃO rastreados pelo git: {missing} — "
-        "commite-os (um clone fresco não os terá)")
+def test_vendor_is_absent_after_package_migration():
+    assert not (ROOT / "vendor").exists()

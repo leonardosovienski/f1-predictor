@@ -12,6 +12,7 @@ import argparse
 import hashlib
 import json
 import os
+from importlib.metadata import PackageNotFoundError, distribution
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,7 +21,7 @@ import sys
 from typing import Any
 
 from .config import ROOT, load_circuits, load_drivers
-from .closure import require_open
+from .closure import ResearchClosedError, require_open
 from .context_factors import match_circuit_metadata
 from .data import db
 from .model import F1EloModel, _load_fase2_params
@@ -94,31 +95,26 @@ def _git(root: Path, *args: str) -> str:
 
 
 def _core_identity(root: Path) -> dict[str, str]:
-    vendor = root / "vendor" / "predictor_core"
-    version = vendor / "VERSION"
-    if not version.is_file():
-        raise SnapshotError("VERSION do predictor_core ausente")
-    return {"version": version.read_text(encoding="utf-8").strip(),
-            "hash": _sha256_file(vendor / "CORE_MANIFEST.json")}
+    del root
+    try:
+        dist = distribution("predictor-core")
+    except PackageNotFoundError as exc:
+        raise SnapshotError("pacote predictor-core ausente") from exc
+    record = next((item for item in (dist.files or []) if item.name == "RECORD"), None)
+    if record is None:
+        raise SnapshotError("RECORD do predictor-core ausente")
+    return {"version": dist.version,
+            "hash": _sha256_file(Path(str(dist.locate_file(record))))}
 
 
 def _tools_provenance(root: Path = ROOT) -> dict[str, Any]:
-    """Collect strict provenance from an explicit, deployable tools root.
-
-    The ecosystem default remains the sibling ``../tools`` checkout, but an
-    installation can set ``TOOLS_PROVENANCE_ROOT`` rather than depending on
-    its current working-directory layout.
-    """
-    workspace = root.parent
-    tools_root = Path(os.environ.get("TOOLS_PROVENANCE_ROOT", workspace / "tools"))
-    tools_parent = tools_root.parent
-    if str(tools_parent) not in sys.path:
-        sys.path.insert(0, str(tools_parent))
+    """Verify the installed predictor-ops wheel, never a sibling checkout."""
+    del root
     try:
-        from tools.tools_provenance import ToolsProvenanceError, collect_tools_provenance
-        return collect_tools_provenance(tools_root, strict=True)
-    except (ImportError, OSError, RuntimeError) as exc:
-        raise SnapshotError(f"proveniência strict de tools indisponível: {exc}") from exc
+        from predictor_ops.provenance import ProvenanceError, collect_provenance
+        return collect_provenance(strict=True)
+    except (ImportError, OSError, RuntimeError, ProvenanceError) as exc:
+        raise SnapshotError(f"proveniência strict de predictor-ops indisponível: {exc}") from exc
 
 
 def _consumer_provenance(root: Path, core: dict[str, str], inputs: dict[str, str], generated: datetime) -> dict[str, Any]:
@@ -433,7 +429,7 @@ def h8_eligibility(pre_path: Path, matured_path: Path | None,
                    *, root: Path | None = None) -> dict[str, Any]:
     try:
         pre = load_and_verify_snapshot(pre_path)
-    except SnapshotError as exc:
+    except (SnapshotError, ResearchClosedError) as exc:
         return {"status": "INVALID_FOR_H8", "reason": str(exc)}
     if matured_path is None or not matured_path.is_file():
         return {"status": "PENDING", "reason": "resultado/maturação ausente", "event_id": pre["event_id"]}
@@ -516,7 +512,7 @@ def main(argv: list[str] | None = None) -> int:
         else:
             result = {**snapshot_status(season=args.season, snapshots_root=args.snapshots_dir),
                       "tools_provenance": _tools_provenance()}
-    except SnapshotError as exc:
+    except (SnapshotError, ResearchClosedError) as exc:
         print(str(exc), file=sys.stderr)
         return 2
     print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))

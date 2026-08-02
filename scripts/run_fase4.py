@@ -11,7 +11,6 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.config import ROOT, load_circuits                     # noqa: E402
 from src.backtest import (evaluate_context_pipeline,            # noqa: E402

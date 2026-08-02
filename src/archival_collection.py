@@ -5,6 +5,7 @@ import hashlib
 import json
 import subprocess
 import sys
+from importlib.metadata import version
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -50,26 +51,14 @@ def _commit(root: Path) -> str:
 def verify_closure_hashes(root: Path = ROOT) -> None:
     record = json.loads((root / "data" / "authorized_closure.json").read_text(encoding="utf-8"))
     for relative, expected in record["preserved_artifact_sha256"].items():
+        if relative == "vendor/predictor_core/CORE_MANIFEST.json":
+            if (root / relative).exists():
+                raise RuntimeError("vendored predictor-core is forbidden after package migration")
+            if version("predictor-core") != "2.1.0":
+                raise RuntimeError("canonical predictor-core 2.1.0 is required")
+            continue
         actual = hashlib.sha256((root / relative).read_bytes()).hexdigest().upper()
         if actual != expected:
-            # The closure preserves the old vendor manifest as historical evidence.
-            # A later canonical sync is allowed only when the vendor manifest is byte
-            # identical to the canonical core; scientific artifacts still fail closed.
-            if relative == "vendor/predictor_core/CORE_MANIFEST.json":
-                canonical = root.parent / "predictor_core"
-                vendor_manifest = json.loads((root / relative).read_text(encoding="utf-8"))
-                files = {}
-                for path in sorted(canonical.rglob("*")):
-                    if (not path.is_file() or any(part in {".git", ".github", "__pycache__", ".pytest_cache", ".claude", "tests", "docs"} for part in path.relative_to(canonical).parts)):
-                        continue
-                    rel = path.relative_to(canonical)
-                    if len(rel.parts) == 1 and rel.name in {"sync_core.py", "CORE_MANIFEST.json", "README.md", "CHANGELOG.md"}:
-                        continue
-                    if path.suffix == ".py" or path.name == "VERSION":
-                        files[rel.as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
-                aggregate = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()
-                if vendor_manifest.get("aggregate") == aggregate:
-                    continue
             raise RuntimeError(f"authorized closure artifact drift: {relative}")
 
 
@@ -113,8 +102,7 @@ def _archive_event(*, archive: CollectionArchive, run_id: str, event: dict,
         source="Jolpica/Ergast", source_record_id=f"{event['season']}:{event['round']}",
         provenance_hash=_hash({"source": "Jolpica/Ergast", "event": event}),
         source_snapshot_hash=snapshot_hash, code_commit=_commit(root),
-        core_version=((root / "vendor" / "predictor_core" / "VERSION").read_text(encoding="utf-8").strip()
-                      if (root / "vendor" / "predictor_core" / "VERSION").is_file() else "test-core"),
+        core_version=version("predictor-core"),
         participants=_participants(results),
         competition={"season": event["season"], "round": event["round"], "name": event["name"],
                      "circuit": event["circuit"], "sessions": raw["sessions"],

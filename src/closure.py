@@ -21,6 +21,9 @@ def require_open(track: str, *, root: Path | str = ROOT) -> None:
     """Reject H8/H2H execution once the immutable human decision exists."""
     path = closure_path(root)
     if not path.is_file():
+        if track in {"H8", "H2H"}:
+            raise ResearchClosedError(
+                f"{track} is fail-closed because the closure artifact is unavailable")
         return
     try:
         record = json.loads(path.read_text(encoding="utf-8"))
@@ -37,7 +40,7 @@ def require_real_money_allowed(*, root: Path | str = ROOT) -> None:
     """The authorized closure blocks real-money operation independently of H1."""
     path = closure_path(root)
     if not path.is_file():
-        return
+        raise ResearchClosedError("real-money operation is fail-closed without closure artifact")
     try:
         record = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
