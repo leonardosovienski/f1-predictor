@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 import pytest
 
+from src import archival_collection
 from src.archival_collection import collect, verify_closure_hashes
 from scripts import run_archival_collection
 from src.data.f1_provider import DataUnavailableError
@@ -67,6 +68,19 @@ def test_closure_hash_drift_blocks_collection(tmp_path):
         verify_closure_hashes(root)
 
 
+def test_closure_hashes_ignore_only_git_crlf_materialization(tmp_path):
+    root = root_with_closure(tmp_path)
+    artifact = root / "evidence.json"
+    artifact.write_bytes(b'{\r\n  "status": "closed"\r\n}\r\n')
+    closure = json.loads((root / "data" / "authorized_closure.json").read_text(encoding="utf-8"))
+    closure["preserved_artifact_sha256"] = {
+        "evidence.json": hashlib.sha256(b'{\n  "status": "closed"\n}\n').hexdigest()
+    }
+    (root / "data" / "authorized_closure.json").write_text(json.dumps(closure), encoding="utf-8")
+
+    verify_closure_hashes(root)
+
+
 def test_installed_core_replaces_historical_vendor_evidence(tmp_path):
     root = tmp_path / "f1-predictor"
     data = root / "data"; data.mkdir(parents=True)
@@ -106,4 +120,14 @@ def test_entrypoint_publishes_atomic_operational_status(tmp_path, monkeypatch):
     status = tmp_path / "runtime" / "status.json"
 
     assert run_archival_collection.main(["--status-output", str(status)]) == 0
+    assert json.loads(status.read_text(encoding="utf-8")) == expected
+
+
+def test_installed_entrypoint_publishes_atomic_domain_status(tmp_path, monkeypatch):
+    expected = {"collection_only": True, "collection_run_id": "r1",
+                "status": "NO_UPSTREAM_EVENTS", "events": 0}
+    monkeypatch.setattr(archival_collection, "collect", lambda **_: expected)
+    status = tmp_path / "runtime" / "status.json"
+
+    assert archival_collection.main(["--offline", "--status-output", str(status)]) == 0
     assert json.loads(status.read_text(encoding="utf-8")) == expected

@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 from predictor_core.data.contracts import DataUnavailableError
-from predictor_ops import JobConfig, OperationalState, run_job
+from predictor_ops import JobConfig, RunStatus, run_job
 from predictor_ops.health import HealthPolicy, assess
 
 from src import cli
@@ -187,19 +187,23 @@ def test_portable_scheduler_success_heartbeat_and_terminal_failure(tmp_path):
         return JobConfig(id=job_id, command=command, runtime={"root": tmp_path},
                          heartbeat_interval_seconds=0.01, **kwargs)
 
-    success = run_job(job("ok", [sys.executable, "-c", "raise SystemExit(0)"]))
-    assert success.status == OperationalState.SUCCEEDED
+    success = run_job(job(
+        "ok", [sys.executable, "-c", "raise SystemExit(0)"],
+        scientific_state="COLLECTION_ONLY",
+    ))
+    assert success.run_status == RunStatus.SUCCEEDED
     heartbeat = tmp_path / "ok" / "heartbeat.json"
-    assert assess(HealthPolicy(job_id="ok", heartbeat_path=heartbeat, max_age_seconds=60), None)["status"] == OperationalState.SUCCEEDED
+    assert assess(HealthPolicy(job_id="ok", heartbeat_path=heartbeat, max_age_seconds=60), None)["status"] == RunStatus.SUCCEEDED
     terminal = json.loads((tmp_path / "ok" / "events.jsonl").read_text(encoding="utf-8").splitlines()[-1])
-    assert terminal["status"] == OperationalState.SUCCEEDED
+    assert terminal["run_status"] == RunStatus.SUCCEEDED
+    assert terminal["scientific_state"] == "COLLECTION_ONLY"
 
     failed = run_job(job("fail", [sys.executable, "-c", "raise SystemExit(7)"]))
-    assert failed.status == OperationalState.FAILED and failed.exit_code == 7
+    assert failed.run_status == RunStatus.FAILED and failed.exit_code == 7
     assert assess(HealthPolicy(job_id="fail", heartbeat_path=tmp_path / "fail" / "heartbeat.json",
-                               max_age_seconds=60), None)["status"] == OperationalState.FAILED
+                               max_age_seconds=60), None)["status"] == RunStatus.FAILED
     terminal = json.loads((tmp_path / "fail" / "events.jsonl").read_text(encoding="utf-8").splitlines()[-1])
-    assert terminal["status"] == OperationalState.FAILED and terminal["exit_code"] == 7
+    assert terminal["run_status"] == RunStatus.FAILED and terminal["exit_code"] == 7
 
 
 def test_portable_scheduler_timeout_closes_process_resources(tmp_path):
@@ -212,11 +216,11 @@ def test_portable_scheduler_timeout_closes_process_resources(tmp_path):
         heartbeat_interval_seconds=0.01,
     ))
     assert time.monotonic() - started < 5
-    assert result.status == OperationalState.FAILED and result.exit_code == 124
+    assert result.run_status == RunStatus.FAILED and result.exit_code == 124
     assert result.record["termination"]["reason"] == "timeout"
     assert not any(thread.name.startswith(f"predictor-ops-output-{result.run_id}")
                    for thread in threading.enumerate())
     heartbeat = json.loads((tmp_path / "timeout" / "heartbeat.json").read_text(encoding="utf-8"))
     terminal = json.loads((tmp_path / "timeout" / "events.jsonl").read_text(encoding="utf-8").splitlines()[-1])
-    assert heartbeat["status"] == terminal["status"] == OperationalState.FAILED
+    assert heartbeat["run_status"] == terminal["run_status"] == RunStatus.FAILED
     assert terminal["termination"]["reason"] == "timeout"

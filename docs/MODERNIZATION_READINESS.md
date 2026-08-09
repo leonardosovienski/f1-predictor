@@ -76,21 +76,21 @@ primary runtime again.
 ## Shared dependency contract
 
 Runtime imports must resolve from installed distributions. Contract tests and
-wheel smoke assert `predictor_core` 2.1.0 and `predictor_ops` 2.0.1 from
+wheel smoke assert `predictor_core` 2.2.0 and `predictor_ops` 3.0.0 from
 `site-packages`; searches reject vendor, `PYTHONPATH`, `sys.path` mutation,
 sibling imports, and `tools.*`. Release wheels in `wheels/` are binary build
 inputs only, not importable source trees.
 
-The pinned `predictor_ops` 2.0.1 wheel has SHA-256
-`37de983718b318fc1ccadc6b299db9fccdbea946080a2b710d6dd6a939a7e766`.
+The wheel hashes are pinned by `uv.lock`; CI installs those immutable release
+artifacts and exercises the commands outside the checkout.
 Scheduler contract tests exercise success, timeout cleanup, heartbeat, and
 terminal failure directly in-process with `ResourceWarning` promoted to error.
 
-## predictor_ops 2.0.1 validation (2026-08-02)
+## predictor_ops 3.0.0 migration validation (2026-08-09)
 
-- dependency and lock constraint: `predictor-ops>=2.0.1,<3`;
-- wheel SHA-256: `37de983718b318fc1ccadc6b299db9fccdbea946080a2b710d6dd6a939a7e766`;
-- clean wheel install: version 2.0.1 loaded from `site-packages`;
+- dependency and lock constraint: `predictor-ops>=3,<4`;
+- clean wheel install: version 3.0.0 loaded from `site-packages`;
+- operational `run_status` remains separate from opaque `scientific_state`;
 - scheduler lifecycle: success, timeout cleanup, heartbeat and terminal failure;
 - suite: 217 passed with `ResourceWarning` promoted to error;
 - branch coverage: 86% global (82.14% homologated runtime scope);

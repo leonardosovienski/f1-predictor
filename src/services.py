@@ -9,7 +9,7 @@ from importlib.metadata import version
 from pathlib import Path
 from typing import Any
 
-from predictor_ops import OperationalState
+from predictor_ops import RunStatus
 
 from .archival_collection import collect as collect_archive
 from .clock import Clock, SystemClock
@@ -76,7 +76,7 @@ class SettlementService:
             root=self.root,
             now=request.settled_at,
         )
-        return {"status": OperationalState.SUCCEEDED, "artifact": str(path)}
+        return {"run_status": RunStatus.SUCCEEDED, "artifact": str(path)}
 
 
 class F1Plugin:

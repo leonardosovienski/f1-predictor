@@ -2,8 +2,8 @@
 
 ## Runtime modernizado (Python 3.13)
 
-O projeto é um pacote instalável e consome `predictor-core>=2.1,<3` e
-`predictor-ops>=2.0.1,<3` como wheels. Não usa vendor, `PYTHONPATH`, imports de
+O projeto é um pacote instalável e consome `predictor-core>=2.2,<3` e
+`predictor-ops>=3,<4` como wheels. Não usa vendor, `PYTHONPATH`, imports de
 workspace ou checkout irmão. `f1-predictor health --offline` expõe capabilities;
 odds são explicitamente `ODDS_UNAVAILABLE_FOR_F1`. H8 e H2H permanecem
 `CLOSED_BY_HUMAN_DECISION` e nenhuma configuração operacional os reabre.
@@ -11,6 +11,17 @@ odds são explicitamente `ODDS_UNAVAILABLE_FOR_F1`. H8 e H2H permanecem
 O scheduler portátil é definido em `scheduler.example.yaml` e executado pelo
 `predictor-ops`; integrações de PostgreSQL e Object Storage devem implementar
 as interfaces pequenas em `src/contracts.py`.
+
+## Zona 1 de mercado (COLLECTION_ONLY)
+
+A aquisição licenciada de mercados H2H usa o pacote isolado
+`src/market_collection`. Consulte `docs/MARKET_COLLECTION.md` para preparação
+do manifesto, import controlado, scorecards, gates congelados e o checklist do
+primeiro lote real. A minuta não executável da futura H9 está em
+`docs/PHASE_C_H9_PROTOCOL_DRAFT.md`.
+
+Esses caminhos não reabrem hipóteses: comandos e jobs permanecem em
+`scientific_state=COLLECTION_ONLY` e qualquer avanço exige decisão humana.
 
 ## Coleta forward automática
 

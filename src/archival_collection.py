@@ -1,14 +1,19 @@
 """Calendar-aware archival collection, isolated from all scientific gates."""
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
+import os
 import subprocess
 import sys
+import tempfile
 from importlib.metadata import version
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+from packaging.version import Version
 
 from .config import ROOT, load_drivers
 from .data.f1_provider import F1Provider
@@ -39,6 +44,11 @@ def _hash(payload: Any) -> str:
                                      separators=(",", ":")).encode("utf-8")).hexdigest()
 
 
+def _artifact_sha256(path: Path) -> str:
+    """Hash repository text canonically so Git's Windows checkout filter is harmless."""
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest().upper()
+
+
 def _commit(root: Path) -> str:
     try:
         return subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], check=True,
@@ -54,11 +64,12 @@ def verify_closure_hashes(root: Path = ROOT) -> None:
         if relative == "vendor/predictor_core/CORE_MANIFEST.json":
             if (root / relative).exists():
                 raise RuntimeError("vendored predictor-core is forbidden after package migration")
-            if version("predictor-core") != "2.1.0":
-                raise RuntimeError("canonical predictor-core 2.1.0 is required")
+            installed = Version(version("predictor-core"))
+            if installed < Version("2.1") or installed >= Version("3"):
+                raise RuntimeError("predictor-core version must be >=2.1,<3")
             continue
-        actual = hashlib.sha256((root / relative).read_bytes()).hexdigest().upper()
-        if actual != expected:
+        actual = _artifact_sha256(root / relative)
+        if actual != expected.upper():
             raise RuntimeError(f"authorized closure artifact drift: {relative}")
 
 
@@ -158,3 +169,45 @@ def collect(*, season: int, now: datetime | None = None, provider: F1Provider | 
                                           results=results, observed_at=observed, root=root)
     return {"collection_only": True, "collection_run_id": run_id,
             "status": "COLLECTED", "events": len(states), "states": states}
+
+
+def _write_status(path: Path, result: dict[str, Any]) -> None:
+    """Publish the domain outcome atomically beside predictor-ops artifacts."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
+            json.dump(result, handle, ensure_ascii=False, sort_keys=True)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    except BaseException:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+        raise
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="F1 archival COLLECTION_ONLY")
+    parser.add_argument("--season", type=int, default=datetime.now(timezone.utc).year)
+    parser.add_argument("--offline", action="store_true")
+    parser.add_argument("--collection-run-id")
+    parser.add_argument("--status-output", type=Path, help="atomic domain status JSON")
+    args = parser.parse_args(argv)
+    result = collect(
+        season=args.season,
+        provider=F1Provider(offline=args.offline),
+        collection_run_id=args.collection_run_id,
+    )
+    print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+    if args.status_output:
+        _write_status(args.status_output, result)
+        return 0
+    return 0 if result["status"] != "SOURCE_UNAVAILABLE" else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
