@@ -5,4 +5,16 @@ jobs:
     timeout_seconds: 900
     heartbeat_interval_seconds: 30
     provenance_mode: strict
-    consumer_status: COLLECTION_ONLY
+    scientific_state: COLLECTION_ONLY
+  - id: f1-market-h2h-import
+    command: ["f1-market-import", "--manifest", "operator-supplied/manifest.json", "--archive", "data/market_collection_only/market_archive.db"]
+    timeout_seconds: 900
+    heartbeat_interval_seconds: 30
+    provenance_mode: strict
+    scientific_state: COLLECTION_ONLY
+  - id: f1-market-h2h-quality
+    command: ["f1-market-quality", "--archive", "data/market_collection_only/market_archive.db", "--scheduled-races", "22"]
+    timeout_seconds: 900
+    heartbeat_interval_seconds: 30
+    provenance_mode: strict
+    scientific_state: COLLECTION_ONLY
