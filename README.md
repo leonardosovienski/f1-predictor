@@ -12,6 +12,17 @@ O scheduler portátil é definido em `scheduler.example.yaml` e executado pelo
 `predictor-ops`; integrações de PostgreSQL e Object Storage devem implementar
 as interfaces pequenas em `src/contracts.py`.
 
+## Zona 1 de mercado (COLLECTION_ONLY)
+
+A aquisição licenciada de mercados H2H usa o pacote isolado
+`src/market_collection`. Consulte `docs/MARKET_COLLECTION.md` para preparação
+do manifesto, import controlado, scorecards, gates congelados e o checklist do
+primeiro lote real. A minuta não executável da futura H9 está em
+`docs/PHASE_C_H9_PROTOCOL_DRAFT.md`.
+
+Esses caminhos não reabrem hipóteses: comandos e jobs permanecem em
+`scientific_state=COLLECTION_ONLY` e qualquer avanço exige decisão humana.
+
 ## Coleta forward automática
 
 `scripts/capture_next_forward_snapshot.py` consulta a agenda/classificação da
