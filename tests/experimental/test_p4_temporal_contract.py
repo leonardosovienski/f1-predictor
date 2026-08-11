@@ -56,7 +56,8 @@ def _canonical_pair(tmp_path: Path, monkeypatch) -> tuple[dict, dict]:
         "fase2_params.json": b'{"w_grid":0.5}',
     }.items():
         (data / name).write_bytes(content)
-    (root / "config.yaml").write_text("synthetic: true\n", encoding="utf-8")
+    # Exact fixture bytes keep the input hash identical on Windows and Linux.
+    (root / "config.yaml").write_bytes(b"synthetic: true\n")
     grid = tmp_path / "grid.json"
     grid.write_text(
         json.dumps(
