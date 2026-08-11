@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       UV_PYTHON: "${{ matrix.python }}"
-      UV_PROJECT_ENVIRONMENT: ".venv-${{ matrix.python }}"
+      UV_PROJECT_ENVIRONMENT: "${{ runner.temp }}/f1-predictor-${{ matrix.python }}"
     strategy:
       fail-fast: false
       matrix:
