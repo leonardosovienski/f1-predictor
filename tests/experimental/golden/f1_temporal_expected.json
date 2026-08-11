@@ -1,0 +1,26 @@
+{
+  "input_hash": "9f819aa4609d6a49e011f9bba35b2120bdfb599bf3afa691bebd6de2a7d91892",
+  "metric_rule": "round((1.0 - actual_winner_probability) ** 2, 8)",
+  "observed_winner": "Driver A",
+  "predicted_winner_probability": 0.75,
+  "record": {
+    "cutoff_at": "2026-03-08T09:30:00Z",
+    "event_id": "f1-2026-r01-synthetic-gp",
+    "event_start_at": "2026-03-08T10:00:00Z",
+    "matured_at": "2026-03-08T12:00:00Z",
+    "matures_at": "2026-03-08T11:45:00Z",
+    "metric_name": "winner_brier",
+    "metric_scale": "f1-native-single-winner-squared-error",
+    "metric_value": 0.0625,
+    "predicted_at": "2026-03-08T09:00:00Z",
+    "prediction_payload_hash": "9f819aa4609d6a49e011f9bba35b2120bdfb599bf3afa691bebd6de2a7d91892",
+    "result_available_at": "2026-03-08T11:45:00Z",
+    "result_payload_hash": "d4c94390072b30826a5060446881051ad6c6d4b9889f68c54f2d9584e832d906",
+    "schema_version": "p4-f1-temporal-experiment/1"
+  },
+  "seed": 17,
+  "tolerance": {
+    "absolute": 1e-12,
+    "relative": 1e-12
+  }
+}
