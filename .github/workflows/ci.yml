@@ -3,6 +3,9 @@ on: [push, pull_request]
 jobs:
   quality:
     runs-on: ubuntu-latest
+    env:
+      UV_PYTHON: "${{ matrix.python }}"
+      UV_PROJECT_ENVIRONMENT: "${{ github.workspace }}/../f1-predictor-${{ matrix.python }}"
     strategy:
       fail-fast: false
       matrix:
@@ -14,17 +17,24 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "${{ matrix.python }}" }
       - name: Install released shared wheels
-        run: uv sync --frozen --all-extras
-      - run: uv run ruff check
-      - run: uv run ruff format --check
-      - run: uv run pyright
-      - run: uv run pytest -W error::ResourceWarning --cov=src --cov-branch --cov-report=term-missing --cov-report=json
-      - run: uv run python scripts/coverage_scopes.py
-      - run: uv build
+        run: uv sync --frozen --all-extras --python "${{ matrix.python }}"
+      - name: Verify matrix interpreter
+        run: |
+          python --version
+          python -c "import sys; print(sys.executable); print(sys.version)"
+          uv python find "${{ matrix.python }}"
+          uv run --python "${{ matrix.python }}" python -c "import sys; expected=tuple(map(int, '${{ matrix.python }}'.split('.'))); print(sys.executable); print(sys.version); assert sys.version_info[:2] == expected, (sys.version_info[:2], expected)"
+      - run: uv run --python "${{ matrix.python }}" ruff check
+      - run: uv run --python "${{ matrix.python }}" ruff format --check
+      - run: uv run --python "${{ matrix.python }}" pyright
+      - run: uv run --python "${{ matrix.python }}" pytest -W error::ResourceWarning --cov=src --cov-branch --cov-report=term-missing --cov-report=json
+      - run: uv run --python "${{ matrix.python }}" python scripts/coverage_scopes.py
+      - run: uv build --python "${{ matrix.python }}"
       - name: Wheel smoke outside checkout
         run: |
           venv=$(mktemp -d)
           python -m venv "$venv"
+          "$venv/bin/python" -c "import sys; expected=tuple(map(int, '${{ matrix.python }}'.split('.'))); print(sys.executable); print(sys.version); assert sys.version_info[:2] == expected, (sys.version_info[:2], expected)"
           "$venv/bin/pip" install dist/*.whl \
             "predictor-core @ https://github.com/leonardosovienski/core-predictor/releases/download/v2.2.0/predictor_core-2.2.0-py3-none-any.whl" \
             "predictor-ops @ https://github.com/leonardosovienski/tools-predictor/releases/download/v3.0.0/predictor_ops-3.0.0-py3-none-any.whl"
