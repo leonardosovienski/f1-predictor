@@ -5,6 +5,13 @@ Uso:
     python -m src.operate --paper-bet --h2h Verstappen Hamilton --circuit Monza --odds 1.80 --bankroll 1000
     python -m src.operate --paper-bet --h2h Verstappen Hamilton --circuit Monza --odds 1.80 --bankroll 1000 --real
 
+O gate é por estratégia (`--strategy-id`, veja `data/strategy_gates.json`).
+O padrão para o fluxo `--h2h` é `f1-h2h-post-qualifying-v1`, que HOJE não
+está registrada — H2H contra preço de mercado nunca foi testada
+economicamente, então o gate corretamente devolve NO-GO por falta de
+trial, não pelo veredito de uma hipótese diferente (H1-F1, que é sobre
+vencedor pré-evento, não H2H).
+
 `--real` sem GO levanta PermissionError (comportamento intencional — não
 é bypass, é a demonstração de que o gate está em vigor).
 """
@@ -15,6 +22,8 @@ import sys
 from .betting import go_gate, record_bet
 from .closure import require_open
 from .model import F1EloModel
+
+DEFAULT_H2H_STRATEGY_ID = "f1-h2h-post-qualifying-v1"
 
 
 def main(argv=None) -> int:
@@ -29,17 +38,21 @@ def main(argv=None) -> int:
     ap.add_argument("--bankroll", type=float, default=1000.0)
     ap.add_argument("--real", action="store_true",
                     help="tenta registrar como aposta REAL (bloqueado sem GO)")
+    ap.add_argument("--strategy-id", default=DEFAULT_H2H_STRATEGY_ID,
+                    help="estratégia a consultar/usar no gate (ver "
+                         "data/strategy_gates.json); padrão: "
+                         f"{DEFAULT_H2H_STRATEGY_ID}")
     ap.add_argument("--approval-file",
                     help="JSON de aprovação manual, obrigatório junto com --real")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
 
     if args.status or not args.paper_bet:
-        gate = go_gate()
+        gate = go_gate(args.strategy_id)
         if args.json:
             print(json.dumps(gate, ensure_ascii=False, indent=2))
         else:
-            print(f"Gate: {gate['decision']} — {gate['reason']}")
+            print(f"Gate [{gate['strategy_id']}]: {gate['decision']} — {gate['reason']}")
         return 0
 
     if not (args.h2h and args.circuit and args.odds):
@@ -61,7 +74,7 @@ def main(argv=None) -> int:
         bet = record_bet(market="h2h", selection=pred["driver_a"],
                          prob_model=pred["prob_a_beats_b"],
                          decimal_odds=args.odds, bankroll=args.bankroll,
-                         real=args.real,
+                         real=args.real, strategy_id=args.strategy_id,
                          approval_path=args.approval_file,
                          circuit=pred["circuit"], driver_b=pred["driver_b"])
     except PermissionError as e:

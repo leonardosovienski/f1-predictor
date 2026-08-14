@@ -170,7 +170,7 @@ def testes_estresse() -> dict:
 
 def operate_status() -> dict:
     from src.betting import go_gate
-    return go_gate()
+    return go_gate("f1-winner-pre-event-elo-v1")
 
 
 def main() -> int:

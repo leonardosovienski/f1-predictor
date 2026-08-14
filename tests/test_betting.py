@@ -42,36 +42,102 @@ def test_kelly_stake_erros():
         kelly_fraction(0.5, 1.0)               # odds <= 1
 
 
-# ---------- gate ----------
+# ---------- gate (por estratégia) ----------
 
-def test_go_gate_sem_arquivo(tmp_path):
-    g = go_gate(tmp_path / "nao_existe.json")
+def _registry(tmp_path, strategy_id, verdict_key, verdict_path, extra_strategies=None):
+    registry_path = tmp_path / "strategy_gates.json"
+    strategies = {strategy_id: {"verdict_path": str(verdict_path),
+                                "verdict_key": verdict_key}}
+    if extra_strategies:
+        strategies.update(extra_strategies)
+    registry_path.write_text(json.dumps({"schema_version": 1, "strategies": strategies}),
+                             encoding="utf-8")
+    return registry_path
+
+
+def test_go_gate_sem_strategy_id():
+    assert go_gate(None)["decision"] == "NO-GO"
+    assert go_gate("")["decision"] == "NO-GO"
+    assert go_gate("   ")["decision"] == "NO-GO"
+
+
+def test_go_gate_sem_registro(tmp_path):
+    g = go_gate("qualquer-estrategia", registry_path=tmp_path / "nao_existe.json")
+    assert g["decision"] == "NO-GO"
+
+
+def test_go_gate_estrategia_nao_cadastrada(tmp_path):
+    registry_path = tmp_path / "strategy_gates.json"
+    registry_path.write_text(json.dumps({"schema_version": 1, "strategies": {}}),
+                             encoding="utf-8")
+    g = go_gate("f1-nao-existe-v1", registry_path=registry_path)
+    assert g["decision"] == "NO-GO"
+    assert "não é uma estratégia registrada" in g["reason"]
+
+
+def test_go_gate_veredito_ausente(tmp_path):
+    registry_path = _registry(tmp_path, "estrategia-x", "HX",
+                              tmp_path / "nao_existe.json")
+    g = go_gate("estrategia-x", registry_path=registry_path)
     assert g["decision"] == "NO-GO"
 
 
 def test_go_gate_le_veredito_refutada(tmp_path):
-    p = tmp_path / "backtest_fase1.json"
-    p.write_text(json.dumps({"verdicts": {"H1-F1": {"verdict": "REFUTADA"}}}),
-                encoding="utf-8")
-    g = go_gate(p)
+    verdict_path = tmp_path / "backtest_fase1.json"
+    verdict_path.write_text(json.dumps({"verdicts": {"H1-F1": {"verdict": "REFUTADA"}}}),
+                            encoding="utf-8")
+    registry_path = _registry(tmp_path, "f1-winner-pre-event-elo-v1", "H1-F1", verdict_path)
+    g = go_gate("f1-winner-pre-event-elo-v1", registry_path=registry_path)
     assert g["decision"] == "NO-GO"
-    assert g["h1_verdict"] == "REFUTADA"
+    assert g["verdict"] == "REFUTADA"
+    assert g["strategy_id"] == "f1-winner-pre-event-elo-v1"
 
 
 def test_go_gate_le_veredito_comprovada(tmp_path):
-    p = tmp_path / "backtest_fase1.json"
-    p.write_text(json.dumps({"verdicts": {"H1-F1": {"verdict": "COMPROVADA"}}}),
-                encoding="utf-8")
-    g = go_gate(p)
+    verdict_path = tmp_path / "backtest_x.json"
+    verdict_path.write_text(json.dumps({"verdicts": {"HX": {"verdict": "COMPROVADA"}}}),
+                            encoding="utf-8")
+    registry_path = _registry(tmp_path, "f1-h2h-post-qualifying-v1", "HX", verdict_path)
+    g = go_gate("f1-h2h-post-qualifying-v1", registry_path=registry_path)
     assert g["decision"] == "GO"
 
 
+def test_go_gate_veredito_de_uma_estrategia_nao_vaza_para_outra(tmp_path):
+    """Prova regressiva do bug de acoplamento: duas estratégias no MESMO
+    registro, com vereditos opostos — cada uma só pode receber a SUA
+    decisão, nunca a da outra (era exatamente esse acoplamento que existia
+    quando go_gate() lia H1-F1 incondicionalmente, inclusive para apostas
+    de estratégias H2H que nunca foram testadas contra H1-F1)."""
+    refutada = tmp_path / "backtest_a.json"
+    refutada.write_text(json.dumps({"verdicts": {"HA": {"verdict": "REFUTADA"}}}),
+                        encoding="utf-8")
+    comprovada = tmp_path / "backtest_b.json"
+    comprovada.write_text(json.dumps({"verdicts": {"HB": {"verdict": "COMPROVADA"}}}),
+                          encoding="utf-8")
+    registry_path = _registry(tmp_path, "estrategia-a", "HA", refutada,
+                              extra_strategies={"estrategia-b": {
+                                  "verdict_path": str(comprovada), "verdict_key": "HB"}})
+    assert go_gate("estrategia-a", registry_path=registry_path)["decision"] == "NO-GO"
+    assert go_gate("estrategia-b", registry_path=registry_path)["decision"] == "GO"
+
+
 def test_go_gate_real_do_projeto_e_no_go():
-    """O backtest real (Fase 1) rodou e H1-F1 foi REFUTADA — o gate do
-    projeto de verdade tem que refletir isso (nenhuma aposta real)."""
-    g = go_gate()
+    """O registro real do projeto (data/strategy_gates.json) tem que
+    refletir H1-F1 REFUTADA para a única estratégia hoje cadastrada."""
+    g = go_gate("f1-winner-pre-event-elo-v1")
     assert g["decision"] == "NO-GO"
-    assert g["h1_verdict"] == "REFUTADA"
+    assert g["verdict"] == "REFUTADA"
+
+
+def test_go_gate_real_do_projeto_estrategia_h2h_nao_cadastrada():
+    """H2H contra preço de mercado nunca foi testada — a estratégia usada
+    por padrão em operate.py --h2h não deve estar registrada hoje, e o
+    motivo do NO-GO tem que ser 'não registrada', não o veredito de uma
+    hipótese diferente."""
+    g = go_gate("f1-h2h-post-qualifying-v1")
+    assert g["decision"] == "NO-GO"
+    assert g["verdict"] is None
+    assert "não é uma estratégia registrada" in g["reason"]
 
 
 # ---------- record_bet / settle_bet ----------
@@ -88,21 +154,39 @@ def test_record_bet_paper(tmp_path):
     assert json.loads(linhas[0])["id"] == bet["id"]
 
 
+def test_record_bet_real_bloqueado_sem_strategy_id(tmp_path):
+    """strategy_id é obrigatório pra real=True, e é checado ANTES do
+    closure/gate — reachable independente do estado de fechamento real do
+    projeto (que já bloqueia tudo por outro motivo)."""
+    with pytest.raises(PermissionError, match="strategy_id"):
+        record_bet(market="h2h", selection="Piloto A", prob_model=0.6,
+                  decimal_odds=2.0, bankroll=1000.0, real=True,
+                  path=tmp_path / "bets.jsonl")
+    assert not (tmp_path / "bets.jsonl").exists()
+
+
 def test_record_bet_real_bloqueado_sem_go(tmp_path):
-    gate_path = tmp_path / "backtest_fase1.json"
-    gate_path.write_text(json.dumps({"verdicts": {"H1-F1": {"verdict": "REFUTADA"}}}),
-                         encoding="utf-8")
+    verdict_path = tmp_path / "backtest_fase1.json"
+    verdict_path.write_text(json.dumps({"verdicts": {"H1-F1": {"verdict": "REFUTADA"}}}),
+                            encoding="utf-8")
+    registry_path = _registry(tmp_path, "f1-winner-pre-event-elo-v1", "H1-F1", verdict_path)
     with pytest.raises(PermissionError):
         record_bet(market="h2h", selection="Piloto A", prob_model=0.6,
                   decimal_odds=2.0, bankroll=1000.0, real=True,
-                  path=tmp_path / "bets.jsonl", gate_path=gate_path)
+                  strategy_id="f1-winner-pre-event-elo-v1",
+                  path=tmp_path / "bets.jsonl", registry_path=registry_path)
     assert not (tmp_path / "bets.jsonl").exists()   # nada foi gravado
 
 
 def test_record_bet_real_permitido_com_go(tmp_path):
-    gate_path = tmp_path / "backtest_fase1.json"
-    gate_path.write_text(json.dumps({"verdicts": {"H1-F1": {"verdict": "COMPROVADA"}}}),
-                         encoding="utf-8")
+    """Mesmo com estratégia registrada, veredito COMPROVADA e aprovação
+    manual válida, o closure global (real_money_operation) do projeto real
+    ainda bloqueia — é a camada mais externa e independente do gate por
+    estratégia."""
+    verdict_path = tmp_path / "backtest_fase1.json"
+    verdict_path.write_text(json.dumps({"verdicts": {"H1-F1": {"verdict": "COMPROVADA"}}}),
+                            encoding="utf-8")
+    registry_path = _registry(tmp_path, "f1-winner-pre-event-elo-v1", "H1-F1", verdict_path)
     approval_path = tmp_path / "approval.json"
     approval_path.write_text(json.dumps({
         "schema_version": 1, "status": "APPROVED", "approval_id": "manual-1",
@@ -113,13 +197,15 @@ def test_record_bet_real_permitido_com_go(tmp_path):
     with pytest.raises(PermissionError, match="PERMANENTLY_BLOCKED"):
         record_bet(market="h2h", selection="Piloto A", prob_model=0.6,
                    decimal_odds=2.0, bankroll=1000.0, real=True,
-                   path=tmp_path / "bets.jsonl", gate_path=gate_path,
+                   strategy_id="f1-winner-pre-event-elo-v1",
+                   path=tmp_path / "bets.jsonl", registry_path=registry_path,
                    approval_path=approval_path)
 
 
 def test_record_bet_real_requires_matching_manual_approval(tmp_path):
-    gate = tmp_path / "gate.json"
-    gate.write_text(json.dumps({"verdicts": {"H1-F1": {"verdict": "COMPROVADA"}}}))
+    verdict_path = tmp_path / "gate.json"
+    verdict_path.write_text(json.dumps({"verdicts": {"H1-F1": {"verdict": "COMPROVADA"}}}))
+    registry_path = _registry(tmp_path, "f1-winner-pre-event-elo-v1", "H1-F1", verdict_path)
     approval = tmp_path / "approval.json"
     approval.write_text(json.dumps({"schema_version": 1, "status": "APPROVED",
         "approval_id": "manual-1", "approved_by": "operator",
@@ -127,7 +213,27 @@ def test_record_bet_real_requires_matching_manual_approval(tmp_path):
         "bet_fingerprint": "wrong"}))
     with pytest.raises(PermissionError):
         record_bet(market="h2h", selection="Piloto A", prob_model=.6, decimal_odds=2,
-                   bankroll=1000, real=True, gate_path=gate, approval_path=approval)
+                   bankroll=1000, real=True, strategy_id="f1-winner-pre-event-elo-v1",
+                   registry_path=registry_path, approval_path=approval)
+
+
+def test_record_bet_estrategia_nao_registrada_e_bloqueada(tmp_path):
+    """record_bet(real=True) sempre bate primeiro no closure global real do
+    projeto (PERMANENTLY_BLOCKED) — a prova isolada de que o veredito de
+    UMA estratégia não vaza para outra está em
+    test_go_gate_veredito_de_uma_estrategia_nao_vaza_para_outra, que testa
+    go_gate() diretamente sem o closure no caminho. Aqui só confirmamos que
+    uma estratégia H2H sem trial próprio também é rejeitada end-to-end."""
+    verdict_path = tmp_path / "backtest_fase1.json"
+    verdict_path.write_text(json.dumps({"verdicts": {"H1-F1": {"verdict": "COMPROVADA"}}}),
+                            encoding="utf-8")
+    registry_path = _registry(tmp_path, "f1-winner-pre-event-elo-v1", "H1-F1", verdict_path)
+    with pytest.raises(PermissionError):
+        record_bet(market="h2h", selection="Piloto A", prob_model=0.6,
+                  decimal_odds=2.0, bankroll=1000.0, real=True,
+                  strategy_id="f1-h2h-post-qualifying-v1",
+                  path=tmp_path / "bets.jsonl", registry_path=registry_path)
+    assert not (tmp_path / "bets.jsonl").exists()
 
 
 def test_settle_bet_ganhou_e_perdeu(tmp_path):
