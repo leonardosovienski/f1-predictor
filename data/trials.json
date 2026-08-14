@@ -193,6 +193,6 @@
       "human_decision": "Authorized closure.py:reopening's required 'new explicit, auditable human decision' — scoped to opening SportsDataIO diligence only, not to reopening H2H execution or reversing H1-F1/NO_GO_CONFIRMED"
     },
     "sharpe": null,
-    "notes": "RESULTADO: pendente — diligência de licença/cobertura da SportsDataIO ainda não realizada (sem acesso a credenciais/API nesta sessão). Este registro só congela o critério de sucesso ANTES de qualquer diligência, conforme regra de honestidade do projeto."
+    "notes": "RESULTADO: pendente — diligência de licença/cobertura da SportsDataIO ainda não realizada (sem acesso a credenciais/API nesta sessão). Este registro só congela o critério de sucesso ANTES de qualquer diligência, conforme regra de honestidade do projeto. Atualização 2026-08-14 (ver docs/DILIGENCIA_ODDS_2026-08-14.md): nova tentativa de diligência documental pública — acesso direto às páginas oficiais da SportsDataIO bloqueado pelo proxy de rede desta sessão (EGRESS_BLOCKED); busca textual só retornou paráfrases de marketing de terceiros, não tratadas como evidência nova por não superarem a leitura direta já feita em 21/07. RESULTADO continua pendente; nenhum item do contrato de decisão foi verificado. Próximo passo identificado (não executado): contato comercial direto, rascunho em docs/SPORTSDATAIO_PRESALE_QUESTIONS_DRAFT.md."
   }
 ]
