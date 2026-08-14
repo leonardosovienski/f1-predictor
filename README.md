@@ -181,7 +181,7 @@ src/
   predict.py                # CLI de serving + PredictionPoint + telemetria
   backtest.py               # prequential ordinal: RPS/nullref/DM + blend + Platt + H0-formal + Fase4 + harnesses
   context_factors.py         # RatingBook por contexto, Reliability, Pit Efficiency, VolatilityShock
-  betting.py                 # Kelly, gate de GO, bet_log append-only, settle
+  betting.py                 # Kelly, gate de GO POR ESTRATÉGIA (data/strategy_gates.json), bet_log append-only, settle
   operate.py                 # CLI de operação (GATED)
   data/f1_provider.py       # cliente Jolpica (cache imutável, rate limit, pitstops)
   data/db.py                # SQLite races/results/pitstops (WAL, leitura read-only)
@@ -190,6 +190,7 @@ src/
 data/drivers_f1.json        # grid 2026 real (22/11) com Elo semente
 data/circuits_f1.json       # calendário 2026 real + características (metadados)
 data/trials.json            # tentativas PRÉ-REGISTRADAS (versionado!)
+data/strategy_gates.json    # registro de estratégias de aposta e o veredito que autoriza cada uma (versionado)
 data/backtest_fase1.json    # resultado completo do backtest Fase 1 (versionado)
 data/backtest_fase2.json    # resultado completo do backtest Fase 2 (versionado)
 data/backtest_fase4.json    # resultado completo do backtest Fase 4 (versionado)
