@@ -36,8 +36,16 @@ def require_manual_approval(path: str | Path | None, *, fingerprint: str,
     except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
         raise PermissionError("arquivo de aprovação manual inválido") from exc
     current = now or datetime.now(timezone.utc)
+    if current.tzinfo is None:
+        # Sem isto, um `now` ingênuo comparado a approved_at/expires_at (ambos
+        # já validados como timezone-aware) levanta TypeError sem ser
+        # capturado aqui — quebra a garantia de "sempre PermissionError,
+        # nunca uma exceção solta" que record_bet/operate.py dependem para
+        # tratar aposta real recusada de forma limpa.
+        raise PermissionError("aprovação manual: 'now' precisa ser timezone-aware")
     if (approval.get("schema_version") != 1 or approval.get("status") != "APPROVED"
             or not isinstance(approval.get("approval_id"), str)
+            or not approval["approval_id"].strip()
             or not isinstance(approval.get("approved_by"), str)
             or not approval["approved_by"].strip()
             or approval.get("bet_fingerprint") != fingerprint
