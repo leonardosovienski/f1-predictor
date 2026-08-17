@@ -2,8 +2,8 @@
 
 ## Runtime modernizado (Python 3.13)
 
-O projeto é um pacote instalável e consome `predictor-core>=2.2,<3` e
-`predictor-ops>=3,<4` como wheels. Não usa vendor, `PYTHONPATH`, imports de
+O projeto é um pacote instalável e consome `predictor-core>=2.3,<3` e
+`predictor-ops>=3.1,<4` como wheels. Não usa vendor, `PYTHONPATH`, imports de
 workspace ou checkout irmão. `f1-predictor health --offline` expõe capabilities;
 odds são explicitamente `ODDS_UNAVAILABLE_FOR_F1`. H8 e H2H permanecem
 `CLOSED_BY_HUMAN_DECISION` e nenhuma configuração operacional os reabre.

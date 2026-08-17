@@ -9,12 +9,17 @@ Research/migration/legacy is `backtest`, `context_factors`, `manual_approval`,
 historical expansion, phase scripts, and compatibility CLIs. CI publishes
 global and per-module reports; no file is omitted from global coverage.
 
-Final branch-aware result: **86.30% global**, **82.14% homologated runtime**,
-and **93.36% research/migration/legacy**. Lower individual runtime modules are
-reported rather than hidden: snapshot orchestration 78%, Jolpica provider 77%,
-database 79%, API-Sports 79%, OpenF1 75%, odds stub 73%, and compatibility
-prediction CLI 70%. Their exercised fail-closed behavior plus the strongly
-covered contracts/services/repositories keep the complete runtime above 80%.
+Final branch-aware result as of the `predictor-ops` 3.0.0 validation
+(2026-08-09, see below): **86.30% global**, **82.14% homologated runtime**,
+and **93.36% research/migration/legacy**. Lower individual runtime modules
+were reported rather than hidden: snapshot orchestration 78%, Jolpica
+provider 77%, database 79%, API-Sports 79%, OpenF1 75%, odds stub 73%, and
+compatibility prediction CLI 70%. Their exercised fail-closed behavior plus
+the strongly covered contracts/services/repositories kept the complete
+runtime above 80%. These figures predate the Core 2.3/Ops 3.1 migration
+(commit `8fd1e3c83c960999b7783976e91082f778874d29`, 2026-08-17) and have not
+been re-measured against it; treat them as historical until coverage is
+re-run on the current dependency set.
 
 ## Skip audit
 
@@ -76,7 +81,7 @@ primary runtime again.
 ## Shared dependency contract
 
 Runtime imports must resolve from installed distributions. Contract tests and
-wheel smoke assert `predictor_core` 2.2.0 and `predictor_ops` 3.0.0 from
+wheel smoke assert `predictor_core` 2.3.0 and `predictor_ops` 3.1.0 from
 `site-packages`; searches reject vendor, `PYTHONPATH`, `sys.path` mutation,
 sibling imports, and `tools.*`. Release wheels in `wheels/` are binary build
 inputs only, not importable source trees.
