@@ -3,7 +3,7 @@
 O gate é por ESTRATÉGIA (`strategy_id`), registrada em
 `data/strategy_gates.json`. Cada entrada aponta para o veredito
 pré-registrado que autoriza aquela estratégia especificamente — nunca um
-veredito genérico do projeto. Ex.: `f1-winner-pre-event-elo-v1` lê H1-F1
+veredito genérico do projeto. Ex.: `f1/winner-pre-event/v1` lê H1-F1
 ("o Elo bate o grid de largada no RPS") de `data/backtest_fase1.json`; H1-F1
 está REFUTADA (RELATORIO_FASE1.md) → essa estratégia é NO-GO. Uma estratégia
 não registrada, ou sem `strategy_id`, é sempre NO-GO — o veredito de uma
@@ -82,15 +82,40 @@ def go_gate(strategy_id: str | None, *,
     except (OSError, ValueError) as exc:
         return {"decision": "NO-GO", "strategy_id": strategy_id, "verdict": None,
                 "reason": f"registro de estratégias ilegível: {exc}"}
-    entry = registry.get("strategies", {}).get(strategy_id)
+    try:
+        if not isinstance(registry, dict) or registry.get("schema_version") != 1:
+            raise TypeError("schema_version must be 1")
+        strategies = registry["strategies"]
+        if not isinstance(strategies, dict):
+            raise TypeError("strategies must be an object")
+        entry = strategies.get(strategy_id)
+    except (KeyError, TypeError) as exc:
+        return {"decision": "NO-GO", "strategy_id": strategy_id, "verdict": None,
+                "reason": f"registro de estratégias inválido: {exc}"}
     if entry is None:
         return {"decision": "NO-GO", "strategy_id": strategy_id, "verdict": None,
                 "reason": f"{strategy_id!r} não é uma estratégia registrada — "
                           "nenhum trial econômico a autoriza"}
-    verdict_path = Path(entry["verdict_path"])
+    try:
+        verdict_path = Path(entry["verdict_path"])
+        verdict_key = entry["verdict_key"]
+        if not isinstance(verdict_key, str) or not verdict_key.strip():
+            raise TypeError("verdict_key must be a non-empty string")
+    except (KeyError, TypeError) as exc:
+        return {"decision": "NO-GO", "strategy_id": strategy_id, "verdict": None,
+                "reason": f"registro inválido para {strategy_id!r}: {exc}"}
+    repository_root = ROOT.resolve()
+    registry_root = registry_file.resolve(strict=False).parent
+    allowed_root = (repository_root if registry_file.resolve(strict=False).is_relative_to(repository_root)
+                    else registry_root)
     if not verdict_path.is_absolute():
-        verdict_path = ROOT / verdict_path
-    verdict_key = entry["verdict_key"]
+        verdict_path = allowed_root / verdict_path
+    try:
+        verdict_path = verdict_path.resolve(strict=False)
+        verdict_path.relative_to(allowed_root)
+    except (OSError, ValueError):
+        return {"decision": "NO-GO", "strategy_id": strategy_id, "verdict": None,
+                "reason": f"veredito fora do repositório para {strategy_id!r}"}
     if not verdict_path.exists():
         return {"decision": "NO-GO", "strategy_id": strategy_id, "verdict": None,
                 "reason": f"veredito ausente para {strategy_id!r}: "
@@ -100,7 +125,10 @@ def go_gate(strategy_id: str | None, *,
     except (OSError, ValueError) as exc:
         return {"decision": "NO-GO", "strategy_id": strategy_id, "verdict": None,
                 "reason": f"veredito ilegível para {strategy_id!r}: {exc}"}
-    verdict = data.get("verdicts", {}).get(verdict_key, {}).get("verdict")
+    try:
+        verdict = data["verdicts"][verdict_key]["verdict"]
+    except (KeyError, TypeError):
+        verdict = None
     decision = "GO" if verdict == "COMPROVADA" else "NO-GO"
     reason = (f"{verdict_key} comprovada: edge demonstrado para {strategy_id!r}"
               if decision == "GO" else
@@ -137,7 +165,8 @@ def record_bet(*, market: str, selection: str, prob_model: float,
             fingerprint=bet_fingerprint(market=market, selection=selection,
                                         prob_model=prob_model,
                                         decimal_odds=decimal_odds,
-                                        bankroll=bankroll), now=now)
+                                        bankroll=bankroll,
+                                        strategy_id=strategy_id), now=now)
         extra = {**extra, "manual_approval": approval}
     edge = prob_model * decimal_odds - 1.0
     stake = kelly_stake(prob_model, decimal_odds, bankroll)

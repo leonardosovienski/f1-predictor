@@ -41,6 +41,16 @@ def test_bet_fingerprint_muda_com_qualquer_campo():
     assert base != bet_fingerprint(market="h2h", selection="X", prob_model=0.6, decimal_odds=2.0, bankroll=1000.01)
 
 
+def test_bet_fingerprint_vincula_strategy_id():
+    winner = bet_fingerprint(market="h2h", selection="X", prob_model=0.6,
+                             decimal_odds=2.0, bankroll=1000.0,
+                             strategy_id="f1/winner-pre-event/v1")
+    h2h = bet_fingerprint(market="h2h", selection="X", prob_model=0.6,
+                          decimal_odds=2.0, bankroll=1000.0,
+                          strategy_id="f1/h2h-post-qualifying/v1")
+    assert winner != h2h
+
+
 def test_bet_fingerprint_ignora_kwargs_extras():
     """record_bet passa **extra (circuit, driver_b, ...) — não deve afetar o fingerprint."""
     a = bet_fingerprint(market="h2h", selection="X", prob_model=0.6, decimal_odds=2.0, bankroll=1000.0)

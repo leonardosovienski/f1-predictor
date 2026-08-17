@@ -13,8 +13,10 @@ from typing import Any
 
 
 def bet_fingerprint(*, market: str, selection: str, prob_model: float,
-                    decimal_odds: float, bankroll: float, **_: Any) -> str:
+                    decimal_odds: float, bankroll: float,
+                    strategy_id: str | None = None, **_: Any) -> str:
     payload = {"market": market, "selection": selection,
+               "strategy_id": strategy_id,
                "prob_model": round(float(prob_model), 8),
                "decimal_odds": round(float(decimal_odds), 8),
                "bankroll": round(float(bankroll), 2)}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "description": "Registry of economically-testable betting strategies. Each key is a strategy_id consumed by src/betting.py:go_gate(). A strategy's verdict never authorizes any other strategy_id — an entry missing from this file, or a strategy_id not passed at all, is always NO-GO. Adding or changing an entry, or changing which verdict file/key it points at, is a human decision — the same standard as any other change under docs/PAST_ATTEMPT_LEDGER.md's decision contract.",
   "strategies": {
-    "f1-winner-pre-event-elo-v1": {
+    "f1/winner-pre-event/v1": {
       "description": "Pre-event race winner, Elo/Plackett-Luce vs starting-grid baseline (the original Fase 0-1 strategy).",
       "market": "winner",
       "decision_stage": "pre-event",

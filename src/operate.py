@@ -6,7 +6,7 @@ Uso:
     python -m src.operate --paper-bet --h2h Verstappen Hamilton --circuit Monza --odds 1.80 --bankroll 1000 --real
 
 O gate é por estratégia (`--strategy-id`, veja `data/strategy_gates.json`).
-O padrão para o fluxo `--h2h` é `f1-h2h-post-qualifying-v1`, que HOJE não
+O padrão para o fluxo `--h2h` é `f1/h2h-post-qualifying/v1`, que HOJE não
 está registrada — H2H contra preço de mercado nunca foi testada
 economicamente, então o gate corretamente devolve NO-GO por falta de
 trial, não pelo veredito de uma hipótese diferente (H1-F1, que é sobre
@@ -23,7 +23,7 @@ from .betting import go_gate, record_bet
 from .closure import require_open
 from .model import F1EloModel
 
-DEFAULT_H2H_STRATEGY_ID = "f1-h2h-post-qualifying-v1"
+DEFAULT_H2H_STRATEGY_ID = "f1/h2h-post-qualifying/v1"
 
 
 def main(argv=None) -> int:

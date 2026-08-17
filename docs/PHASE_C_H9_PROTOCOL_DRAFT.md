@@ -1,40 +1,89 @@
-# Minuta de protocolo — H9-F1-h2h-market-v1
+# Protocolo candidato — `f1/h2h-post-qualifying/v1`
 
-> **DRAFT — NÃO APROVADO, NÃO CONGELADO, NÃO EXECUTÁVEL.** Este documento não
-> reabre hipóteses. Ele precisa de revisão humana, versão, commit e SHA-256 antes
-> de qualquer inspeção analítica dos dados reais. Emendas posteriores não podem
-> valer retroativamente para dados já observados.
+> **DRAFT v1 — NÃO APROVADO, NÃO CONGELADO E NÃO EXECUTÁVEL.**
+> Este documento prepara uma decisão humana; não reabre `tracks.H2H`, não
+> registra a estratégia em `data/strategy_gates.json` e não autoriza apostas.
+> O freeze exige fonte aceita, revisão humana, commit e SHA-256 anteriores ao
+> primeiro acesso a retornos fora da amostra.
 
-## Pergunta científica
+## 1. Unidade governada e hipótese
 
-Probabilidades produzidas pelo Elo H2H congelado para companheiros de equipe,
-comparadas a preços H2H disponíveis antes da corrida e tratadas com regras
-causais, custos e sizing predefinidos, geram retorno médio positivo fora da
-amostra?
+- `strategy_id`: `f1/h2h-post-qualifying/v1`;
+- mercado: `race_h2h`, nunca qualifying/sprint;
+- decisão: depois do grid oficial e antes da corrida;
+- unidade estatística primária: corrida, com duelos agrupados dentro dela;
+- resultado econômico: retorno líquido de comissão, spread, slippage e voids.
 
-- H0: retorno líquido esperado por aposta menor ou igual a zero.
-- H1: retorno líquido esperado por aposta maior que zero.
+Hipótese confirmatória: informação de Elo e grid, congelada antes do evento,
+contém sinal residual sobre a probabilidade sem margem do preço executável e
+esse sinal produz retorno líquido esperado positivo fora da amostra.
 
-H9 é independente e não altera os vereditos nem reabre H1–H8.
+- H0 científica: o candidato não melhora log loss/Brier sobre o mercado.
+- H0 econômica: retorno líquido esperado por aposta é menor ou igual a zero.
+- GO exige rejeitar ambas; superar Elo ou grid isoladamente nunca basta.
 
-## Artefatos a congelar
+H9 é independente de H1–H8. H1-F1 e H6-F1c permanecem refutadas.
 
-Antes do primeiro acesso analítico ao arquivo real, registrar:
+## 2. Pré-condições de mercado
 
-- versão e hash desta especificação e commit exato do projeto;
-- versão do Elo H2H, estado inicial, parâmetros e identidades;
-- fonte, licença, bookmaker/exchange, preço e settlement;
-- seleção, sizing, custos, exclusões e código estatístico;
-- temporadas OOS, burn-in, seed e tratamento de ausências.
+Nenhuma análise modelo-versus-mercado pode começar antes de:
 
-O freeze não pode usar estatísticas aprendidas dos preços ou retornos OOS.
+1. ao menos uma fonte passar integralmente o contrato `SOURCE_ACCEPTED`;
+2. uma decisão humana reabrir `tracks.H2H` somente para o protocolo aprovado;
+3. existir export reproduzível com IDs, ambos os lados, timestamps, preços,
+   comissão, liquidez, regra versionada e settlement;
+4. a opção de qualidade ser escolhida antes de observar retornos;
+5. nenhuma identidade canônica permanecer ambígua.
 
-## Modelo e decisão
+O marco `intermediate_descriptive_only` atual (250 duelos, 70% das corridas,
+97% temporal, duas casas) permite apenas descrição. Não autoriza Stage 1. Para
+candidatura a Stage 1, o piso existente é 500 duelos, 80% das corridas, 98%
+temporal e três bookmakers, além de limites humanos ainda a congelar para
+`both_sides_coverage`, `settlement_coverage` e `volume_coverage`.
 
-Será usado o Elo H2H de companheiros congelado no registro de pré-análise, sem
-reotimização, calibração, seleção de features ou ajuste com retornos OOS.
+## 3. População e causalidade
 
-Para `p_model`, odds executáveis decimais `o` e comissão `c` sobre lucro:
+- somente pilotos canônicos inscritos na mesma corrida;
+- universo de pares definido sem consultar resultado ou retorno;
+- pares de companheiros são a população primária; ampliar a adversários de
+  equipes diferentes cria outra versão;
+- `decision_at`: instante fixo a congelar, posterior à publicação do grid e
+  anterior ao `scheduled_start_utc`;
+- quote elegível: integralmente publicada e disponível até `decision_at`;
+- closing: última quote integralmente disponível antes do início, usada como
+  baseline/CLV, nunca como informação da decisão;
+- in-play e pós-evento permanecem arquivadas, mas inelegíveis;
+- correção de grid, adiamento ou mudança de horário segue regra versionada;
+- DNF/DNS/DSQ/cancelamento segue exclusivamente a regra da fonte, sem inferência.
+
+## 4. Comparadores obrigatórios
+
+Todos usam exatamente a mesma população, cutoff e settlement:
+
+1. **Elo puro**: marginal H2H prequential existente;
+2. **grid puro**: probabilidades H2H da escada de grid/Plackett–Luce congelada;
+3. **blend Elo + grid**: peso aprendido somente no desenvolvimento temporal;
+4. **mercado sem margem**: probabilidades dos dois lados normalizadas; exchange
+   usa preço executável e comissão separada, sem inventar overround;
+5. **candidato**: modelo pós-classificação especificado e hasheado no freeze.
+
+O candidato não pode ser escolhido pela performance OOS. Feature, interação,
+calibrador ou threshold novo depois de observar OOS cria `v2`.
+
+## 5. Calibração e incerteza
+
+Para cada comparador: Brier, log loss, reliability diagram, ECE com bins
+congelados e calibração por faixa de preço. Acurácia não prova calibração.
+
+A simulação Plackett–Luce/Gumbel mede incerteza de resultado condicionada aos
+parâmetros. Ela **não** mede incerteza de Elo, peso do grid ou calibrador.
+Incerteza de parâmetros deve ser estimada separadamente por refits prequential
+dentro de bootstrap em blocos de corrida ou outro método aprovado no freeze.
+As duas fontes de incerteza nunca serão somadas ou descritas como equivalentes.
+
+## 6. Preço, execução e retorno
+
+Para odds decimais executáveis `o` e comissão `c` sobre lucro:
 
 ```text
 net_win = (o - 1) * (1 - c)
@@ -42,99 +91,72 @@ p_break_even = 1 / (1 + net_win)
 edge = p_model - p_break_even
 ```
 
-Aposta somente se `edge >= 0.03`, com ambos os lados válidos no snapshot. Se os
-dois lados excederem o threshold, o mercado é bloqueado. Aceita-se no máximo uma
-seleção por mercado. A análise primária usa stake fixa de 1 unidade. Kelly,
-reinvestimento e otimização de stake são apenas exploratórios.
+Spread, profundidade disponível, slippage, moeda/câmbio e limite de stake são
+inputs obrigatórios. Quote sem capacidade executável suficiente é bloqueada,
+não preenchida artificialmente. A análise primária usa stake fixa de uma
+unidade; Kelly e reinvestimento são proibidos na confirmação.
 
-## Mercado e causalidade
+O threshold de aposta, inclusive a opção de não apostar, será escolhido apenas
+no desenvolvimento temporal e congelado. Se ambos os lados parecerem elegíveis,
+o mercado é bloqueado como inconsistência.
 
-Fonte e preço serão aprovados após diligência e antes do freeze. A preferência
-é preço executável de fechamento de exchange licenciado, como Betfair, somente
-se licença, histórico e temporalidade forem aprovados.
+## 7. Split temporal e prevenção de tuning
 
-- `decision_at`: último snapshot integralmente disponível até 10 minutos antes
-  do `scheduled_start_utc` congelado;
-- `closing_at`: último snapshot antes do início real, apenas para diagnóstico de
-  closing-line value, nunca para decisão;
-- in-play, pós-evento, retrodatado ou sem ordem causal é inelegível;
-- comissão ausente ou ambígua bloqueia o mercado;
-- margem proporcional usa os dois lados; exchange usa preço executável e
-  comissão explícita;
-- liquidez mínima, moeda e câmbio serão fixados antes do freeze;
-- void devolve stake e permanece na auditoria.
+- sem split aleatório;
+- burn-in anterior ao desenvolvimento apenas inicializa ratings;
+- desenvolvimento escolhe blend, calibrador e threshold;
+- validação temporal confirma sanidade uma única vez;
+- teste OOS permanece lacrado até hashes, código e protocolo estarem congelados;
+- temporadas concretas dependem da cobertura real e serão escolhidas sem olhar
+  retornos, por regra de calendário registrada no freeze;
+- duelos da mesma corrida nunca atravessam folds diferentes.
 
-Trocar fonte, preço, janela, comissão ou settlement cria nova versão da hipótese.
+## 8. Testes confirmatórios
 
-## População, OOS e burn-in
+Primário científico: diferença pareada de log loss do candidato contra mercado
+sem margem, com IC 95% e teste em blocos de corrida. Brier é coprimário somente
+se assim aprovado antes do freeze; caso contrário, secundário.
 
-A população são mercados `race_h2h` entre companheiros canônicos. A minuta
-reserva 2023–2024 como OOS se o lote aprovado cobrir essas temporadas; caso
-contrário, a escolha ocorrerá sem observar retornos e antes da análise.
+Primário econômico: retorno médio líquido por unidade, com IC 95% por bootstrap
+em blocos de corrida e teste unicaudal definido antes do OOS. Reportar ainda:
 
-O burn-in mínimo será de 20 corridas anteriores ao primeiro evento OOS, usado
-somente para inicializar o Elo. Burn-in não produz apostas ou métricas. Não há
-split aleatório: avaliação e reamostragem preservam corrida e ordem temporal.
+- P/L, número de apostas, corridas e duelos;
+- CLV e calibração;
+- drawdown máximo;
+- Sharpe de retornos agregados por corrida, sem transformar corridas em apostas;
+- resultados por fonte somente como diagnóstico, sem escolher a melhor depois.
 
-## Métricas e teste primário
+O tamanho confirmatório não será fixado pela fórmula i.i.d. de apostas. Antes
+do freeze, uma análise de poder sintética deve usar clusters de corrida, taxa de
+void, frequência de aposta e custos conservadores. Amostra inferior ao número
+congelado produz `INSUFFICIENT_POWER`, nunca GO.
 
-Com stake unitária, retorno é `net_win` na vitória, `-1` na derrota e `0` em
-void. A métrica primária é a média desse retorno.
+## 9. Critério de continuidade e GO
 
-O teste confirmatório será permutação unicaudal com 100.000 permutações e seed
-congelada, trocando sinais/seleções dentro de corrida de modo compatível com H0
-e preservando dependência intracorrida. Reportar média, IC 95% por bootstrap em
-blocos de corrida e `p=(extremos+1)/(permutações+1)`.
+Continuidade para paper trading exige cumulativamente:
 
-Diebold–Mariano será secundário quando houver série de perdas comparável e HAC
-predefinido; não substitui o teste primário. Métricas secundárias:
+- candidato melhor que Elo e grid em calibração/log loss;
+- candidato melhor que mercado no teste confirmatório congelado;
+- limite inferior do IC 95% do retorno líquido maior que zero;
+- tamanho/poder, cobertura, settlement e liquidez aprovados;
+- nenhum desvio crítico, lookahead ou identidade ambígua;
+- revisão humana do pacote completo.
 
-- Sharpe anualizado de retornos agregados por corrida;
-- drawdown máximo da curva de stake fixa;
-- taxa de acerto com intervalo binomial;
-- P/L acumulado e número de apostas;
-- closing-line value, cobertura e bloqueios somente como diagnósticos.
+Qualquer falha é NO-GO. GO retrospectivo autoriza no máximo paper trading e
+não altera `real_money_operation`. Paper trading terá janela, checkpoints e
+stopping rules congelados em documento separado.
 
-## Poder e tamanho mínimo
+## 10. Artefatos exigidos no freeze
 
-Premissas sintéticas conservadoras: alfa unicaudal 5%, poder 80%, efeito mínimo
-relevante de 0,05 unidade e desvio-padrão 1,0:
+- protocolo aprovado, commit e SHA-256;
+- `strategy_id`, versão do modelo e hashes de código/parâmetros;
+- manifesto/licença e hashes do lote de mercado;
+- regra de identidade, cutoff, closing e settlement;
+- splits temporais e seeds;
+- especificação de custos, liquidez e sizing;
+- plano estatístico e análise de poder sintética;
+- lista de exclusões permitidas e template de desvios;
+- assinatura humana que reabre somente o escopo necessário.
 
-```text
-n = ceil(((z_0.95 + z_0.80) * sigma / delta)^2) = 2.473
-```
-
-Com 5% para voids/exclusões, o mínimo provisório é **2.604 apostas elegíveis**,
-além do gate operacional de 500 duelos. Antes do freeze, simulação sintética
-versionada deve reproduzir e ajustar esse número por cluster de corrida. Ele
-pode aumentar, mas não diminuir com base em resultados reais. Amostra menor
-gera `INSUFFICIENT_POWER`, nunca GO.
-
-## GO/NO-GO
-
-GO exige simultaneamente:
-
-- retorno médio líquido maior que zero;
-- permutação unicaudal com `p < 0.05`;
-- limite inferior do IC 95% da média maior que zero;
-- Sharpe anualizado maior que 0,5;
-- drawdown máximo não superior a 30%;
-- ao menos 2.604 apostas e nenhum desvio crítico;
-- revisão e assinatura humana do pacote de resultados.
-
-Qualquer falha produz NO-GO. Nenhum critério compensa outro e não há promoção
-automática para dinheiro real.
-
-## Paper trading e interrupção
-
-Após GO retrospectivo e autorização separada, paper trading mantém protocolo e
-stake fixa. Interromper imediatamente se:
-
-- drawdown acumulado superar 20%;
-- Sharpe móvel das últimas 10 corridas ficar abaixo de zero em três checkpoints;
-- licença, causalidade, identidade, settlement ou disponibilidade quebrarem;
-- houver divergência de hash ou alteração não autorizada do modelo.
-
-Interrupção exige investigação e decisão humana. Mudança material cria protocolo
-novo. Exclusões e desvios serão publicados; cortes por piloto, equipe,
-bookmaker, threshold, sizing ou temporada são apenas exploratórios.
+Enquanto qualquer item estiver pendente, `f1/h2h-post-qualifying/v1` permanece
+ausente de `data/strategy_gates.json` e o sistema retorna NO-GO.

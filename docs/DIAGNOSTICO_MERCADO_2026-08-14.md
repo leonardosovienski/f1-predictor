@@ -115,7 +115,7 @@ registro (`data/strategy_gates.json`) que mapeia cada `strategy_id` ao seu
 próprio `verdict_path`/`verdict_key`. Fail-closed em cada etapa: sem
 `strategy_id`, sem registro, estratégia não cadastrada, ou veredito ausente
 → NO-GO. `record_bet(real=True)` agora exige `strategy_id` explicitamente.
-`operate.py --h2h` usa por padrão `f1-h2h-post-qualifying-v1`, que **não
+`operate.py --h2h` usa por padrão `f1/h2h-post-qualifying/v1`, que **não
 está registrada** — o NO-GO resultante agora é pelo motivo certo ("nenhum
 trial autoriza esta estratégia"), não pelo veredito de uma hipótese
 diferente. Testes de regressão em `tests/test_betting.py` provam que o

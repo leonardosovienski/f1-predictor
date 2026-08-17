@@ -80,9 +80,9 @@ seu próprio `verdict_path`/`verdict_key`. Fail-closed em cada etapa: sem
 `strategy_id`, sem registro, estratégia não cadastrada, ou veredito
 ausente → NO-GO. `record_bet(real=True)` agora exige `strategy_id`
 explícito (checado antes do closure, pra ser testável isoladamente).
-`operate.py --h2h` usa por padrão `f1-h2h-post-qualifying-v1`, que
+`operate.py --h2h` usa por padrão `f1/h2h-post-qualifying/v1`, que
 **deliberadamente não está registrada** — o NO-GO agora é pelo motivo
-certo. `f1-winner-pre-event-elo-v1` → H1-F1 é a única entrada registrada
+certo. `f1/winner-pre-event/v1` → H1-F1 é a única entrada registrada
 hoje (ainda NO-GO; nenhuma ciência mudou). `scripts/validate_2026.py`
 atualizado para o mesmo `strategy_id`.
 

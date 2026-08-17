@@ -66,6 +66,22 @@ def test_go_gate_sem_registro(tmp_path):
     assert g["decision"] == "NO-GO"
 
 
+@pytest.mark.parametrize("registry", [
+    {},
+    [],
+    {"schema_version": 2, "strategies": {}},
+    {"strategies": []},
+    {"strategies": {"f1/test/v1": {}}},
+    {"strategies": {"f1/test/v1": {"verdict_path": "x", "verdict_key": ""}}},
+])
+def test_go_gate_registro_malformado_falha_fechado(tmp_path, registry):
+    registry_path = tmp_path / "strategy_gates.json"
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+    gate = go_gate("f1/test/v1", registry_path=registry_path)
+    assert gate["decision"] == "NO-GO"
+    assert gate["verdict"] is None
+
+
 def test_go_gate_estrategia_nao_cadastrada(tmp_path):
     registry_path = tmp_path / "strategy_gates.json"
     registry_path.write_text(json.dumps({"schema_version": 1, "strategies": {}}),
@@ -82,23 +98,42 @@ def test_go_gate_veredito_ausente(tmp_path):
     assert g["decision"] == "NO-GO"
 
 
+def test_go_gate_bloqueia_veredito_fora_do_repositorio(tmp_path):
+    outside = tmp_path.parent / f"{tmp_path.name}-outside.json"
+    outside.write_text(json.dumps({"verdicts": {"HX": {"verdict": "COMPROVADA"}}}),
+                       encoding="utf-8")
+    registry_path = _registry(tmp_path, "f1/test/v1", "HX", outside)
+    gate = go_gate("f1/test/v1", registry_path=registry_path)
+    assert gate["decision"] == "NO-GO"
+    assert "fora do repositório" in gate["reason"]
+
+
+def test_go_gate_veredito_com_estrutura_invalida_falha_fechado(tmp_path):
+    verdict_path = tmp_path / "verdict.json"
+    verdict_path.write_text("[]", encoding="utf-8")
+    registry_path = _registry(tmp_path, "f1/test/v1", "HX", verdict_path)
+    gate = go_gate("f1/test/v1", registry_path=registry_path)
+    assert gate["decision"] == "NO-GO"
+    assert gate["verdict"] is None
+
+
 def test_go_gate_le_veredito_refutada(tmp_path):
     verdict_path = tmp_path / "backtest_fase1.json"
     verdict_path.write_text(json.dumps({"verdicts": {"H1-F1": {"verdict": "REFUTADA"}}}),
                             encoding="utf-8")
-    registry_path = _registry(tmp_path, "f1-winner-pre-event-elo-v1", "H1-F1", verdict_path)
-    g = go_gate("f1-winner-pre-event-elo-v1", registry_path=registry_path)
+    registry_path = _registry(tmp_path, "f1/winner-pre-event/v1", "H1-F1", verdict_path)
+    g = go_gate("f1/winner-pre-event/v1", registry_path=registry_path)
     assert g["decision"] == "NO-GO"
     assert g["verdict"] == "REFUTADA"
-    assert g["strategy_id"] == "f1-winner-pre-event-elo-v1"
+    assert g["strategy_id"] == "f1/winner-pre-event/v1"
 
 
 def test_go_gate_le_veredito_comprovada(tmp_path):
     verdict_path = tmp_path / "backtest_x.json"
     verdict_path.write_text(json.dumps({"verdicts": {"HX": {"verdict": "COMPROVADA"}}}),
                             encoding="utf-8")
-    registry_path = _registry(tmp_path, "f1-h2h-post-qualifying-v1", "HX", verdict_path)
-    g = go_gate("f1-h2h-post-qualifying-v1", registry_path=registry_path)
+    registry_path = _registry(tmp_path, "f1/h2h-post-qualifying/v1", "HX", verdict_path)
+    g = go_gate("f1/h2h-post-qualifying/v1", registry_path=registry_path)
     assert g["decision"] == "GO"
 
 
@@ -124,7 +159,7 @@ def test_go_gate_veredito_de_uma_estrategia_nao_vaza_para_outra(tmp_path):
 def test_go_gate_real_do_projeto_e_no_go():
     """O registro real do projeto (data/strategy_gates.json) tem que
     refletir H1-F1 REFUTADA para a única estratégia hoje cadastrada."""
-    g = go_gate("f1-winner-pre-event-elo-v1")
+    g = go_gate("f1/winner-pre-event/v1")
     assert g["decision"] == "NO-GO"
     assert g["verdict"] == "REFUTADA"
 
@@ -134,7 +169,7 @@ def test_go_gate_real_do_projeto_estrategia_h2h_nao_cadastrada():
     por padrão em operate.py --h2h não deve estar registrada hoje, e o
     motivo do NO-GO tem que ser 'não registrada', não o veredito de uma
     hipótese diferente."""
-    g = go_gate("f1-h2h-post-qualifying-v1")
+    g = go_gate("f1/h2h-post-qualifying/v1")
     assert g["decision"] == "NO-GO"
     assert g["verdict"] is None
     assert "não é uma estratégia registrada" in g["reason"]
@@ -169,11 +204,11 @@ def test_record_bet_real_bloqueado_sem_go(tmp_path):
     verdict_path = tmp_path / "backtest_fase1.json"
     verdict_path.write_text(json.dumps({"verdicts": {"H1-F1": {"verdict": "REFUTADA"}}}),
                             encoding="utf-8")
-    registry_path = _registry(tmp_path, "f1-winner-pre-event-elo-v1", "H1-F1", verdict_path)
+    registry_path = _registry(tmp_path, "f1/winner-pre-event/v1", "H1-F1", verdict_path)
     with pytest.raises(PermissionError):
         record_bet(market="h2h", selection="Piloto A", prob_model=0.6,
                   decimal_odds=2.0, bankroll=1000.0, real=True,
-                  strategy_id="f1-winner-pre-event-elo-v1",
+                  strategy_id="f1/winner-pre-event/v1",
                   path=tmp_path / "bets.jsonl", registry_path=registry_path)
     assert not (tmp_path / "bets.jsonl").exists()   # nada foi gravado
 
@@ -186,7 +221,7 @@ def test_record_bet_real_permitido_com_go(tmp_path):
     verdict_path = tmp_path / "backtest_fase1.json"
     verdict_path.write_text(json.dumps({"verdicts": {"H1-F1": {"verdict": "COMPROVADA"}}}),
                             encoding="utf-8")
-    registry_path = _registry(tmp_path, "f1-winner-pre-event-elo-v1", "H1-F1", verdict_path)
+    registry_path = _registry(tmp_path, "f1/winner-pre-event/v1", "H1-F1", verdict_path)
     approval_path = tmp_path / "approval.json"
     approval_path.write_text(json.dumps({
         "schema_version": 1, "status": "APPROVED", "approval_id": "manual-1",
@@ -197,7 +232,7 @@ def test_record_bet_real_permitido_com_go(tmp_path):
     with pytest.raises(PermissionError, match="PERMANENTLY_BLOCKED"):
         record_bet(market="h2h", selection="Piloto A", prob_model=0.6,
                    decimal_odds=2.0, bankroll=1000.0, real=True,
-                   strategy_id="f1-winner-pre-event-elo-v1",
+                   strategy_id="f1/winner-pre-event/v1",
                    path=tmp_path / "bets.jsonl", registry_path=registry_path,
                    approval_path=approval_path)
 
@@ -205,7 +240,7 @@ def test_record_bet_real_permitido_com_go(tmp_path):
 def test_record_bet_real_requires_matching_manual_approval(tmp_path):
     verdict_path = tmp_path / "gate.json"
     verdict_path.write_text(json.dumps({"verdicts": {"H1-F1": {"verdict": "COMPROVADA"}}}))
-    registry_path = _registry(tmp_path, "f1-winner-pre-event-elo-v1", "H1-F1", verdict_path)
+    registry_path = _registry(tmp_path, "f1/winner-pre-event/v1", "H1-F1", verdict_path)
     approval = tmp_path / "approval.json"
     approval.write_text(json.dumps({"schema_version": 1, "status": "APPROVED",
         "approval_id": "manual-1", "approved_by": "operator",
@@ -213,7 +248,7 @@ def test_record_bet_real_requires_matching_manual_approval(tmp_path):
         "bet_fingerprint": "wrong"}))
     with pytest.raises(PermissionError):
         record_bet(market="h2h", selection="Piloto A", prob_model=.6, decimal_odds=2,
-                   bankroll=1000, real=True, strategy_id="f1-winner-pre-event-elo-v1",
+                   bankroll=1000, real=True, strategy_id="f1/winner-pre-event/v1",
                    registry_path=registry_path, approval_path=approval)
 
 
@@ -227,11 +262,11 @@ def test_record_bet_estrategia_nao_registrada_e_bloqueada(tmp_path):
     verdict_path = tmp_path / "backtest_fase1.json"
     verdict_path.write_text(json.dumps({"verdicts": {"H1-F1": {"verdict": "COMPROVADA"}}}),
                             encoding="utf-8")
-    registry_path = _registry(tmp_path, "f1-winner-pre-event-elo-v1", "H1-F1", verdict_path)
+    registry_path = _registry(tmp_path, "f1/winner-pre-event/v1", "H1-F1", verdict_path)
     with pytest.raises(PermissionError):
         record_bet(market="h2h", selection="Piloto A", prob_model=0.6,
                   decimal_odds=2.0, bankroll=1000.0, real=True,
-                  strategy_id="f1-h2h-post-qualifying-v1",
+                  strategy_id="f1/h2h-post-qualifying/v1",
                   path=tmp_path / "bets.jsonl", registry_path=registry_path)
     assert not (tmp_path / "bets.jsonl").exists()
 

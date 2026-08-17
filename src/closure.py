@@ -29,6 +29,8 @@ def require_open(track: str, *, root: Path | str = ROOT) -> None:
         record = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         raise ResearchClosedError(f"closure record unreadable: {path}") from exc
+    if not isinstance(record, dict):
+        raise ResearchClosedError(f"closure record has invalid structure: {path}")
     status = record.get("tracks", {}).get(track)
     if status == "CLOSED_BY_HUMAN_DECISION":
         raise ResearchClosedError(
@@ -45,7 +47,12 @@ def require_real_money_allowed(*, root: Path | str = ROOT) -> None:
         record = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         raise ResearchClosedError(f"closure record unreadable: {path}") from exc
-    if record.get("real_money_operation") == "PERMANENTLY_BLOCKED":
+    if not isinstance(record, dict):
+        raise ResearchClosedError(f"closure record has invalid structure: {path}")
+    status = record.get("real_money_operation")
+    if status != "ALLOWED_BY_HUMAN_DECISION":
+        detail = status if isinstance(status, str) and status else "MISSING_OR_INVALID"
         raise PermissionError(
-            "real-money operation is PERMANENTLY_BLOCKED by human closure; "
-            "a new explicit, auditable human decision is required")
+            f"real-money operation is not explicitly allowed ({detail}); "
+            "an explicit, auditable human decision with "
+            "real_money_operation=ALLOWED_BY_HUMAN_DECISION is required")
