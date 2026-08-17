@@ -22,7 +22,7 @@ def _snapshot_contract_unit_tests_do_not_use_project_closure(monkeypatch):
 @pytest.fixture(autouse=True)
 def _installed_ops_provenance():
     """Provenance is supplied by the installed release wheel, not a checkout."""
-    assert version("predictor-ops") == "3.0.0"
+    assert version("predictor-ops") == "3.1.0"
 from src.config import ROOT, load_drivers
 
 # Estes artefatos são OPERACIONAIS: nascem do pipeline de ingestão local e estão

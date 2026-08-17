@@ -36,8 +36,8 @@ jobs:
           python -m venv "$venv"
           "$venv/bin/python" -c "import sys; expected=tuple(map(int, '${{ matrix.python }}'.split('.'))); print(sys.executable); print(sys.version); assert sys.version_info[:2] == expected, (sys.version_info[:2], expected)"
           "$venv/bin/pip" install dist/*.whl \
-            "predictor-core @ https://github.com/leonardosovienski/core-predictor/releases/download/v2.2.0/predictor_core-2.2.0-py3-none-any.whl" \
-            "predictor-ops @ https://github.com/leonardosovienski/tools-predictor/releases/download/v3.0.0/predictor_ops-3.0.0-py3-none-any.whl"
+            "predictor-core @ https://github.com/leonardosovienski/core-predictor/releases/download/v2.3.0/predictor_core-2.3.0-py3-none-any.whl" \
+            "predictor-ops @ https://github.com/leonardosovienski/predictor-ops/releases/download/v3.1.0/predictor_ops-3.1.0-py3-none-any.whl"
           cd /tmp
           "$venv/bin/f1-predictor" --help
           "$venv/bin/f1-archival-collection" --help
