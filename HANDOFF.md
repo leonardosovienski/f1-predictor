@@ -1,13 +1,22 @@
 # HANDOFF.md — f1-predictor
 
-> ## Migração operacional 2026-08-09
+> ## Migração operacional 2026-08-17
 >
-> O runtime corrente usa `predictor-core` 2.2.0 e `predictor-ops` 3.0.0 por
-> wheels fixadas no `uv.lock`. Estados operacionais usam `RunStatus` e o
+> O runtime corrente usa `predictor-core` 2.3.0 e `predictor-ops` 3.1.0 por
+> wheels fixadas no `uv.lock` (commit `8fd1e3c83c960999b7783976e91082f778874d29`,
+> "Migrate to Core 2.3 and Ops 3.1"). Estados operacionais usam `RunStatus` e o
 > scheduler transporta `scientific_state: COLLECTION_ONLY` sem interpretá-lo.
 > H1-F1 permanece `HYPOTHESIS_REFUTED`; H8 e H2H permanecem
 > `CLOSED_BY_HUMAN_DECISION`; operação real permanece bloqueada. As notas
 > abaixo descrevem migrações históricas e não são o contrato runtime atual.
+
+> ## Migração operacional 2026-08-09 (histórico — superada pela migração de 2026-08-17 acima)
+>
+> Nesta migração, o runtime passou a usar `predictor-core` 2.2.0 e
+> `predictor-ops` 3.0.0 por wheels fixadas no `uv.lock`. Estados operacionais
+> usam `RunStatus` e o scheduler transporta `scientific_state: COLLECTION_ONLY`
+> sem interpretá-lo. H1-F1 permanece `HYPOTHESIS_REFUTED`; H8 e H2H permanecem
+> `CLOSED_BY_HUMAN_DECISION`; operação real permanece bloqueada.
 
 > ## Reconciliacao de hashes da modernizacao (2026-08-01)
 >
